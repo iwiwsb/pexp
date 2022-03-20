@@ -208,7 +208,17 @@ impl TryFrom<u16> for Subsystem {
     }
 }
 
+struct SectionTable {}
+
 struct DataDirectories {}
+
+struct PortableExecutable {
+    ms_dos_stub: Option<Vec<u8>>,
+    signature: [u8; 4],
+    coff_file_header: COFFFileHeader,
+    optional_header: Option<OptionalHeader>,
+
+}
 
 fn main() {
     let mut cmdline_args = args();
