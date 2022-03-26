@@ -196,25 +196,25 @@ enum Subsystem {
     WINDOWS_BOOT_APPLICATION,
 }
 
-impl TryFrom<u16> for Subsystem {
+impl TryFrom<[u8; 2]> for Subsystem {
     type Error = &'static str;
 
-    fn try_from(value: u16) -> Result<Self, Self::Error> {
+    fn try_from(value: [u8; 2]) -> Result<Self, Self::Error> {
         match value {
-            0 => Ok(Self::UNKNOWN),
-            1 => Ok(Self::NATIVE),
-            2 => Ok(Self::WINDOWS_GUI),
-            3 => Ok(Self::WINDOWS_CUI),
-            5 => Ok(Self::OS2_CUI),
-            7 => Ok(Self::POSIX_CUI),
-            8 => Ok(Self::NATIVE_WINDOWS),
-            9 => Ok(Self::WINDOWS_CE_GUI),
-            10 => Ok(Self::EFI_APPLICATION),
-            11 => Ok(Self::EFI_BOOT_SERVICE_DRIVER),
-            12 => Ok(Self::EFI_RUNTIME_DRIVER),
-            13 => Ok(Self::EFI_ROM),
-            14 => Ok(Self::XBOX),
-            16 => Ok(Self::WINDOWS_BOOT_APPLICATION),
+            [0x00, 0x00] => Ok(Self::UNKNOWN),
+            [0x01, 0x00] => Ok(Self::NATIVE),
+            [0x02, 0x00] => Ok(Self::WINDOWS_GUI),
+            [0x03, 0x00] => Ok(Self::WINDOWS_CUI),
+            [0x05, 0x00] => Ok(Self::OS2_CUI),
+            [0x07, 0x00] => Ok(Self::POSIX_CUI),
+            [0x08, 0x00] => Ok(Self::NATIVE_WINDOWS),
+            [0x09, 0x00] => Ok(Self::WINDOWS_CE_GUI),
+            [0x0A, 0x00] => Ok(Self::EFI_APPLICATION),
+            [0x0B, 0x00] => Ok(Self::EFI_BOOT_SERVICE_DRIVER),
+            [0x0C, 0x00] => Ok(Self::EFI_RUNTIME_DRIVER),
+            [0x0D, 0x00] => Ok(Self::EFI_ROM),
+            [0x0E, 0x00] => Ok(Self::XBOX),
+            [0x10, 0x00] => Ok(Self::WINDOWS_BOOT_APPLICATION),
             _ => Err("invalid subsystem type"),
         }
     }
