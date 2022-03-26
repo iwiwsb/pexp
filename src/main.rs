@@ -112,6 +112,18 @@ impl TryFrom<u16> for PEImageType {
     }
 }
 
+impl TryFrom<[u8; 2]> for PEImageType {
+    type Error = &'static str;
+
+    fn try_from(value: [u8; 2]) -> Result<Self, Self::Error> {
+        match value {
+            [0x1, 0xB] => Ok(Self::PE32),
+            [0x2, 0xB] => Ok(Self::PE64),
+            _ => Err("invalid image type"),
+        }
+    }
+}
+
 #[allow(non_camel_case_types)]
 struct COFFFileHeader {
     machine: MachineType,
