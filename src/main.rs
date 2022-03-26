@@ -117,8 +117,8 @@ impl TryFrom<[u8; 2]> for PEImageType {
 
     fn try_from(value: [u8; 2]) -> Result<Self, Self::Error> {
         match value {
-            [0x1, 0xB] => Ok(Self::PE32),
-            [0x2, 0xB] => Ok(Self::PE64),
+            [0xB, 0x1] => Ok(Self::PE32),
+            [0xB, 0x2] => Ok(Self::PE64),
             _ => Err("invalid image type"),
         }
     }
