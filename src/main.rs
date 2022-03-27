@@ -262,7 +262,7 @@ struct PortableExecutable {
     signature: [u8; 4],
     coff_file_header: COFFFileHeader,
     optional_header: Option<OptionalHeader>,
-
+    section_table: SectionTable,
 }
 
 fn main() {
