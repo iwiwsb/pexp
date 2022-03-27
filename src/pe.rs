@@ -1,5 +1,9 @@
 use chrono::{DateTime, Utc};
-use std::{fs::{File, OpenOptions}, io, path::Path};
+use std::{
+    fs::{File, OpenOptions},
+    io,
+    path::Path,
+};
 
 #[allow(non_camel_case_types)]
 enum MachineType {
