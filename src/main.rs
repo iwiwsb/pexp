@@ -6,7 +6,7 @@ use std::io::{self, Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::exit;
 
-mod pe;
+mod portable_executable;
 
 fn main() -> io::Result<()> {
     let mut cmdline_args = args();
