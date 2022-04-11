@@ -1,5 +1,6 @@
 use chrono::{DateTime, TimeZone, Utc};
 
+#[derive(PartialEq, Debug)]
 #[allow(non_camel_case_types)]
 pub struct COFFFileHeader {
     machine: MachineType,
@@ -47,6 +48,7 @@ impl TryFrom<[u8; 20]> for COFFFileHeader {
     }
 }
 
+#[derive(PartialEq, Debug)]
 #[allow(non_camel_case_types)]
 enum MachineType {
     UNKNOWN = 0x0000, // The content of this field is assumed to be applicable to any machine type
@@ -132,4 +134,28 @@ enum Characteristics {
     DLL,
     SYSTEM_ONLY,
     BYTES_REVERSED_HI,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_coff_parsing() {
+        let test_coff: [u8; 20] = [
+            0x4C, 0x01, 0x03, 0x00, 0xDC, 0x52, 0xDB, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0xE0, 0x00, 0x22, 0x00,
+        ];
+
+        let parsed = COFFFileHeader {
+            machine: MachineType::I386,
+            number_of_sections: 0x03,
+            time_date_stamp: Utc.timestamp(4275786460, 0),
+            pointer_to_symbol_table: None,
+            number_of_symbols: 0,
+            size_of_optional_header: 0xE0,
+            characteristics: 0x22,
+        };
+        assert_eq!(parsed, COFFFileHeader::try_from(test_coff).unwrap())
+    }
 }

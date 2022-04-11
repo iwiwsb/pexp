@@ -41,7 +41,6 @@ enum Subsystem {
     WINDOWS_BOOT_APPLICATION,
 }
 
-
 impl TryFrom<[u8; 2]> for Subsystem {
     type Error = &'static str;
 
