@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc, TimeZone};
+use chrono::{DateTime, TimeZone, Utc};
 
 #[allow(non_camel_case_types)]
 pub struct COFFFileHeader {
@@ -113,4 +113,23 @@ impl TryFrom<[u8; 2]> for MachineType {
             _ => Err("invalid machine type"),
         }
     }
+}
+
+#[allow(non_camel_case_types)]
+enum Characteristics {
+    RELOCS_STRIPPED,
+    EXECUTABLE_IMAGE,
+    LINE_NUMS_STRIPPED,
+    SYMS_STRIPPED,
+    AGGRESSIVE_WS_TRIM,
+    LARGE_ADDRESS_AWARE,
+    BYTES_REVERSED_LO,
+    MACHINE_32BIT,
+    DEBUG_STRIPPED,
+    REMOVABLE_RUN_FROM_SWAP,
+    RUN_FROM_SWAP,
+    SYSTEM,
+    DLL,
+    SYSTEM_ONLY,
+    BYTES_REVERSED_HI,
 }
