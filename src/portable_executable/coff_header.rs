@@ -1,7 +1,5 @@
 use chrono::{DateTime, Utc, TimeZone};
 
-use super::Characteristics;
-
 #[allow(non_camel_case_types)]
 pub struct COFFFileHeader {
     machine: MachineType,
