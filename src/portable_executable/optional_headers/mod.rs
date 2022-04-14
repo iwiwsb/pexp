@@ -79,8 +79,26 @@ impl TryFrom<[u8; 112]> for OptionalHeader {
             PE64 => 24,
         };
         let image_base = match magic {
-            PE32 => u64::from_le_bytes([buffer[win_offset], buffer[win_offset + 4], buffer[win_offset + 8], buffer[win_offset + 12], 0, 0, 0, 0]),
-            PE64 => u64::from_le_bytes([buffer[win_offset], buffer[win_offset + 4], buffer[win_offset + 8], buffer[win_offset + 12], buffer[win_offset + 16], buffer[win_offset + 20], buffer[win_offset + 24], buffer[win_offset + 32]]),
+            PE32 => u64::from_le_bytes([
+                buffer[win_offset],
+                buffer[win_offset + 4],
+                buffer[win_offset + 8],
+                buffer[win_offset + 12],
+                0,
+                0,
+                0,
+                0,
+            ]),
+            PE64 => u64::from_le_bytes([
+                buffer[win_offset],
+                buffer[win_offset + 4],
+                buffer[win_offset + 8],
+                buffer[win_offset + 12],
+                buffer[win_offset + 16],
+                buffer[win_offset + 20],
+                buffer[win_offset + 24],
+                buffer[win_offset + 32],
+            ]),
         };
         let section_alignment = u32::from_le_bytes(bytes_32_35);
         let file_alignment = u32::from_le_bytes(bytes_36_39);
