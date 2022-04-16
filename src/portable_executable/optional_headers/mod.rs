@@ -42,39 +42,21 @@ impl TryFrom<[u8; 112]> for OptionalHeader {
     fn try_from(buffer: [u8; 112]) -> Result<Self, Self::Error> {
         use PEImageType::*;
 
-        let bytes_0_1 = [buffer[0], buffer[1]];
-        let bytes_2 = buffer[2];
-        let bytes_3 = buffer[3];
-        let bytes_4_7 = [buffer[4], buffer[5], buffer[6], buffer[7]];
-        let bytes_8_11 = [buffer[8], buffer[9], buffer[10], buffer[11]];
-        let bytes_12_15 = [buffer[12], buffer[13], buffer[14], buffer[15]];
-        let bytes_16_19 = [buffer[16], buffer[17], buffer[18], buffer[19]];
-        let bytes_20_23 = [buffer[20], buffer[21], buffer[22], buffer[23]];
-        let bytes_24_27 = [buffer[24], buffer[25], buffer[26], buffer[27]];
-        let bytes_32_35 = [buffer[32], buffer[33], buffer[34], buffer[35]];
-        let bytes_36_39 = [buffer[36], buffer[37], buffer[38], buffer[39]];
-        let bytes_40_41 = [buffer[40], buffer[41]];
-        let bytes_42_43 = [buffer[42], buffer[43]];
-        let bytes_44_45 = [buffer[44], buffer[45]];
-        let bytes_46_47 = [buffer[46], buffer[47]];
-        let bytes_48_49 = [buffer[48], buffer[49]];
-        let bytes_50_53 = [buffer[50], buffer[51], buffer[52], buffer[53]];
-        let bytes_54_57 = [buffer[54], buffer[55], buffer[56], buffer[57]];
-        let bytes_58_61 = [buffer[58], buffer[59], buffer[60], buffer[61]];
-        let bytes_62_65 = [buffer[62], buffer[63], buffer[64], buffer[65]];
-        let bytes_66_67 = [buffer[66], buffer[67]];
-        let bytes_68_69 = [buffer[68], buffer[69]];
-
-        let magic = PEImageType::try_from(bytes_0_1)?;
-        let major_linker_version = bytes_2;
-        let minor_linker_version = bytes_3;
-        let size_of_code = u32::from_le_bytes(bytes_4_7);
-        let size_of_initialized_data = u32::from_le_bytes(bytes_8_11);
-        let size_of_uninitialized_data = u32::from_le_bytes(bytes_12_15);
-        let address_of_entry_point = u32::from_le_bytes(bytes_16_19);
-        let base_of_code = u32::from_le_bytes(bytes_20_23);
+        let magic = PEImageType::try_from([buffer[0], buffer[1]])?;
+        let major_linker_version = buffer[2];
+        let minor_linker_version = buffer[3];
+        let size_of_code = u32::from_le_bytes([buffer[4], buffer[5], buffer[6], buffer[7]]);
+        let size_of_initialized_data =
+            u32::from_le_bytes([buffer[8], buffer[9], buffer[10], buffer[11]]);
+        let size_of_uninitialized_data =
+            u32::from_le_bytes([buffer[12], buffer[13], buffer[14], buffer[15]]);
+        let address_of_entry_point =
+            u32::from_le_bytes([buffer[16], buffer[17], buffer[18], buffer[19]]);
+        let base_of_code = u32::from_le_bytes([buffer[20], buffer[21], buffer[22], buffer[23]]);
         let base_of_data = match magic {
-            PE32 => Some(u32::from_le_bytes(bytes_24_27)),
+            PE32 => Some(u32::from_le_bytes([
+                buffer[24], buffer[25], buffer[26], buffer[27],
+            ])),
             PE64 => None,
         };
         let win_offset: usize = match magic {
@@ -103,19 +85,21 @@ impl TryFrom<[u8; 112]> for OptionalHeader {
                 buffer[win_offset + 32],
             ]),
         };
-        let section_alignment = u32::from_le_bytes(bytes_32_35);
-        let file_alignment = u32::from_le_bytes(bytes_36_39);
-        let major_operating_system_version = u16::from_le_bytes(bytes_40_41);
-        let minor_operating_system_version = u16::from_le_bytes(bytes_42_43);
-        let major_image_version = u16::from_le_bytes(bytes_44_45);
-        let major_subsystem_version = u16::from_le_bytes(bytes_46_47);
-        let minor_subsystem_version = u16::from_le_bytes(bytes_48_49);
-        let win32_version_value = u32::from_le_bytes(bytes_50_53);
-        let size_of_image = u32::from_le_bytes(bytes_54_57);
-        let size_of_headers = u32::from_le_bytes(bytes_58_61);
-        let checksum = u32::from_le_bytes(bytes_62_65);
-        let subsystem = u16::from_le_bytes(bytes_66_67);
-        let dll_characteristics = u16::from_le_bytes(bytes_68_69);
+        let section_alignment =
+            u32::from_le_bytes([buffer[32], buffer[33], buffer[34], buffer[35]]);
+        let file_alignment = u32::from_le_bytes([buffer[36], buffer[37], buffer[38], buffer[39]]);
+        let major_operating_system_version = u16::from_le_bytes([buffer[40], buffer[41]]);
+        let minor_operating_system_version = u16::from_le_bytes([buffer[42], buffer[43]]);
+        let major_image_version = u16::from_le_bytes([buffer[44], buffer[45]]);
+        let major_subsystem_version = u16::from_le_bytes([buffer[46], buffer[47]]);
+        let minor_subsystem_version = u16::from_le_bytes([buffer[48], buffer[49]]);
+        let win32_version_value =
+            u32::from_le_bytes([buffer[50], buffer[51], buffer[52], buffer[53]]);
+        let size_of_image = u32::from_le_bytes([buffer[54], buffer[55], buffer[56], buffer[57]]);
+        let size_of_headers = u32::from_le_bytes([buffer[58], buffer[59], buffer[60], buffer[61]]);
+        let checksum = u32::from_le_bytes([buffer[62], buffer[63], buffer[64], buffer[65]]);
+        let subsystem = u16::from_le_bytes([buffer[66], buffer[67]]);
+        let dll_characteristics = u16::from_le_bytes([buffer[68], buffer[69]]);
         todo!()
     }
 }
