@@ -61,6 +61,9 @@ impl TryFrom<[u8; 112]> for OptionalHeader {
         let bytes_50_53 = [buffer[50], buffer[51], buffer[52], buffer[53]];
         let bytes_54_57 = [buffer[54], buffer[55], buffer[56], buffer[57]];
         let bytes_58_61 = [buffer[58], buffer[59], buffer[60], buffer[61]];
+        let bytes_62_65 = [buffer[62], buffer[63], buffer[64], buffer[65]];
+        let bytes_66_67 = [buffer[66], buffer[67]];
+        let bytes_68_69 = [buffer[68], buffer[69]];
 
         let magic = PEImageType::try_from(bytes_0_1)?;
         let major_linker_version = bytes_2;
@@ -110,6 +113,9 @@ impl TryFrom<[u8; 112]> for OptionalHeader {
         let win32_version_value = u32::from_le_bytes(bytes_50_53);
         let size_of_image = u32::from_le_bytes(bytes_54_57);
         let size_of_headers = u32::from_le_bytes(bytes_58_61);
+        let checksum = u32::from_le_bytes(bytes_62_65);
+        let subsystem = u16::from_le_bytes(bytes_66_67);
+        let dll_characteristics = u16::from_le_bytes(bytes_68_69);
         todo!()
     }
 }
