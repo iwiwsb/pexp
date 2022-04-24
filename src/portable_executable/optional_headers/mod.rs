@@ -91,15 +91,16 @@ impl TryFrom<[u8; 112]> for OptionalHeader {
         let major_operating_system_version = u16::from_le_bytes([buffer[40], buffer[41]]);
         let minor_operating_system_version = u16::from_le_bytes([buffer[42], buffer[43]]);
         let major_image_version = u16::from_le_bytes([buffer[44], buffer[45]]);
-        let major_subsystem_version = u16::from_le_bytes([buffer[46], buffer[47]]);
-        let minor_subsystem_version = u16::from_le_bytes([buffer[48], buffer[49]]);
+        let minor_image_version = u16::from_le_bytes([buffer[46], buffer[47]]);
+        let major_subsystem_version = u16::from_le_bytes([buffer[48], buffer[49]]);
+        let minor_subsystem_version = u16::from_le_bytes([buffer[50], buffer[51]]);
         let win32_version_value =
-            u32::from_le_bytes([buffer[50], buffer[51], buffer[52], buffer[53]]);
-        let size_of_image = u32::from_le_bytes([buffer[54], buffer[55], buffer[56], buffer[57]]);
-        let size_of_headers = u32::from_le_bytes([buffer[58], buffer[59], buffer[60], buffer[61]]);
-        let checksum = u32::from_le_bytes([buffer[62], buffer[63], buffer[64], buffer[65]]);
-        let subsystem = u16::from_le_bytes([buffer[66], buffer[67]]);
-        let dll_characteristics = u16::from_le_bytes([buffer[68], buffer[69]]);
+            u32::from_le_bytes([buffer[52], buffer[53], buffer[54], buffer[55]]);
+        let size_of_image = u32::from_le_bytes([buffer[56], buffer[57], buffer[58], buffer[59]]);
+        let size_of_headers = u32::from_le_bytes([buffer[60], buffer[61], buffer[62], buffer[63]]);
+        let checksum = u32::from_le_bytes([buffer[64], buffer[65], buffer[66], buffer[67]]);
+        let subsystem = u16::from_le_bytes([buffer[68], buffer[69]]);
+        let dll_characteristics = u16::from_le_bytes([buffer[70], buffer[71]]);
         todo!()
     }
 }
