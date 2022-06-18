@@ -29,7 +29,7 @@ impl OptionalHeader {
     }
 
     fn minor_linker_version(&self) -> u8 {
-        self.raw[2]
+        self.raw[3]
     }
 
     fn size_of_code(&self) -> u32 {
