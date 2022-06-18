@@ -109,6 +109,7 @@ impl TryFrom<[u8; 112]> for OptionalHeader {
 enum PEImageType {
     PE32,
     PE64,
+    // ROM,
 }
 
 impl TryFrom<u16> for PEImageType {
