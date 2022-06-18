@@ -4,7 +4,7 @@ use data_directories::DataDirectories;
 
 #[allow(non_snake_case)]
 pub struct OptionalHeader {
-    magic: PEImageType,
+    magic: u16,
     major_linker_version: u8,
     minor_linker_version: u8,
     size_of_code: u32,
@@ -42,7 +42,7 @@ impl TryFrom<[u8; 112]> for OptionalHeader {
     fn try_from(buffer: [u8; 112]) -> Result<Self, Self::Error> {
         use PEImageType::*;
 
-        let magic = PEImageType::try_from([buffer[0], buffer[1]])?;
+        let magic = u16::from_le_bytes([buffer[0], buffer[1]]);
         let major_linker_version = buffer[2];
         let minor_linker_version = buffer[3];
         let size_of_code = u32::from_le_bytes([buffer[4], buffer[5], buffer[6], buffer[7]]);
@@ -53,17 +53,17 @@ impl TryFrom<[u8; 112]> for OptionalHeader {
         let address_of_entry_point =
             u32::from_le_bytes([buffer[16], buffer[17], buffer[18], buffer[19]]);
         let base_of_code = u32::from_le_bytes([buffer[20], buffer[21], buffer[22], buffer[23]]);
-        let base_of_data = match magic {
+        let base_of_data = match PEImageType::try_from(magic)? {
             PE32 => Some(u32::from_le_bytes([
                 buffer[24], buffer[25], buffer[26], buffer[27],
             ])),
             PE64 => None,
         };
-        let win_offset: usize = match magic {
+        let win_offset: usize = match PEImageType::try_from(magic)? {
             PE32 => 28,
             PE64 => 24,
         };
-        let image_base = match magic {
+        let image_base = match PEImageType::try_from(magic)? {
             PE32 => u64::from_le_bytes([
                 buffer[win_offset],
                 buffer[win_offset + 4],
