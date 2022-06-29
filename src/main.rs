@@ -19,21 +19,18 @@ fn main() -> io::Result<()> {
     };
     if !path.is_file() {
         let path_str = path.to_str().expect("error converting path to string");
-        println!("error: {path_str} is not a file");
-        exit(0);
+        panic!("error: {path_str} is not a file");
     }
     let mut pe_file = File::open(&path)?;
     let pe_metadata = pe_file.metadata()?;
     if pe_metadata.len() < 60 {
-        println!("error: file too small");
-        exit(0)
+        panic!("error: file too small");
     }
 
     let mut magic_mz = [0u8; 2];
     pe_file.read(&mut magic_mz)?;
     if magic_mz != [b'M', b'Z'] {
-        println!("Not PE file: first bytes must be 'MZ'");
-        exit(0);
+        panic!("Not PE file: first bytes must be 'MZ'");
     }
     pe_file.seek(SeekFrom::Start(0x3C))?;
 
@@ -44,7 +41,7 @@ fn main() -> io::Result<()> {
     let mut magic_pe = [0u8; 4];
     pe_file.read(&mut magic_pe)?;
     if magic_pe != [b'P', b'E', 0, 0] {
-        println!("Not a PE file: 'PE' bytes not found");
+        panic!("Not a PE file: 'PE' bytes not found");
     }
     let mut machine_buf = [0u8; 2];
     pe_file.read_exact(&mut machine_buf)?;
