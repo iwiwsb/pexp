@@ -50,7 +50,7 @@ impl TryFrom<[u8; 20]> for COFFFileHeader {
 
 #[derive(PartialEq, Debug)]
 #[allow(non_camel_case_types)]
-enum MachineType {
+pub enum MachineType {
     UNKNOWN = 0x0000, // The content of this field is assumed to be applicable to any machine type
     AM33 = 0x01D3,    // Matsushita AM33
     AMD64 = 0x8664,   // x64

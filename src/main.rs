@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![allow(unused)]
 
 use std::env::args;
 use std::fs::File;
