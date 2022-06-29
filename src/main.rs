@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use std::env::args;
-use std::fs::OpenOptions;
+use std::fs::File;
 use std::io::{self, Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::exit;
@@ -22,7 +22,7 @@ fn main() -> io::Result<()> {
         println!("error: {path_str} is not a file");
         exit(0);
     }
-    let mut pe_file = OpenOptions::new().read(true).open(&path)?;
+    let mut pe_file = File::open(&path)?;
     let pe_metadata = pe_file.metadata()?;
     if pe_metadata.len() < 60 {
         println!("error: file too small");
