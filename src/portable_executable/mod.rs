@@ -5,7 +5,9 @@ mod section_table;
 use coff_header::COFFFileHeader;
 use optional_headers::OptionalHeader;
 use section_table::SectionTable;
-use std::io::{self, Read, Seek};
+use std::io::{self, Read, Seek, SeekFrom};
+
+use coff_header::MachineType;
 
 pub struct PEHeaders {
     ms_dos_stub: Vec<u8>,
@@ -48,6 +50,33 @@ impl<R: Read> Reader<R> {
 
 impl<R: Read + Seek> Reader<R> {
     fn with_guessed_type(mut self) -> io::Result<Self> {
-        todo!()
+        let mut first_2_bytes = [0u8; 2];
+        let mut reader = self.inner;
+        reader.read(&mut first_2_bytes)?;
+        if first_2_bytes == [b'M', b'Z'] {
+            reader.seek(SeekFrom::Start(0x3C))?;
+            let mut pe_signature_offset = [0u8; 4];
+            reader.read(&mut pe_signature_offset)?;
+            reader.seek(SeekFrom::Start(u32::from_le_bytes(pe_signature_offset) as u64))?;
+            let mut pe_signature = [0u8; 4];
+            reader.read(&mut pe_signature)?;
+            if pe_signature == [b'P', b'E', 0, 0] {
+                reader.seek(SeekFrom::Current(20))?;
+                let mut pe_magic = [0u8; 2];
+                reader.read(&mut pe_magic)?;
+                match pe_magic {
+                    [0x0B, 0x01] => Ok(Self { inner: reader, pe_type: Some(PEType::Image32)}),
+                    [0x0B, 0x02] => Ok(Self { inner: reader, pe_type: Some(PEType::Image64)}),
+                    [0x07, 0x01] => Ok(Self { inner: reader, pe_type: Some(PEType::ImageRom)}),
+                    _ => todo!()
+                }
+            } else {
+                todo!()
+            }
+        } else if MachineType::try_from(first_2_bytes).is_ok() {
+             todo!()
+        } else {
+            todo!()
+        }
     }
 }
