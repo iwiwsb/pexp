@@ -425,7 +425,17 @@ impl<R: Read> Reader<R> {
 
 impl<R: Read + Seek> Reader<R> {
     pub fn decode(mut self) -> io::Result<PEHeaders> {
-        todo!()
+        match self.pe_type() {
+            Some(PEType::Image) => {
+                todo!()
+            }
+            Some(PEType::Object) => {
+                todo!()
+            }
+            None => {
+                unimplemented!()
+            }
+        }
     }
 
     fn guess_type(&mut self) -> io::Result<()> {
