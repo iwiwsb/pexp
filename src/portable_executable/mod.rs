@@ -441,7 +441,11 @@ impl<R: Read> Reader<R> {
 }
 
 impl<R: Read + Seek> Reader<R> {
-    fn with_guessed_type(mut self) -> io::Result<Self> {
+    pub fn decode(mut self) -> io::Result<PEHeaders> {
+        todo!()
+    }
+
+    fn guess_type(&mut self) -> io::Result<()> {
         let mut first_2_bytes = [0u8; 2];
         self.inner.read(&mut first_2_bytes)?;
         if first_2_bytes == [b'M', b'Z'] {
@@ -463,13 +467,13 @@ impl<R: Read + Seek> Reader<R> {
                     [0x07, 0x01] => self.pe_type = Some(PEType::ImageRom).or(self.pe_type),
                     _ => return Err(io::Error::from(ErrorKind::InvalidData)),
                 }
-                return Ok(self);
+                return Ok(());
             } else {
                 return Err(io::Error::from(ErrorKind::InvalidData));
             }
         } else if MachineType::try_from(first_2_bytes).is_ok() {
             self.pe_type = Some(PEType::Object).or(self.pe_type);
-            return Ok(self);
+            return Ok(());
         } else {
             return Err(io::Error::from(ErrorKind::InvalidData));
         }
