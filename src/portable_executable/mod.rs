@@ -198,6 +198,7 @@ impl OptionalHeader {
                 self.raw[27],
             ])),
             PE64 => None,
+            ROM => todo!(),
         }
     }
 
@@ -219,6 +220,7 @@ impl OptionalHeader {
                 self.raw[34],
                 self.raw[35],
             ])),
+            ROM => todo!(),
         }
     }
 
@@ -267,29 +269,12 @@ impl OptionalHeader {
     }
 }
 
-impl TryFrom<[u8; 112]> for OptionalHeader {
-    type Error = &'static str;
-    fn try_from(buffer: [u8; 112]) -> Result<Self, Self::Error> {
-        match PEImageType::try_from([buffer[0], buffer[1]]) {
-            Ok(PE32) => Ok(OptionalHeader {
-                raw: buffer.to_vec(),
-                image_type: PE32,
-            }),
-            Ok(PE64) => Ok(OptionalHeader {
-                raw: buffer.to_vec(),
-                image_type: PE64,
-            }),
-            Err(s) => panic!("{s}"),
-        }
-    }
-}
-
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 enum PEImageType {
     PE32,
     PE64,
-    // ROM,
+    ROM,
 }
 
 impl TryFrom<u16> for PEImageType {
@@ -406,9 +391,7 @@ pub struct PEHeaders {
 #[derive(Clone, Copy, Debug)]
 enum PEType {
     Object,
-    Image32,
-    Image64,
-    ImageRom,
+    Image,
 }
 
 struct Reader<R: Read> {
@@ -449,34 +432,13 @@ impl<R: Read + Seek> Reader<R> {
         let mut first_2_bytes = [0u8; 2];
         self.inner.read(&mut first_2_bytes)?;
         if first_2_bytes == [b'M', b'Z'] {
-            self.inner.seek(SeekFrom::Start(0x3C))?;
-            let mut pe_signature_offset = [0u8; 4];
-            self.inner.read(&mut pe_signature_offset)?;
-            self.inner.seek(SeekFrom::Start(
-                u32::from_le_bytes(pe_signature_offset) as u64
-            ))?;
-            let mut pe_signature = [0u8; 4];
-            self.inner.read(&mut pe_signature)?;
-            if pe_signature == [b'P', b'E', 0, 0] {
-                self.inner.seek(SeekFrom::Current(20))?;
-                let mut pe_magic = [0u8; 2];
-                self.inner.read(&mut pe_magic)?;
-                match pe_magic {
-                    [0x0B, 0x01] => self.pe_type = Some(PEType::Image32).or(self.pe_type),
-                    [0x0B, 0x02] => self.pe_type = Some(PEType::Image64).or(self.pe_type),
-                    [0x07, 0x01] => self.pe_type = Some(PEType::ImageRom).or(self.pe_type),
-                    _ => return Err(io::Error::from(ErrorKind::InvalidData)),
-                }
-                return Ok(());
-            } else {
-                return Err(io::Error::from(ErrorKind::InvalidData));
-            }
+            self.pe_type = Some(PEType::Image).or(self.pe_type);
         } else if MachineType::try_from(first_2_bytes).is_ok() {
             self.pe_type = Some(PEType::Object).or(self.pe_type);
-            return Ok(());
         } else {
             return Err(io::Error::from(ErrorKind::InvalidData));
         }
+        return Ok(());
     }
 }
 
