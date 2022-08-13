@@ -425,6 +425,9 @@ impl<R: Read> Reader<R> {
 
 impl<R: Read + Seek> Reader<R> {
     pub fn decode(mut self) -> io::Result<PEHeaders> {
+        if self.pe_type().is_none() {
+            self.guess_type()?;
+        }
         match self.pe_type() {
             Some(PEType::Image) => {
                 todo!()
