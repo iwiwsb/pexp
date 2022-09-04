@@ -1,52 +1,70 @@
-use std::io::{self, ErrorKind, Read, Seek, SeekFrom};
+use std::io::{self, BufRead, ErrorKind, Read, Seek, SeekFrom};
 
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 
 #[derive(PartialEq, Debug)]
-#[allow(non_camel_case_types)]
 pub struct COFFFileHeader {
-    machine: MachineType,
-    number_of_sections: u16,
-    time_date_stamp: DateTime<Utc>,
-    pointer_to_symbol_table: Option<u32>,
-    number_of_symbols: u32,
-    size_of_optional_header: u16,
-    characteristics: u16,
+    raw: Vec<u8>,
 }
 
-impl TryFrom<[u8; 20]> for COFFFileHeader {
-    type Error = &'static str;
-    fn try_from(buffer: [u8; 20]) -> Result<Self, Self::Error> {
-        let bytes_0_1 = [buffer[0], buffer[1]];
-        let bytes_2_3 = [buffer[2], buffer[3]];
-        let bytes_4_7 = [buffer[4], buffer[5], buffer[6], buffer[7]];
-        let bytes_8_11 = [buffer[8], buffer[9], buffer[10], buffer[11]];
-        let bytes_12_15 = [buffer[12], buffer[13], buffer[14], buffer[15]];
-        let bytes_16_17 = [buffer[16], buffer[17]];
-        let bytes_18_19 = [buffer[18], buffer[19]];
+impl COFFFileHeader {
+    pub fn machine(&self) -> Result<MachineType, &str> {
+        MachineType::try_from([self.raw[0], self.raw[1]])
+    }
 
-        let machine = MachineType::try_from(bytes_0_1)?;
-        let number_of_sections = u16::from_le_bytes(bytes_2_3);
-        if number_of_sections > 96 {
-            return Err("number of sections must not exceed 96");
-        }
-        let time_date_stamp = Utc.timestamp(u32::from_le_bytes(bytes_4_7) as i64, 0);
-        let pointer_to_symbol_table = match bytes_8_11 {
-            [0, 0, 0, 0] => None,
-            _ => Some(u32::from_le_bytes(bytes_8_11)),
-        };
-        let number_of_symbols = u32::from_le_bytes(bytes_12_15);
-        let size_of_optional_header = u16::from_le_bytes(bytes_16_17);
-        let characteristics = u16::from_le_bytes(bytes_18_19);
-        Ok(Self {
-            machine,
-            number_of_sections,
-            time_date_stamp,
-            pointer_to_symbol_table,
-            number_of_symbols,
-            size_of_optional_header,
-            characteristics,
-        })
+    pub fn number_of_sections(&self) -> u16 {
+        u16::from_le_bytes([self.raw[2], self.raw[3]])
+    }
+
+    pub fn time_date_stamp(&self) -> DateTime<Utc> {
+        DateTime::<Utc>::from_utc(
+            NaiveDateTime::from_timestamp(
+                i64::from_le_bytes([
+                    self.raw[4],
+                    self.raw[5],
+                    self.raw[6],
+                    self.raw[7],
+                    0,
+                    0,
+                    0,
+                    0,
+                ]),
+                0,
+            ),
+            Utc,
+        )
+    }
+
+    pub fn pointer_to_symbol_table(&self) -> u32 {
+        u32::from_le_bytes([self.raw[8], self.raw[9], self.raw[10], self.raw[11]])
+    }
+
+    pub fn number_of_symbols(&self) -> u32 {
+        u32::from_le_bytes([self.raw[12], self.raw[13], self.raw[14], self.raw[15]])
+    }
+
+    pub fn size_of_optional_header(&self) -> u16 {
+        u16::from_le_bytes([self.raw[16], self.raw[17]])
+    }
+
+    pub fn characteristics(&self) -> Characteristics {
+        Characteristics(u16::from_le_bytes([self.raw[18], self.raw[19]]))
+    }
+}
+
+pub struct Characteristics(u16);
+
+impl Characteristics {
+    pub fn relocs_stripped(&self) -> bool {
+        self.0 & 0b1 == 1
+    }
+
+    pub fn executable_image(&self) -> bool {
+        (self.0 >> 1) & 0b1 == 1
+    }
+
+    pub fn line_nums_stripped(&self) -> bool {
+        (self.0 >> 2) & 0b1 == 1
     }
 }
 
@@ -119,37 +137,12 @@ impl TryFrom<[u8; 2]> for MachineType {
     }
 }
 
-#[allow(non_camel_case_types)]
-enum Characteristics {
-    RELOCS_STRIPPED,
-    EXECUTABLE_IMAGE,
-    LINE_NUMS_STRIPPED,
-    SYMS_STRIPPED,
-    AGGRESSIVE_WS_TRIM,
-    LARGE_ADDRESS_AWARE,
-    BYTES_REVERSED_LO,
-    MACHINE_32BIT,
-    DEBUG_STRIPPED,
-    REMOVABLE_RUN_FROM_SWAP,
-    RUN_FROM_SWAP,
-    SYSTEM,
-    DLL,
-    SYSTEM_ONLY,
-    BYTES_REVERSED_HI,
-}
-
-use ImageBase::*;
 use PEImageType::*;
 
 #[allow(non_snake_case)]
 pub struct OptionalHeader {
     raw: Vec<u8>,
     image_type: PEImageType,
-}
-
-enum ImageBase {
-    ImageBase32(u32),
-    ImageBase64(u64),
 }
 
 impl OptionalHeader {
@@ -198,28 +191,6 @@ impl OptionalHeader {
                 self.raw[27],
             ])),
             PE64 => None,
-            ROM => todo!(),
-        }
-    }
-
-    fn image_base(&self) -> ImageBase {
-        match self.image_type() {
-            PE32 => ImageBase32(u32::from_le_bytes([
-                self.raw[28],
-                self.raw[29],
-                self.raw[30],
-                self.raw[31],
-            ])),
-            PE64 => ImageBase64(u64::from_le_bytes([
-                self.raw[28],
-                self.raw[29],
-                self.raw[30],
-                self.raw[31],
-                self.raw[32],
-                self.raw[33],
-                self.raw[34],
-                self.raw[35],
-            ])),
             ROM => todo!(),
         }
     }
@@ -381,8 +352,6 @@ pub struct SectionTable {
 }
 
 pub struct PEHeaders {
-    ms_dos_stub: Vec<u8>,
-    signature: [u8; 4],
     coff_file_header: COFFFileHeader,
     optional_header: Option<OptionalHeader>,
     section_table: SectionTable,
@@ -423,22 +392,22 @@ impl<R: Read> Reader<R> {
     }
 }
 
-impl<R: Read + Seek> Reader<R> {
+impl<R: BufRead + Seek> Reader<R> {
     pub fn decode(mut self) -> io::Result<PEHeaders> {
-        if self.pe_type().is_none() {
-            self.guess_type()?;
-        }
-        match self.pe_type() {
-            Some(PEType::Image) => {
-                todo!()
-            }
-            Some(PEType::Object) => {
-                todo!()
-            }
-            None => {
-                unimplemented!()
-            }
-        }
+        let mut mz = [0u8; 2];
+        self.inner.read(&mut mz)?;
+        let petype = if mz == [b'M', b'Z'] {
+            PEType::Image
+        } else if MachineType::try_from(mz).is_ok() {
+            PEType::Object
+        } else {
+            return Err(io::Error::from(ErrorKind::InvalidData));
+        };
+        match petype {
+            PEType::Image => self.inner.seek(SeekFrom::Start(0x3C)),
+            PEType::Object => self.inner.seek(SeekFrom::Start(0)),
+        };
+        todo!()
     }
 
     fn guess_type(&mut self) -> io::Result<()> {
@@ -456,25 +425,4 @@ impl<R: Read + Seek> Reader<R> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_coff_parsing() {
-        let test_coff: [u8; 20] = [
-            0x4C, 0x01, 0x03, 0x00, 0xDC, 0x52, 0xDB, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0xE0, 0x00, 0x22, 0x00,
-        ];
-
-        let parsed = COFFFileHeader {
-            machine: MachineType::I386,
-            number_of_sections: 0x03,
-            time_date_stamp: Utc.timestamp(4275786460, 0),
-            pointer_to_symbol_table: None,
-            number_of_symbols: 0,
-            size_of_optional_header: 0xE0,
-            characteristics: 0x22,
-        };
-        assert_eq!(parsed, COFFFileHeader::try_from(test_coff).unwrap())
-    }
-}
+mod tests {}
