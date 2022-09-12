@@ -6,8 +6,6 @@ use std::io::{self, Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::exit;
 
-mod portable_executable;
-
 fn main() -> io::Result<()> {
     let mut cmdline_args = args();
     let path = match cmdline_args.nth(1) {
