@@ -5,6 +5,7 @@ use std::io::{self, Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::exit;
 
+#[allow(unused)]
 mod machine_types {
     const IMAGE_FILE_MACHINE_UNKNOWN: u16 = 0x0000; //The content of this field is assumed to be applicable to any machine type
     const IMAGE_FILE_MACHINE_AM33: u16 = 0x01D3; // Matsushita AM33
@@ -35,6 +36,7 @@ mod machine_types {
     const IMAGE_FILE_MACHINE_WCEMIPSV2: u16 = 0x0169; // MIPS little-endian WCE v2
 }
 
+#[allow(unused)]
 mod characteristics {
     const IMAGE_FILE_RELOCS_STRIPPED: u16 = 0x0001; // Image only, Windows CE, and Microsoft Windows NT and later. This indicates that the file does not contain base relocations and must therefore be loaded at its preferred base address. If the base address is not available, the loader reports an error. The default behavior of the linker is to strip base relocations from executable (EXE) files.
     const IMAGE_FILE_EXECUTABLE_IMAGE: u16 = 0x0002; // Image only. This indicates that the image file is valid and can be run. If this flag is not set, it indicates a linker error.
