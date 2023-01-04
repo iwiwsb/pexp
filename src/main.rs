@@ -5,6 +5,55 @@ use std::io::{self, Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::exit;
 
+mod machine_types {
+    const IMAGE_FILE_MACHINE_UNKNOWN: u16 = 0x0000; //The content of this field is assumed to be applicable to any machine type
+    const IMAGE_FILE_MACHINE_AM33: u16 = 0x01D3; // Matsushita AM33
+    const IMAGE_FILE_MACHINE_AMD64: u16 = 0x8664; // x64
+    const IMAGE_FILE_MACHINE_ARM: u16 = 0x01C0; // ARM little endian
+    const IMAGE_FILE_MACHINE_ARM64: u16 = 0xAA64; // ARM64 little endian
+    const IMAGE_FILE_MACHINE_ARMNT: u16 = 0x01C4; //ARM Thumb-2 little endian
+    const IMAGE_FILE_MACHINE_EBC: u16 = 0x0EBC; // EFI byte code
+    const IMAGE_FILE_MACHINE_I386: u16 = 0x014C; // Intel 386 or later processors and compatible processors
+    const IMAGE_FILE_MACHINE_IA64: u16 = 0x0200; // Intel Itanium processor family
+    const IMAGE_FILE_MACHINE_LOONGARCH32: u16 = 0x6232; // LoongArch 32-bit processor family
+    const IMAGE_FILE_MACHINE_LOONGARCH64: u16 = 0x6264; // LoongArch 64-bit processor family
+    const IMAGE_FILE_MACHINE_M32R: u16 = 0x9041; // Mitsubishi M32R little endian
+    const IMAGE_FILE_MACHINE_MIPS16: u16 = 0x266; // MIPS16
+    const IMAGE_FILE_MACHINE_MIPSFPU: u16 = 0x0366; // MIPS with FPU
+    const IMAGE_FILE_MACHINE_MIPSFPU16: u16 = 0x0466; // MIPS16 with FPU
+    const IMAGE_FILE_MACHINE_POWERPC: u16 = 0x01F0; // Power PC little endian
+    const IMAGE_FILE_MACHINE_POWERPCFP: u16 = 0x01F1; // Power PC with floating point support
+    const IMAGE_FILE_MACHINE_R4000: u16 = 0x0166; // MIPS little endian
+    const IMAGE_FILE_MACHINE_RISCV32: u16 = 0x5032; //RISC-V 32-bit address space
+    const IMAGE_FILE_MACHINE_RISCV64: u16 = 0x5064; // RISC-V 64-bit address space
+    const IMAGE_FILE_MACHINE_RISCV128: u16 = 0x5128; // RISC-V 128-bit address space
+    const IMAGE_FILE_MACHINE_SH3: u16 = 0x01A2; // Hitachi SH3
+    const IMAGE_FILE_MACHINE_SH3DSP: u16 = 0x01A3; // Hitachi SH3 DSP
+    const IMAGE_FILE_MACHINE_SH4: u16 = 0x01A6; // Hitachi SH4
+    const IMAGE_FILE_MACHINE_SH5: u16 = 0x01A8; // Hitachi SH5
+    const IMAGE_FILE_MACHINE_THUMB: u16 = 0x01C2; // Thumb
+    const IMAGE_FILE_MACHINE_WCEMIPSV2: u16 = 0x0169; // MIPS little-endian WCE v2
+}
+
+mod characteristics {
+    const IMAGE_FILE_RELOCS_STRIPPED: u16 = 0x0001; // Image only, Windows CE, and Microsoft Windows NT and later. This indicates that the file does not contain base relocations and must therefore be loaded at its preferred base address. If the base address is not available, the loader reports an error. The default behavior of the linker is to strip base relocations from executable (EXE) files.
+    const IMAGE_FILE_EXECUTABLE_IMAGE: u16 = 0x0002; // Image only. This indicates that the image file is valid and can be run. If this flag is not set, it indicates a linker error.
+    const IMAGE_FILE_LINE_NUMS_STRIPPED: u16 = 0x0004; // COFF line numbers have been removed. This flag is deprecated and should be zero.
+    const IMAGE_FILE_LOCAL_SYMS_STRIPPED: u16 = 0x0008; // COFF symbol table entries for local symbols have been removed. This flag is deprecated and should be zero.
+    const IMAGE_FILE_AGGRESSIVE_WS_TRIM: u16 = 0x0010; // Obsolete. Aggressively trim working set. This flag is deprecated for Windows 2000 and later and must be zero.
+    const IMAGE_FILE_LARGE_ADDRESS_AWARE: u16 = 0x0020; // Application can handle > 2-GB addresses.
+    const IMAGE_FILE_RESERVED0: u16 = 0x0040; // This flag is reserved for future use.
+    const IMAGE_FILE_BYTES_REVERSED_LO: u16 = 0x0080; // Little endian: the least significant bit (LSB) precedes the most significant bit (MSB) in memory. This flag is deprecated and should be zero.
+    const IMAGE_FILE_32BIT_MACHINE: u16 = 0x0100; // Machine is based on a 32-bit-word architecture.
+    const IMAGE_FILE_DEBUG_STRIPPED: u16 = 0x0200; // Debugging information is removed from the image file.
+    const IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP: u16 = 0x0400; // If the image is on removable media, fully load it and copy it to the swap file.
+    const IMAGE_FILE_NET_RUN_FROM_SWAP: u16 = 0x0800; // If the image is on network media, fully load it and copy it to the swap file.
+    const IMAGE_FILE_SYSTEM: u16 = 0x1000; // The image file is a system file, not a user program.
+    const IMAGE_FILE_DLL: u16 = 0x2000; // The image file is a dynamic-link library (DLL). Such files are considered executable files for almost all purposes, although they cannot be directly run.
+    const IMAGE_FILE_UP_SYSTEM_ONLY: u16 = 0x4000; // The file should be run only on a uniprocessor machine.
+    const IMAGE_FILE_BYTES_REVERSED_HI: u16 = 0x8000; // Big endian: the MSB precedes the LSB in memory. This flag is deprecated and should be zero.
+}
+
 struct FileHeader {
     raw: Box<[u8]>,
 }
