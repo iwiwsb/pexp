@@ -56,6 +56,10 @@ mod characteristics {
     const IMAGE_FILE_BYTES_REVERSED_HI: u16 = 0x8000; // Big endian: the MSB precedes the LSB in memory. This flag is deprecated and should be zero.
 }
 
+const IMAGE_NT_OPTIONAL_HDR32_MAGIC: u16 = 0x010B; // The file is an executable image of 32-bit application
+const IMAGE_NT_OPTIONAL_HDR64_MAGIC: u16 = 0x020B; // The file is an executable image of 64-bit application
+const IMAGE_ROM_OPTIONAL_HDR_MAGIC: u16 = 0x0107; // The file is a ROM image.
+
 struct FileHeader {
     raw: Box<[u8]>,
 }
@@ -125,6 +129,88 @@ impl Display for FileHeader {
             self.characteristics()
         ))
     }
+}
+
+struct OptionalHeader {
+    raw: Box<[u8]>,
+}
+
+impl OptionalHeader {
+    fn magic(&self) -> u16 {
+        u16::from_le_bytes([self.raw[0], self.raw[1]])
+    }
+
+    fn major_linker_version(&self) -> u8 {
+        self.raw[2]
+    }
+
+    fn minor_linker_version(&self) -> u8 {
+        self.raw[3]
+    }
+
+    fn size_of_code(&self) -> u32 {
+        u32::from_le_bytes([self.raw[4], self.raw[5], self.raw[6], self.raw[7]])
+    }
+
+    fn size_of_initialized_data(&self) -> u32 {
+        u32::from_le_bytes([self.raw[8], self.raw[9], self.raw[10], self.raw[11]])
+    }
+
+    fn size_of_uninitialized_data(&self) -> u32 {
+        u32::from_le_bytes([self.raw[12], self.raw[13], self.raw[14], self.raw[15]])
+    }
+
+    fn address_of_entry_point(&self) -> u32 {
+        u32::from_le_bytes([self.raw[16], self.raw[17], self.raw[18], self.raw[19]])
+    }
+
+    fn base_of_code(&self) -> u32 {
+        u32::from_le_bytes([self.raw[20], self.raw[21], self.raw[22], self.raw[23]])
+    }
+
+    fn base_of_data(&self) -> Option<u32> {
+        if self.magic() == IMAGE_NT_OPTIONAL_HDR32_MAGIC {
+            Some(u32::from_le_bytes([
+                self.raw[24],
+                self.raw[25],
+                self.raw[26],
+                self.raw[27],
+            ]))
+        } else {
+            None
+        }
+    }
+
+    fn image_base(&self) -> Either32or64 {
+        match self.magic() {
+            IMAGE_NT_OPTIONAL_HDR32_MAGIC => {
+                return Either32or64::Bit32(u32::from_le_bytes([
+                    self.raw[28],
+                    self.raw[29],
+                    self.raw[30],
+                    self.raw[31],
+                ]))
+            }
+            IMAGE_NT_OPTIONAL_HDR64_MAGIC => {
+                return Either32or64::Bit64(u64::from_le_bytes([
+                    self.raw[24],
+                    self.raw[25],
+                    self.raw[26],
+                    self.raw[27],
+                    self.raw[28],
+                    self.raw[29],
+                    self.raw[30],
+                    self.raw[31],
+                ]))
+            },
+            _ => panic!()
+        }
+    }
+}
+
+enum Either32or64 {
+    Bit32(u32),
+    Bit64(u64),
 }
 
 fn main() -> io::Result<()> {
