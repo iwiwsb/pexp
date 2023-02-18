@@ -167,10 +167,18 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-#[derive(Debug)]
-pub struct PortExeParser<R> {
-    inner: R,
-    pe_type: PortExeType,
+pub struct ObjectParser<R> {
+    reader: R
+}
+
+impl<R: Read + Seek> PortExeParse for ObjectParser<R> {
+    fn file_header(&mut self) -> FileHeader {
+        read_file_header(&mut self.reader, 0).unwrap()
+    }
+}
+
+pub struct ImageParser<R> {
+    reader: R,
     file_header_offset: u64,
 }
 
