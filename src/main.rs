@@ -274,6 +274,37 @@ pub struct FileHeader {
     characteristics: [u8; 2],
 }
 
+impl FileHeader {
+    fn machine(&self) -> Machine {
+        Machine::from(self.machine)
+    }
+
+    fn number_of_sections(&self) -> u16 {
+        u16::from_le_bytes(self.number_of_sections)
+    }
+
+    fn time_date_stamp(&self) -> DateTime<Utc> {
+        Utc.timestamp_opt(u32::from_le_bytes(self.time_date_stamp) as i64, 0)
+            .unwrap()
+    }
+
+    fn pointer_to_symbol_table(&self) -> u32 {
+        u32::from_le_bytes(self.pointer_to_symbol_table)
+    }
+
+    fn number_of_symbols(&self) -> u32 {
+        u32::from_le_bytes(self.number_of_symbols)
+    }
+
+    fn size_of_optional_header(&self) -> u16 {
+        u16::from_le_bytes(self.size_of_optional_header)
+    }
+
+    fn characteristics(&self) -> u16 {
+        u16::from_le_bytes(self.characteristics)
+    }
+}
+
 impl Display for FileHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
