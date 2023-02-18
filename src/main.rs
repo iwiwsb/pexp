@@ -160,10 +160,13 @@ fn main() -> io::Result<()> {
             exit(0);
         }
     };
-    let pe_file = File::open(&path)?;
-    let mut parser = PortExeParser::new(pe_file);
-    let file_header = parser.file_header();
-    println!("{file_header:X?}");
+    let mut pe_file = File::open(&path)?;
+    let pe_type = detect_pe_type(&mut pe_file).unwrap();
+    let file_header = match pe_type {
+        PortExeType::Image => ImageParser::new(&mut pe_file).file_header(),
+        PortExeType::Object => ObjectParser::new(&mut pe_file).file_header(),
+    };
+    println!("{file_header}");
     Ok(())
 }
 
