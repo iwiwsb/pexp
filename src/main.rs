@@ -191,7 +191,7 @@ impl<R: Read + Seek> PortExeParser<R> {
                     .seek(SeekFrom::Start(0x3C))
                     .expect("Should be seekable");
                 inner.read_exact(&mut bytes).expect("Should be readable");
-                u32::from_le_bytes(bytes) as u64
+                (u32::from_le_bytes(bytes) as u64) + 4
             }
             PortExeType::PortExeObject => 0,
         };
@@ -213,8 +213,7 @@ impl<R: Read + Seek> PortExeParse for PortExeParser<R> {
         let mut size_of_optional_header = [0u8; 2];
         let mut characteristics = [0u8; 2];
 
-        self.inner
-            .seek(SeekFrom::Start(self.file_header_offset + 4));
+        self.inner.seek(SeekFrom::Start(self.file_header_offset));
         self.inner.read_exact(&mut machine);
         self.inner.read_exact(&mut number_of_sections);
         self.inner.read_exact(&mut time_date_stamp);
