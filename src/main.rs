@@ -307,7 +307,34 @@ impl FileHeader {
 
 impl Display for FileHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        f.write_fmt(format_args!("Machine: {0}\n", self.machine()))
+            .unwrap();
+        f.write_fmt(format_args!(
+            "Number of sections: {0}\n",
+            self.number_of_sections()
+        ))
+        .unwrap();
+        f.write_fmt(format_args!("Timestamp: {0}\n", self.time_date_stamp()))
+            .unwrap();
+        f.write_fmt(format_args!(
+            "Pointer to symbol table: {0:X}\n",
+            self.pointer_to_symbol_table()
+        ))
+        .unwrap();
+        f.write_fmt(format_args!(
+            "Number of symbols: {0}\n",
+            self.number_of_symbols()
+        ))
+        .unwrap();
+        f.write_fmt(format_args!(
+            "Size of optional header: {0}\n",
+            self.size_of_optional_header()
+        ))
+        .unwrap();
+        f.write_fmt(format_args!(
+            "Characteristics: {0:X}\n",
+            self.characteristics()
+        ))
     }
 }
 
