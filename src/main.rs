@@ -267,8 +267,8 @@ trait PortExeParse {
 }
 
 trait PortExeImageParse: PortExeParse {
-    fn optional_header(&self);
-    fn data_directories(&self);
+    fn optional_header(&self) -> OptionalHeader;
+    fn data_directories(&self) -> DataDirectories;
 }
 
 trait PortExeObjectParse: PortExeParse {}
