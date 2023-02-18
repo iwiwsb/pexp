@@ -174,38 +174,35 @@ pub struct PortExeParser<R> {
     file_header_offset: u64,
 }
 
-impl<R: Read + Seek> PortExeParser<R> {
-    fn new(mut inner: R) -> Self {
-        let mut mz = [0u8; 2];
-        inner.seek(SeekFrom::Start(0)).expect("Should be seekable");
-        inner.read_exact(&mut mz).expect("Should be readable");
-        let pe_type = if mz == [b'M', b'Z'] {
-            PortExeType::PortExeImage
-        } else {
-            PortExeType::PortExeObject
-        };
-        let file_header_offset = match pe_type {
-            PortExeType::PortExeImage => {
-                let mut bytes = [0u8; 4];
-                inner
-                    .seek(SeekFrom::Start(0x3C))
-                    .expect("Should be seekable");
-                inner.read_exact(&mut bytes).expect("Should be readable");
-                (u32::from_le_bytes(bytes) as u64) + 4
-            }
-            PortExeType::PortExeObject => 0,
-        };
-        Self {
-            inner,
-            pe_type,
-            file_header_offset,
-        }
+impl<R: Read + Seek> PortExeParse for ImageParser<R> {
+    fn file_header(&mut self) -> FileHeader {
+        read_file_header(&mut self.reader, self.file_header_offset).unwrap()
     }
 }
 
-impl<R: Read + Seek> PortExeParse for PortExeParser<R> {
-    fn file_header(&mut self) -> FileHeader {
-        read_file_header(&mut self.inner, self.file_header_offset).unwrap()
+fn detect_pe_type<R: Read + Seek>(reader: &mut R) -> io::Result<PortExeType> {
+    let mut mz = [0u8; 2];
+    reader.rewind()?;
+    reader.read_exact(&mut mz)?;
+    if mz == [b'M', b'Z'] {
+        Ok(PortExeType::Image)
+    } else {
+        Ok(PortExeType::Object)
+    }
+}
+
+fn get_file_header_offset<R: Read + Seek>(
+    reader: &mut R,
+    pe_type: &PortExeType,
+) -> io::Result<u64> {
+    match pe_type {
+        PortExeType::Image => {
+            let mut bytes = [0u8; 4];
+            reader.seek(SeekFrom::Start(0x3C))?;
+            reader.read_exact(&mut bytes)?;
+            Ok((u32::from_le_bytes(bytes) as u64) + 4)
+        }
+        PortExeType::Object => Ok(0),
     }
 }
 
@@ -254,8 +251,8 @@ trait PortExeObjectParse: PortExeParse {}
 
 #[derive(Debug)]
 pub enum PortExeType {
-    PortExeObject,
-    PortExeImage,
+    Object,
+    Image,
 }
 
 #[derive(Debug)]
