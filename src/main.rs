@@ -314,7 +314,7 @@ impl OptionalHeader {
             IMAGE_NT_OPTIONAL_HDR32_MAGIC => PortExeImageType::PortExeImage32,
             IMAGE_NT_OPTIONAL_HDR64_MAGIC => PortExeImageType::PortExeImage64,
             IMAGE_ROM_OPTIONAL_HDR_MAGIC => PortExeImageType::PortExeImageRom,
-            _ => panic!()
+            _ => panic!(),
         }
     }
 
