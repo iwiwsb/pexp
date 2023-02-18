@@ -11,7 +11,7 @@ pub mod machine_types {
     pub const IMAGE_FILE_MACHINE_AMD64: [u8; 2] = [0x64, 0x86]; // x64
     pub const IMAGE_FILE_MACHINE_ARM: [u8; 2] = [0xC0, 0x01]; // ARM little endian
     pub const IMAGE_FILE_MACHINE_ARM64: [u8; 2] = [0x64, 0xAA]; // ARM64 little endian
-    pub const IMAGE_FILE_MACHINE_ARMNT: [u8; 2] = [0xC4, 0x01]; //ARM Thumb-2 little endian
+    pub const IMAGE_FILE_MACHINE_ARMNT: [u8; 2] = [0xC4, 0x01]; // ARM Thumb-2 little endian
     pub const IMAGE_FILE_MACHINE_EBC: [u8; 2] = [0xBC, 0x0E]; // EFI byte code
     pub const IMAGE_FILE_MACHINE_I386: [u8; 2] = [0x4C, 0x01]; // Intel 386 or later processors and compatible processors
     pub const IMAGE_FILE_MACHINE_IA64: [u8; 2] = [0x00, 0x02]; // Intel Itanium processor family
@@ -24,7 +24,7 @@ pub mod machine_types {
     pub const IMAGE_FILE_MACHINE_POWERPC: [u8; 2] = [0xF0, 0x01]; // Power PC little endian
     pub const IMAGE_FILE_MACHINE_POWERPCFP: [u8; 2] = [0xF1, 0x01]; // Power PC with floating point support
     pub const IMAGE_FILE_MACHINE_R4000: [u8; 2] = [0x66, 0x01]; // MIPS little endian
-    pub const IMAGE_FILE_MACHINE_RISCV32: [u8; 2] = [0x32, 0x50]; //RISC-V 32-bit address space
+    pub const IMAGE_FILE_MACHINE_RISCV32: [u8; 2] = [0x32, 0x50]; // RISC-V 32-bit address space
     pub const IMAGE_FILE_MACHINE_RISCV64: [u8; 2] = [0x64, 0x50]; // RISC-V 64-bit address space
     pub const IMAGE_FILE_MACHINE_RISCV128: [u8; 2] = [0x28, 0x51]; // RISC-V 128-bit address space
     pub const IMAGE_FILE_MACHINE_SH3: [u8; 2] = [0xA2, 0x01]; // Hitachi SH3
