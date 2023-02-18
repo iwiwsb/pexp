@@ -210,37 +210,60 @@ impl Display for FileHeader {
     }
 }
 
-pub struct OptHeader32 {
-    magic: u16,
-    major_linker_version: u8,
-    minor_linker_version: u8,
-    size_of_code: u32,
-    size_of_initialized_data: u32,
-    size_of_uninitialized_data: u32,
-    address_of_entry_point: u32,
-    base_of_code: u32,
-    base_of_data: u32,
-    image_base: u32,
-    section_alignment: u32,
-    file_alignment: u32,
-    major_operating_system_version: u16,
-    minor_operating_system_version: u16,
-    major_image_version: u16,
-    minor_image_version: u16,
-    major_subsystem_version: u16,
-    minor_subsystem_version: u16,
-    win32_version_value: u32,
-    size_of_image: u32,
-    size_of_headers: u32,
-    check_sum: u32,
-    subsystem: u16,
-    dll_characteristics: u16,
-    size_of_stack_reserve: u32,
-    size_of_stack_commit: u32,
-    size_of_heap_reserve: u32,
-    size_of_heap_commit: u32,
-    loader_flags: u32,
-    number_of_rva_and_sizes: u32,
+pub struct OptionalHeader {
+    magic: [u8; 2],
+    major_linker_version: [u8; 1],
+    minor_linker_version: [u8; 1],
+    size_of_code: [u8; 4],
+    size_of_initialized_data: [u8; 4],
+    size_of_uninitialized_data: [u8; 4],
+    address_of_entry_point: [u8; 4],
+    base_of_code: [u8; 4],
+    base_of_data: Option<[u8; 4]>,
+    image_base: [u8; 8],
+    section_alignment: [u8; 4],
+    file_alignment: [u8; 4],
+    major_operating_system_version: [u8; 2],
+    minor_operating_system_version: [u8; 2],
+    major_image_version: [u8; 2],
+    minor_image_version: [u8; 2],
+    major_subsystem_version: [u8; 2],
+    minor_subsystem_version: [u8; 2],
+    win32_version_value: [u8; 4],
+    size_of_image: [u8; 4],
+    size_of_headers: [u8; 4],
+    check_sum: [u8; 4],
+    subsystem: [u8; 2],
+    dll_characteristics: [u8; 2],
+    size_of_stack_reserve: [u8; 8],
+    size_of_stack_commit: [u8; 8],
+    size_of_heap_reserve: [u8; 8],
+    size_of_heap_commit: [u8; 8],
+    loader_flags: [u8; 4],
+    number_of_rva_and_sizes: [u8; 4],
+}
+
+impl OptionalHeader {
+    fn image_type(&self) -> PortExeImageType {
+        match self.magic {
+            IMAGE_NT_OPTIONAL_HDR32_MAGIC => PortExeImageType::PortExeImage32,
+            IMAGE_NT_OPTIONAL_HDR64_MAGIC => PortExeImageType::PortExeImage64,
+            IMAGE_ROM_OPTIONAL_HDR_MAGIC => PortExeImageType::PortExeImageRom,
+            _ => panic!()
+        }
+    }
+
+    fn linker_version(&self) -> String {
+        todo!()
+    }
+
+    fn os_version(&self) -> String {
+        todo!()
+    }
+
+    fn image_version(&self) -> String {
+        todo!()
+    }
 }
 
 pub struct DataDir {
