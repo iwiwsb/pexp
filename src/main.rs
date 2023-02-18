@@ -205,31 +205,39 @@ impl<R: Read + Seek> PortExeParser<R> {
 
 impl<R: Read + Seek> PortExeParse for PortExeParser<R> {
     fn file_header(&mut self) -> FileHeader {
-        let mut machine = [0u8; 2];
-        let mut number_of_sections = [0u8; 2];
-        let mut time_date_stamp = [0u8; 4];
-        let mut pointer_to_symbol_table = [0u8; 4];
-        let mut number_of_symbols = [0u8; 4];
-        let mut size_of_optional_header = [0u8; 2];
-        let mut characteristics = [0u8; 2];
+        read_file_header(&mut self.inner, self.file_header_offset).unwrap()
+    }
+}
 
-        self.inner.seek(SeekFrom::Start(self.file_header_offset));
-        self.inner.read_exact(&mut machine);
-        self.inner.read_exact(&mut number_of_sections);
-        self.inner.read_exact(&mut time_date_stamp);
-        self.inner.read_exact(&mut pointer_to_symbol_table);
-        self.inner.read_exact(&mut number_of_symbols);
-        self.inner.read_exact(&mut size_of_optional_header);
-        self.inner.read_exact(&mut characteristics);
+fn read_file_header<R: Read + Seek>(
+    reader: &mut R,
+    file_header_offset: u64,
+) -> io::Result<FileHeader> {
+    let mut machine = [0u8; 2];
+    let mut number_of_sections = [0u8; 2];
+    let mut time_date_stamp = [0u8; 4];
+    let mut pointer_to_symbol_table = [0u8; 4];
+    let mut number_of_symbols = [0u8; 4];
+    let mut size_of_optional_header = [0u8; 2];
+    let mut characteristics = [0u8; 2];
 
-        FileHeader {
-            machine,
-            number_of_sections,
-            time_date_stamp,
-            pointer_to_symbol_table,
-            number_of_symbols,
-            size_of_optional_header,
-            characteristics,
+    reader.seek(SeekFrom::Start(file_header_offset))?;
+    reader.read_exact(&mut machine)?;
+    reader.read_exact(&mut number_of_sections)?;
+    reader.read_exact(&mut time_date_stamp)?;
+    reader.read_exact(&mut pointer_to_symbol_table)?;
+    reader.read_exact(&mut number_of_symbols)?;
+    reader.read_exact(&mut size_of_optional_header)?;
+    reader.read_exact(&mut characteristics)?;
+
+    Ok(FileHeader {
+        machine,
+        number_of_sections,
+        time_date_stamp,
+        pointer_to_symbol_table,
+        number_of_symbols,
+        size_of_optional_header,
+        characteristics,
         }
     }
 }
