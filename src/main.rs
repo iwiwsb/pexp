@@ -145,6 +145,12 @@ pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: [u8; 2] = [0x0B, 0x01]; // The file is 
 pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: [u8; 2] = [0x0B, 0x02]; // The file is an executable image of 64-bit application
 pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: [u8; 2] = [0x07, 0x01]; // The file is a ROM image.
 
+enum PortExeImageType {
+    PortExeImage32,
+    PortExeImage64,
+    PortExeImageRom,
+}
+
 fn main() -> io::Result<()> {
     let mut cmdline_args = args();
     let path = match cmdline_args.nth(1) {
