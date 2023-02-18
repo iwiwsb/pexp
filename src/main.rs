@@ -168,7 +168,13 @@ fn main() -> io::Result<()> {
 }
 
 pub struct ObjectParser<R> {
-    reader: R
+    reader: R,
+}
+
+impl<R: Read + Seek> ObjectParser<R> {
+    fn new(reader: R) -> Self {
+        Self { reader }
+    }
 }
 
 impl<R: Read + Seek> PortExeParse for ObjectParser<R> {
