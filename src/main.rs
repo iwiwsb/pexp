@@ -238,8 +238,7 @@ fn read_file_header<R: Read + Seek>(
         number_of_symbols,
         size_of_optional_header,
         characteristics,
-        }
-    }
+    })
 }
 
 trait PortExeParse {
