@@ -415,6 +415,16 @@ pub struct DataDir {
     size: [u8; 4],
 }
 
+pub struct DataDirectories {}
+
+impl Iterator for DataDirectories {
+    type Item = DataDir;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        todo!()
+    }
+}
+
 pub struct Section {
     name: [u8; 8],
     virtual_size: [u8; 4],
