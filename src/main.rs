@@ -188,6 +188,16 @@ pub struct ImageParser<R> {
     file_header_offset: u64,
 }
 
+impl<R: Read + Seek> ImageParser<R> {
+    fn new(mut reader: R) -> Self {
+        let file_header_offset = get_file_header_offset(&mut reader, &PortExeType::Image).unwrap();
+        Self {
+            reader,
+            file_header_offset,
+        }
+    }
+}
+
 impl<R: Read + Seek> PortExeParse for ImageParser<R> {
     fn file_header(&mut self) -> FileHeader {
         read_file_header(&mut self.reader, self.file_header_offset).unwrap()
