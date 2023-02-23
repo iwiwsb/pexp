@@ -145,6 +145,8 @@ pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: [u8; 2] = [0x0B, 0x01]; // The file is 
 pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: [u8; 2] = [0x0B, 0x02]; // The file is an executable image of 64-bit application
 pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: [u8; 2] = [0x07, 0x01]; // The file is a ROM image.
 
+const FILE_HEADER_SIZE: u64 = 20;
+
 enum PortExeImageType {
     PortExeImage32,
     PortExeImage64,
@@ -262,6 +264,115 @@ fn read_file_header<R: Read + Seek>(
         number_of_symbols,
         size_of_optional_header,
         characteristics,
+    })
+}
+
+fn read_optional_header<R: Read + Seek>(
+    reader: &mut R,
+    file_header_offset: u64,
+    image_type: PortExeImageType,
+) -> io::Result<OptionalHeader> {
+    let mut magic = [0u8; 2];
+    let mut major_linker_version = [0u8; 1];
+    let mut minor_linker_version = [0u8; 1];
+    let mut size_of_code = [0u8; 4];
+    let mut size_of_initialized_data = [0u8; 4];
+    let mut size_of_uninitialized_data = [0u8; 4];
+    let mut address_of_entry_point = [0u8; 4];
+    let mut base_of_code = [0u8; 4];
+    let mut base_of_data: Option<[u8; 4]> = Some([0u8; 4]);
+    let mut image_base = [0u8; 8];
+    let mut section_alignment = [0u8; 4];
+    let mut file_alignment = [0u8; 4];
+    let mut major_operating_system_version = [0u8; 2];
+    let mut minor_operating_system_version = [0u8; 2];
+    let mut major_image_version = [0u8; 2];
+    let mut minor_image_version = [0u8; 2];
+    let mut major_subsystem_version = [0u8; 2];
+    let mut minor_subsystem_version = [0u8; 2];
+    let mut win32_version_value = [0u8; 4];
+    let mut size_of_image = [0u8; 4];
+    let mut size_of_headers = [0u8; 4];
+    let mut check_sum = [0u8; 4];
+    let mut subsystem = [0u8; 2];
+    let mut dll_characteristics = [0u8; 2];
+    let mut size_of_stack_reserve = [0u8; 8];
+    let mut size_of_stack_commit = [0u8; 8];
+    let mut size_of_heap_reserve = [0u8; 8];
+    let mut size_of_heap_commit = [0u8; 8];
+    let mut loader_flags = [0u8; 4];
+    let mut number_of_rva_and_sizes = [0u8; 4];
+
+    reader.seek(SeekFrom::Start(file_header_offset + FILE_HEADER_SIZE))?;
+    reader.read_exact(&mut magic)?;
+    reader.read_exact(&mut major_linker_version)?;
+    reader.read_exact(&mut minor_linker_version)?;
+    reader.read_exact(&mut size_of_code)?;
+    reader.read_exact(&mut size_of_initialized_data)?;
+    reader.read_exact(&mut size_of_uninitialized_data)?;
+    reader.read_exact(&mut address_of_entry_point)?;
+    reader.read_exact(&mut base_of_code)?;
+    base_of_data = match image_type {
+        PortExeImageType::PortExeImage32 | PortExeImageType::PortExeImageRom => {
+            let mut buf = [0u8; 4];
+            reader.read_exact(&mut buf)?;
+            Some(buf)
+        }
+        PortExeImageType::PortExeImage64 => None,
+    };
+    reader.read_exact(&mut image_base)?;
+    reader.read_exact(&mut section_alignment)?;
+    reader.read_exact(&mut file_alignment)?;
+    reader.read_exact(&mut major_operating_system_version)?;
+    reader.read_exact(&mut minor_operating_system_version)?;
+    reader.read_exact(&mut major_image_version)?;
+    reader.read_exact(&mut minor_image_version)?;
+    reader.read_exact(&mut major_subsystem_version)?;
+    reader.read_exact(&mut minor_subsystem_version)?;
+    reader.read_exact(&mut win32_version_value)?;
+    reader.read_exact(&mut size_of_image)?;
+    reader.read_exact(&mut size_of_headers)?;
+    reader.read_exact(&mut check_sum)?;
+    reader.read_exact(&mut subsystem)?;
+    reader.read_exact(&mut dll_characteristics)?;
+    reader.read_exact(&mut size_of_stack_reserve)?;
+    reader.read_exact(&mut size_of_stack_commit)?;
+    reader.read_exact(&mut size_of_heap_reserve)?;
+    reader.read_exact(&mut size_of_heap_commit)?;
+    reader.read_exact(&mut loader_flags)?;
+    reader.read_exact(&mut number_of_rva_and_sizes)?;
+
+    Ok(OptionalHeader {
+        magic,
+        major_linker_version,
+        minor_linker_version,
+        size_of_code,
+        size_of_initialized_data,
+        size_of_uninitialized_data,
+        address_of_entry_point,
+        base_of_code,
+        base_of_data,
+        image_base,
+        section_alignment,
+        file_alignment,
+        major_operating_system_version,
+        minor_operating_system_version,
+        major_image_version,
+        minor_image_version,
+        major_subsystem_version,
+        minor_subsystem_version,
+        win32_version_value,
+        size_of_image,
+        size_of_headers,
+        check_sum,
+        subsystem,
+        dll_characteristics,
+        size_of_stack_reserve,
+        size_of_stack_commit,
+        size_of_heap_reserve,
+        size_of_heap_commit,
+        loader_flags,
+        number_of_rva_and_sizes,
     })
 }
 
