@@ -163,6 +163,8 @@ pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: [u8; 2] = [0x0B, 0x02]; // The file is 
 pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: [u8; 2] = [0x07, 0x01]; // The file is a ROM image.
 
 const FILE_HEADER_SIZE: u64 = 20;
+const OPTIONAL_HDR32_SIZE: u64 = 92;
+const OPTIONAL_HDR64_SIZE: u64 = 108;
 
 enum PortExeImageType {
     PortExeImage32,
@@ -399,7 +401,7 @@ trait PortExeParse {
 
 trait PortExeImageParse: PortExeParse {
     fn optional_header(&self) -> OptionalHeader;
-    fn data_directories(&self) -> DataDirectories;
+    fn data_directories<R: Read + Seek>(&self) -> DataDirectories<R>;
 }
 
 trait PortExeObjectParse: PortExeParse {}
@@ -546,14 +548,38 @@ pub struct DataDir {
     size: [u8; 4],
 }
 
-pub struct DataDirectories {}
+pub struct DataDirectories<'a, R> {
+    reader: &'a mut R,
+    data_dir_offset: u64,
+    data_dir_count: u64,
+}
 
-impl Iterator for DataDirectories {
+impl<'a, R: Read + Seek> Iterator for DataDirectories<'a, R> {
     type Item = DataDir;
 
     fn next(&mut self) -> Option<Self::Item> {
-        todo!()
+        if self.data_dir_count == 16 {
+            return None;
+        }
+        if let Ok(data_dir) = read_data_dir(self.reader, self.data_dir_offset) {
+            self.data_dir_count += 1;
+            Some(data_dir)
+        } else {
+            None
+        }
     }
+}
+
+fn read_data_dir<R: Read + Seek>(reader: &mut R, data_dir_offset: u64) -> io::Result<DataDir> {
+    let mut virtual_address: [u8; 4] = [0u8; 4];
+    let mut size: [u8; 4] = [0u8; 4];
+    reader.seek(SeekFrom::Start(data_dir_offset))?;
+    reader.read_exact(&mut virtual_address)?;
+    reader.read_exact(&mut size)?;
+    Ok(DataDir {
+        virtual_address,
+        size,
+    })
 }
 
 pub struct Section {
