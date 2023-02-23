@@ -28,19 +28,17 @@ pub const IMAGE_FILE_MACHINE_SH5: [u8; 2] = [0xA8, 0x01]; // Hitachi SH5
 pub const IMAGE_FILE_MACHINE_THUMB: [u8; 2] = [0xC2, 0x01]; // Thumb
 pub const IMAGE_FILE_MACHINE_WCEMIPSV2: [u8; 2] = [0x69, 0x01]; // MIPS little-endian WCE v2
 
-pub struct Machine {
-    raw: [u8; 2],
-}
+pub struct Machine([u8; 2]);
 
 impl From<[u8; 2]> for Machine {
     fn from(value: [u8; 2]) -> Self {
-        Self { raw: value }
+        Self(value)
     }
 }
 
 impl Display for Machine {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let data = match self.raw {
+        let data = match self.0 {
             IMAGE_FILE_MACHINE_UNKNOWN => "Any machine type",
             IMAGE_FILE_MACHINE_AM33 => "Matsushita AM33",
             IMAGE_FILE_MACHINE_AMD64 => "x64",
@@ -48,9 +46,7 @@ impl Display for Machine {
             IMAGE_FILE_MACHINE_ARM64 => "ARM64 little endian",
             IMAGE_FILE_MACHINE_ARMNT => "ARM Thumb-2 little endian",
             IMAGE_FILE_MACHINE_EBC => "EFI byte code",
-            IMAGE_FILE_MACHINE_I386 => {
-                "Intel 386 or later processors and compatible processors"
-            }
+            IMAGE_FILE_MACHINE_I386 => "Intel 386 or later processors and compatible processors",
             IMAGE_FILE_MACHINE_IA64 => "Intel Itanium processor family",
             IMAGE_FILE_MACHINE_LOONGARCH32 => "LoongArch 32-bit processor family",
             IMAGE_FILE_MACHINE_LOONGARCH64 => "LoongArch 64-bit processor family",
