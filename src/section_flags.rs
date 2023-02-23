@@ -29,3 +29,5 @@ pub const IMAGE_SCN_MEM_SHARED: [u8; 4] = [0x00, 0x00, 0x00, 0x10]; // The secti
 pub const IMAGE_SCN_MEM_EXECUTE: [u8; 4] = [0x00, 0x00, 0x00, 0x20]; // The section can be executed as code.
 pub const IMAGE_SCN_MEM_READ: [u8; 4] = [0x00, 0x00, 0x00, 0x40]; // The section can be read.
 pub const IMAGE_SCN_MEM_WRITE: [u8; 4] = [0x00, 0x00, 0x00, 0x80]; // The section can be written to.
+
+pub struct SectionFlags([u8; 4]);
