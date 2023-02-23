@@ -17,20 +17,6 @@ mod win_sybsystem;
 
 mod dll_characteristics;
 
-pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: [u8; 2] = [0x0B, 0x01]; // The file is an executable image of 32-bit application
-pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: [u8; 2] = [0x0B, 0x02]; // The file is an executable image of 64-bit application
-pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: [u8; 2] = [0x07, 0x01]; // The file is a ROM image.
-
-const FILE_HEADER_SIZE: u64 = 20;
-const OPTIONAL_HDR32_SIZE: u64 = 92;
-const OPTIONAL_HDR64_SIZE: u64 = 108;
-
-enum PortExeImageType {
-    PortExeImage32,
-    PortExeImage64,
-    PortExeImageRom,
-}
-
 fn main() -> io::Result<()> {
     let mut cmdline_args = args();
     let path = match cmdline_args.nth(1) {
@@ -48,6 +34,26 @@ fn main() -> io::Result<()> {
     };
     println!("{file_header}");
     Ok(())
+}
+
+pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: [u8; 2] = [0x0B, 0x01]; // The file is an executable image of 32-bit application
+pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: [u8; 2] = [0x0B, 0x02]; // The file is an executable image of 64-bit application
+pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: [u8; 2] = [0x07, 0x01]; // The file is a ROM image.
+
+const FILE_HEADER_SIZE: u64 = 20;
+const OPTIONAL_HDR32_SIZE: u64 = 92;
+const OPTIONAL_HDR64_SIZE: u64 = 108;
+
+enum PortExeImageType {
+    PortExeImage32,
+    PortExeImage64,
+    PortExeImageRom,
+}
+
+#[derive(Debug)]
+pub enum PortExeType {
+    Object,
+    Image,
 }
 
 pub struct ObjectParser<R> {
@@ -84,6 +90,184 @@ impl<R: Read + Seek> ImageParser<R> {
 impl<R: Read + Seek> PortExeParse for ImageParser<R> {
     fn file_header(&mut self) -> FileHeader {
         read_file_header(&mut self.reader, self.file_header_offset).unwrap()
+    }
+}
+
+#[derive(Debug)]
+pub struct FileHeader {
+    machine: [u8; 2],
+    number_of_sections: [u8; 2],
+    time_date_stamp: [u8; 4],
+    pointer_to_symbol_table: [u8; 4],
+    number_of_symbols: [u8; 4],
+    size_of_optional_header: [u8; 2],
+    characteristics: [u8; 2],
+}
+
+impl FileHeader {
+    fn machine(&self) -> Machine {
+        Machine::from(self.machine)
+    }
+
+    fn number_of_sections(&self) -> u16 {
+        u16::from_le_bytes(self.number_of_sections)
+    }
+
+    fn time_date_stamp(&self) -> DateTime<Utc> {
+        Utc.timestamp_opt(u32::from_le_bytes(self.time_date_stamp) as i64, 0)
+            .unwrap()
+    }
+
+    fn pointer_to_symbol_table(&self) -> u32 {
+        u32::from_le_bytes(self.pointer_to_symbol_table)
+    }
+
+    fn number_of_symbols(&self) -> u32 {
+        u32::from_le_bytes(self.number_of_symbols)
+    }
+
+    fn size_of_optional_header(&self) -> u16 {
+        u16::from_le_bytes(self.size_of_optional_header)
+    }
+
+    fn characteristics(&self) -> u16 {
+        u16::from_le_bytes(self.characteristics)
+    }
+}
+
+impl Display for FileHeader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("Machine: {0}\n", self.machine()))
+            .unwrap();
+        f.write_fmt(format_args!(
+            "Number of sections: {0}\n",
+            self.number_of_sections()
+        ))
+        .unwrap();
+        f.write_fmt(format_args!("Timestamp: {0}\n", self.time_date_stamp()))
+            .unwrap();
+        f.write_fmt(format_args!(
+            "Pointer to symbol table: {0:X}\n",
+            self.pointer_to_symbol_table()
+        ))
+        .unwrap();
+        f.write_fmt(format_args!(
+            "Number of symbols: {0}\n",
+            self.number_of_symbols()
+        ))
+        .unwrap();
+        f.write_fmt(format_args!(
+            "Size of optional header: {0}\n",
+            self.size_of_optional_header()
+        ))
+        .unwrap();
+        f.write_fmt(format_args!(
+            "Characteristics: {0:X}\n",
+            self.characteristics()
+        ))
+    }
+}
+
+pub struct OptionalHeader {
+    magic: [u8; 2],
+    major_linker_version: [u8; 1],
+    minor_linker_version: [u8; 1],
+    size_of_code: [u8; 4],
+    size_of_initialized_data: [u8; 4],
+    size_of_uninitialized_data: [u8; 4],
+    address_of_entry_point: [u8; 4],
+    base_of_code: [u8; 4],
+    base_of_data: Option<[u8; 4]>,
+    image_base: [u8; 8],
+    section_alignment: [u8; 4],
+    file_alignment: [u8; 4],
+    major_operating_system_version: [u8; 2],
+    minor_operating_system_version: [u8; 2],
+    major_image_version: [u8; 2],
+    minor_image_version: [u8; 2],
+    major_subsystem_version: [u8; 2],
+    minor_subsystem_version: [u8; 2],
+    win32_version_value: [u8; 4],
+    size_of_image: [u8; 4],
+    size_of_headers: [u8; 4],
+    check_sum: [u8; 4],
+    subsystem: [u8; 2],
+    dll_characteristics: [u8; 2],
+    size_of_stack_reserve: [u8; 8],
+    size_of_stack_commit: [u8; 8],
+    size_of_heap_reserve: [u8; 8],
+    size_of_heap_commit: [u8; 8],
+    loader_flags: [u8; 4],
+    number_of_rva_and_sizes: [u8; 4],
+}
+
+impl OptionalHeader {
+    fn image_type(&self) -> PortExeImageType {
+        match self.magic {
+            IMAGE_NT_OPTIONAL_HDR32_MAGIC => PortExeImageType::PortExeImage32,
+            IMAGE_NT_OPTIONAL_HDR64_MAGIC => PortExeImageType::PortExeImage64,
+            IMAGE_ROM_OPTIONAL_HDR_MAGIC => PortExeImageType::PortExeImageRom,
+            _ => panic!(),
+        }
+    }
+
+    fn linker_version(&self) -> String {
+        todo!()
+    }
+
+    fn os_version(&self) -> String {
+        todo!()
+    }
+
+    fn image_version(&self) -> String {
+        todo!()
+    }
+}
+
+pub struct DataDir {
+    virtual_address: [u8; 4],
+    size: [u8; 4],
+}
+
+pub struct DataDirectories<'a, R> {
+    reader: &'a mut R,
+    data_dir_offset: u64,
+    data_dir_count: u64,
+}
+
+impl<'a, R: Read + Seek> Iterator for DataDirectories<'a, R> {
+    type Item = DataDir;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.data_dir_count == 16 {
+            return None;
+        }
+        if let Ok(data_dir) = read_data_dir(self.reader, self.data_dir_offset) {
+            self.data_dir_count += 1;
+            Some(data_dir)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Section {
+    name: [u8; 8],
+    virtual_size: [u8; 4],
+    virtual_address: [u8; 4],
+    size_of_raw_data: [u8; 4],
+    pointer_to_raw_data: [u8; 4],
+    pointer_to_relocations: [u8; 4],
+    pointer_to_linenumbers: [u8; 4],
+    number_of_relocations: [u8; 2],
+    number_of_linenumbers: [u8; 2],
+    characteristics: [u8; 4],
+}
+
+impl Section {
+    fn name(&self) -> String {
+        self.name.iter().map(|&b| b as char).collect()
     }
 }
 
@@ -254,181 +438,6 @@ fn read_optional_header<R: Read + Seek>(
     })
 }
 
-trait PortExeParse {
-    fn file_header(&mut self) -> FileHeader;
-}
-
-trait PortExeImageParse: PortExeParse {
-    fn optional_header(&self) -> OptionalHeader;
-    fn data_directories<R: Read + Seek>(&self) -> DataDirectories<R>;
-}
-
-trait PortExeObjectParse: PortExeParse {}
-
-#[derive(Debug)]
-pub enum PortExeType {
-    Object,
-    Image,
-}
-
-#[derive(Debug)]
-pub struct FileHeader {
-    machine: [u8; 2],
-    number_of_sections: [u8; 2],
-    time_date_stamp: [u8; 4],
-    pointer_to_symbol_table: [u8; 4],
-    number_of_symbols: [u8; 4],
-    size_of_optional_header: [u8; 2],
-    characteristics: [u8; 2],
-}
-
-impl FileHeader {
-    fn machine(&self) -> Machine {
-        Machine::from(self.machine)
-    }
-
-    fn number_of_sections(&self) -> u16 {
-        u16::from_le_bytes(self.number_of_sections)
-    }
-
-    fn time_date_stamp(&self) -> DateTime<Utc> {
-        Utc.timestamp_opt(u32::from_le_bytes(self.time_date_stamp) as i64, 0)
-            .unwrap()
-    }
-
-    fn pointer_to_symbol_table(&self) -> u32 {
-        u32::from_le_bytes(self.pointer_to_symbol_table)
-    }
-
-    fn number_of_symbols(&self) -> u32 {
-        u32::from_le_bytes(self.number_of_symbols)
-    }
-
-    fn size_of_optional_header(&self) -> u16 {
-        u16::from_le_bytes(self.size_of_optional_header)
-    }
-
-    fn characteristics(&self) -> u16 {
-        u16::from_le_bytes(self.characteristics)
-    }
-}
-
-impl Display for FileHeader {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("Machine: {0}\n", self.machine()))
-            .unwrap();
-        f.write_fmt(format_args!(
-            "Number of sections: {0}\n",
-            self.number_of_sections()
-        ))
-        .unwrap();
-        f.write_fmt(format_args!("Timestamp: {0}\n", self.time_date_stamp()))
-            .unwrap();
-        f.write_fmt(format_args!(
-            "Pointer to symbol table: {0:X}\n",
-            self.pointer_to_symbol_table()
-        ))
-        .unwrap();
-        f.write_fmt(format_args!(
-            "Number of symbols: {0}\n",
-            self.number_of_symbols()
-        ))
-        .unwrap();
-        f.write_fmt(format_args!(
-            "Size of optional header: {0}\n",
-            self.size_of_optional_header()
-        ))
-        .unwrap();
-        f.write_fmt(format_args!(
-            "Characteristics: {0:X}\n",
-            self.characteristics()
-        ))
-    }
-}
-
-pub struct OptionalHeader {
-    magic: [u8; 2],
-    major_linker_version: [u8; 1],
-    minor_linker_version: [u8; 1],
-    size_of_code: [u8; 4],
-    size_of_initialized_data: [u8; 4],
-    size_of_uninitialized_data: [u8; 4],
-    address_of_entry_point: [u8; 4],
-    base_of_code: [u8; 4],
-    base_of_data: Option<[u8; 4]>,
-    image_base: [u8; 8],
-    section_alignment: [u8; 4],
-    file_alignment: [u8; 4],
-    major_operating_system_version: [u8; 2],
-    minor_operating_system_version: [u8; 2],
-    major_image_version: [u8; 2],
-    minor_image_version: [u8; 2],
-    major_subsystem_version: [u8; 2],
-    minor_subsystem_version: [u8; 2],
-    win32_version_value: [u8; 4],
-    size_of_image: [u8; 4],
-    size_of_headers: [u8; 4],
-    check_sum: [u8; 4],
-    subsystem: [u8; 2],
-    dll_characteristics: [u8; 2],
-    size_of_stack_reserve: [u8; 8],
-    size_of_stack_commit: [u8; 8],
-    size_of_heap_reserve: [u8; 8],
-    size_of_heap_commit: [u8; 8],
-    loader_flags: [u8; 4],
-    number_of_rva_and_sizes: [u8; 4],
-}
-
-impl OptionalHeader {
-    fn image_type(&self) -> PortExeImageType {
-        match self.magic {
-            IMAGE_NT_OPTIONAL_HDR32_MAGIC => PortExeImageType::PortExeImage32,
-            IMAGE_NT_OPTIONAL_HDR64_MAGIC => PortExeImageType::PortExeImage64,
-            IMAGE_ROM_OPTIONAL_HDR_MAGIC => PortExeImageType::PortExeImageRom,
-            _ => panic!(),
-        }
-    }
-
-    fn linker_version(&self) -> String {
-        todo!()
-    }
-
-    fn os_version(&self) -> String {
-        todo!()
-    }
-
-    fn image_version(&self) -> String {
-        todo!()
-    }
-}
-
-pub struct DataDir {
-    virtual_address: [u8; 4],
-    size: [u8; 4],
-}
-
-pub struct DataDirectories<'a, R> {
-    reader: &'a mut R,
-    data_dir_offset: u64,
-    data_dir_count: u64,
-}
-
-impl<'a, R: Read + Seek> Iterator for DataDirectories<'a, R> {
-    type Item = DataDir;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.data_dir_count == 16 {
-            return None;
-        }
-        if let Ok(data_dir) = read_data_dir(self.reader, self.data_dir_offset) {
-            self.data_dir_count += 1;
-            Some(data_dir)
-        } else {
-            None
-        }
-    }
-}
-
 fn read_data_dir<R: Read + Seek>(reader: &mut R, data_dir_offset: u64) -> io::Result<DataDir> {
     let mut virtual_address: [u8; 4] = [0u8; 4];
     let mut size: [u8; 4] = [0u8; 4];
@@ -441,23 +450,15 @@ fn read_data_dir<R: Read + Seek>(reader: &mut R, data_dir_offset: u64) -> io::Re
     })
 }
 
-pub struct Section {
-    name: [u8; 8],
-    virtual_size: [u8; 4],
-    virtual_address: [u8; 4],
-    size_of_raw_data: [u8; 4],
-    pointer_to_raw_data: [u8; 4],
-    pointer_to_relocations: [u8; 4],
-    pointer_to_linenumbers: [u8; 4],
-    number_of_relocations: [u8; 2],
-    number_of_linenumbers: [u8; 2],
-    characteristics: [u8; 4],
+trait PortExeParse {
+    fn file_header(&mut self) -> FileHeader;
 }
 
-impl Section {
-    fn name(&self) -> String {
-        self.name.iter().map(|&b| b as char).collect()
-    }
+trait PortExeImageParse: PortExeParse {
+    fn optional_header(&self) -> OptionalHeader;
+    fn data_directories<R: Read + Seek>(&self) -> DataDirectories<R>;
 }
+
+trait PortExeObjectParse: PortExeParse {}
 
 trait BitFlags {}
