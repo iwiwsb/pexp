@@ -12,3 +12,5 @@ pub const IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER: [u8; 2] = [0x0C, 0x00];
 pub const IMAGE_SUBSYSTEM_EFI_ROM: [u8; 2] = [0x0D, 0x00];
 pub const IMAGE_SUBSYSTEM_XBOX: [u8; 2] = [0x0E, 0x00];
 pub const IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION: [u8; 2] = [0x10, 0x00];
+
+pub struct WinSubsystem([u8; 2]);
