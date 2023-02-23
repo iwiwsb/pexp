@@ -1,3 +1,5 @@
+use chrono::{DateTime, TimeZone, Utc};
+use machine_types::Machine;
 use std::env::args;
 use std::fmt::Display;
 use std::fs::File;
@@ -5,172 +7,15 @@ use std::io::{self, Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::exit;
 
-use chrono::{DateTime, TimeZone, Utc};
-use machine_types::Machine;
+pub mod machine_types;
 
-pub mod machine_types {
-    use std::fmt::Display;
+pub mod characteristics;
 
-    pub const IMAGE_FILE_MACHINE_UNKNOWN: [u8; 2] = [0x00, 0x00]; //The content of this field is assumed to be applicable to any machine type
-    pub const IMAGE_FILE_MACHINE_AM33: [u8; 2] = [0xD3, 0x01]; // Matsushita AM33
-    pub const IMAGE_FILE_MACHINE_AMD64: [u8; 2] = [0x64, 0x86]; // x64
-    pub const IMAGE_FILE_MACHINE_ARM: [u8; 2] = [0xC0, 0x01]; // ARM little endian
-    pub const IMAGE_FILE_MACHINE_ARM64: [u8; 2] = [0x64, 0xAA]; // ARM64 little endian
-    pub const IMAGE_FILE_MACHINE_ARMNT: [u8; 2] = [0xC4, 0x01]; // ARM Thumb-2 little endian
-    pub const IMAGE_FILE_MACHINE_EBC: [u8; 2] = [0xBC, 0x0E]; // EFI byte code
-    pub const IMAGE_FILE_MACHINE_I386: [u8; 2] = [0x4C, 0x01]; // Intel 386 or later processors and compatible processors
-    pub const IMAGE_FILE_MACHINE_IA64: [u8; 2] = [0x00, 0x02]; // Intel Itanium processor family
-    pub const IMAGE_FILE_MACHINE_LOONGARCH32: [u8; 2] = [0x32, 0x62]; // LoongArch 32-bit processor family
-    pub const IMAGE_FILE_MACHINE_LOONGARCH64: [u8; 2] = [0x64, 0x62]; // LoongArch 64-bit processor family
-    pub const IMAGE_FILE_MACHINE_M32R: [u8; 2] = [0x41, 0x90]; // Mitsubishi M32R little endian
-    pub const IMAGE_FILE_MACHINE_MIPS16: [u8; 2] = [0x66, 0x02]; // MIPS16
-    pub const IMAGE_FILE_MACHINE_MIPSFPU: [u8; 2] = [0x66, 0x03]; // MIPS with FPU
-    pub const IMAGE_FILE_MACHINE_MIPSFPU16: [u8; 2] = [0x66, 0x04]; // MIPS16 with FPU
-    pub const IMAGE_FILE_MACHINE_POWERPC: [u8; 2] = [0xF0, 0x01]; // Power PC little endian
-    pub const IMAGE_FILE_MACHINE_POWERPCFP: [u8; 2] = [0xF1, 0x01]; // Power PC with floating point support
-    pub const IMAGE_FILE_MACHINE_R4000: [u8; 2] = [0x66, 0x01]; // MIPS little endian
-    pub const IMAGE_FILE_MACHINE_RISCV32: [u8; 2] = [0x32, 0x50]; // RISC-V 32-bit address space
-    pub const IMAGE_FILE_MACHINE_RISCV64: [u8; 2] = [0x64, 0x50]; // RISC-V 64-bit address space
-    pub const IMAGE_FILE_MACHINE_RISCV128: [u8; 2] = [0x28, 0x51]; // RISC-V 128-bit address space
-    pub const IMAGE_FILE_MACHINE_SH3: [u8; 2] = [0xA2, 0x01]; // Hitachi SH3
-    pub const IMAGE_FILE_MACHINE_SH3DSP: [u8; 2] = [0xA3, 0x01]; // Hitachi SH3 DSP
-    pub const IMAGE_FILE_MACHINE_SH4: [u8; 2] = [0xA6, 0x01]; // Hitachi SH4
-    pub const IMAGE_FILE_MACHINE_SH5: [u8; 2] = [0xA8, 0x01]; // Hitachi SH5
-    pub const IMAGE_FILE_MACHINE_THUMB: [u8; 2] = [0xC2, 0x01]; // Thumb
-    pub const IMAGE_FILE_MACHINE_WCEMIPSV2: [u8; 2] = [0x69, 0x01]; // MIPS little-endian WCE v2
+pub mod section_flags;
 
-    pub struct Machine {
-        raw: [u8; 2],
-    }
+mod win_sybsystem;
 
-    impl From<[u8; 2]> for Machine {
-        fn from(value: [u8; 2]) -> Self {
-            Self { raw: value }
-        }
-    }
-
-    impl Display for Machine {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            let data = match self.raw {
-                IMAGE_FILE_MACHINE_UNKNOWN => "Any machine type",
-                IMAGE_FILE_MACHINE_AM33 => "Matsushita AM33",
-                IMAGE_FILE_MACHINE_AMD64 => "x64",
-                IMAGE_FILE_MACHINE_ARM => "ARM little endian",
-                IMAGE_FILE_MACHINE_ARM64 => "ARM64 little endian",
-                IMAGE_FILE_MACHINE_ARMNT => "ARM Thumb-2 little endian",
-                IMAGE_FILE_MACHINE_EBC => "EFI byte code",
-                IMAGE_FILE_MACHINE_I386 => {
-                    "Intel 386 or later processors and compatible processors"
-                }
-                IMAGE_FILE_MACHINE_IA64 => "Intel Itanium processor family",
-                IMAGE_FILE_MACHINE_LOONGARCH32 => "LoongArch 32-bit processor family",
-                IMAGE_FILE_MACHINE_LOONGARCH64 => "LoongArch 64-bit processor family",
-                IMAGE_FILE_MACHINE_M32R => "Mitsubishi M32R little endian",
-                IMAGE_FILE_MACHINE_MIPS16 => "MIPS16",
-                IMAGE_FILE_MACHINE_MIPSFPU => "MIPS with FPU",
-                IMAGE_FILE_MACHINE_MIPSFPU16 => "MIPS16 with FPU",
-                IMAGE_FILE_MACHINE_POWERPC => "Power PC little endian",
-                IMAGE_FILE_MACHINE_POWERPCFP => "Power PC with floating point support",
-                IMAGE_FILE_MACHINE_R4000 => "MIPS little endian",
-                IMAGE_FILE_MACHINE_RISCV32 => "RISC-V 32-bit address space",
-                IMAGE_FILE_MACHINE_RISCV64 => "RISC-V 64-bit address space",
-                IMAGE_FILE_MACHINE_RISCV128 => "RISC-V 128-bit address space",
-                IMAGE_FILE_MACHINE_SH3 => "Hitachi SH3",
-                IMAGE_FILE_MACHINE_SH3DSP => "Hitachi SH3 DSP",
-                IMAGE_FILE_MACHINE_SH4 => "Hitachi SH4",
-                IMAGE_FILE_MACHINE_SH5 => "Hitachi SH5",
-                IMAGE_FILE_MACHINE_THUMB => "Thumb",
-                IMAGE_FILE_MACHINE_WCEMIPSV2 => "MIPS little-endian WCE v2",
-                _ => return Err(std::fmt::Error),
-            };
-            f.write_str(data)
-        }
-    }
-}
-
-pub mod characteristics {
-    pub const IMAGE_FILE_RELOCS_STRIPPED: [u8; 2] = [0x01, 0x00]; // Image only, Windows CE, and Microsoft Windows NT and later. This indicates that the file does not contain base relocations and must therefore be loaded at its preferred base address. If the base address is not available, the loader reports an error. The default behavior of the linker is to strip base relocations from executable (EXE) files.
-    pub const IMAGE_FILE_EXECUTABLE_IMAGE: [u8; 2] = [0x02, 0x00]; // Image only. This indicates that the image file is valid and can be run. If this flag is not set, it indicates a linker error.
-    pub const IMAGE_FILE_LINE_NUMS_STRIPPED: [u8; 2] = [0x04, 0x00]; // COFF line numbers have been removed. This flag is deprecated and should be zero.
-    pub const IMAGE_FILE_LOCAL_SYMS_STRIPPED: [u8; 2] = [0x08, 0x00]; // COFF symbol table entries for local symbols have been removed. This flag is deprecated and should be zero.
-    pub const IMAGE_FILE_AGGRESSIVE_WS_TRIM: [u8; 2] = [0x10, 0x00]; // Obsolete. Aggressively trim working set. This flag is deprecated for Windows 2000 and later and must be zero.
-    pub const IMAGE_FILE_LARGE_ADDRESS_AWARE: [u8; 2] = [0x20, 0x00]; // Application can handle > 2-GB addresses.
-    pub const IMAGE_FILE_RESERVED0: [u8; 2] = [0x40, 0x00]; // This flag is reserved for future use.
-    pub const IMAGE_FILE_BYTES_REVERSED_LO: [u8; 2] = [0x80, 0x00]; // Little endian: the least significant bit (LSB) precedes the most significant bit (MSB) in memory. This flag is deprecated and should be zero.
-    pub const IMAGE_FILE_32BIT_MACHINE: [u8; 2] = [0x00, 0x01]; // Machine is based on a 32-bit-word architecture.
-    pub const IMAGE_FILE_DEBUG_STRIPPED: [u8; 2] = [0x00, 0x02]; // Debugging information is removed from the image file.
-    pub const IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP: [u8; 2] = [0x00, 0x04]; // If the image is on removable media, fully load it and copy it to the swap file.
-    pub const IMAGE_FILE_NET_RUN_FROM_SWAP: [u8; 2] = [0x00, 0x08]; // If the image is on network media, fully load it and copy it to the swap file.
-    pub const IMAGE_FILE_SYSTEM: [u8; 2] = [0x00, 0x10]; // The image file is a system file, not a user program.
-    pub const IMAGE_FILE_DLL: [u8; 2] = [0x00, 0x20]; // The image file is a dynamic-link library (DLL). Such files are considered executable files for almost all purposes, although they cannot be directly run.
-    pub const IMAGE_FILE_UP_SYSTEM_ONLY: [u8; 2] = [0x00, 0x40]; // The file should be run only on a uniprocessor machine.
-    pub const IMAGE_FILE_BYTES_REVERSED_HI: [u8; 2] = [0x00, 0x80]; // Big endian: the MSB precedes the LSB in memory. This flag is deprecated and should be zero.
-}
-
-pub mod section_flags {
-    pub const IMAGE_SCN_TYPE_NO_PAD: [u8; 4] = [0x08, 0x00, 0x00, 0x00]; // The section should not be padded to the next boundary. This flag is obsolete and is replaced by IMAGE_SCN_ALIGN_1BYTES. This is valid only for object files.
-    pub const IMAGE_SCN_CNT_CODE: [u8; 4] = [0x20, 0x00, 0x00, 0x00]; // The section contains executable code.
-    pub const IMAGE_SCN_CNT_INITIALIZED_DATA: [u8; 4] = [0x40, 0x00, 0x00, 0x00]; // The section contains initialized data.
-    pub const IMAGE_SCN_CNT_UNINITIALIZED_DATA: [u8; 4] = [0x80, 0x00, 0x00, 0x00]; // The section contains uninitialized data.
-    pub const IMAGE_SCN_LNK_OTHER: [u8; 4] = [0x00, 0x01, 0x00, 0x00]; // Reserved for future use.
-    pub const IMAGE_SCN_LNK_INFO: [u8; 4] = [0x00, 0x02, 0x00, 0x00]; // The section contains comments or other information. The .drectve section has this type. This is valid for object files only.
-    pub const IMAGE_SCN_LNK_REMOVE: [u8; 4] = [0x00, 0x08, 0x00, 0x00]; // The section will not become part of the image. This is valid only for object files.
-    pub const IMAGE_SCN_LNK_COMDAT: [u8; 4] = [0x00, 0x10, 0x00, 0x00]; // The section contains COMDAT data. For more information, see COMDAT Sections (Object Only). This is valid only for object files.
-    pub const IMAGE_SCN_GPREL: [u8; 4] = [0x00, 0x80, 0x00, 0x00]; // The section contains data referenced through the global pointer (GP).
-    pub const IMAGE_SCN_ALIGN_1BYTES: [u8; 4] = [0x00, 0x00, 0x10, 0x00]; // Align data on a 1-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_2BYTES: [u8; 4] = [0x00, 0x00, 0x20, 0x00]; // Align data on a 2-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_4BYTES: [u8; 4] = [0x00, 0x00, 0x30, 0x00]; // Align data on a 4-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_8BYTES: [u8; 4] = [0x00, 0x00, 0x40, 0x00]; // Align data on an 8-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_16BYTES: [u8; 4] = [0x00, 0x00, 0x50, 0x00]; // Align data on a 16-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_32BYTES: [u8; 4] = [0x00, 0x00, 0x60, 0x00]; // Align data on a 32-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_64BYTES: [u8; 4] = [0x00, 0x00, 0x70, 0x00]; // Align data on a 64-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_128BYTES: [u8; 4] = [0x00, 0x00, 0x80, 0x00]; // Align data on a 128-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_256BYTES: [u8; 4] = [0x00, 0x00, 0x90, 0x00]; // Align data on a 256-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_512BYTES: [u8; 4] = [0x00, 0x00, 0xA0, 0x00]; // Align data on a 512-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_1024BYTES: [u8; 4] = [0x00, 0x00, 0xB0, 0x00]; // Align data on a 1024-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_2048BYTES: [u8; 4] = [0x00, 0x00, 0xC0, 0x00]; // Align data on a 2048-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_4096BYTES: [u8; 4] = [0x00, 0x00, 0xD0, 0x00]; // Align data on a 4096-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_ALIGN_8192BYTES: [u8; 4] = [0x00, 0x00, 0xE0, 0x00]; // Align data on an 8192-byte boundary. Valid only for object files.
-    pub const IMAGE_SCN_LNK_NRELOC_OVFL: [u8; 4] = [0x00, 0x00, 0x00, 0x01]; // The section contains extended relocations.
-    pub const IMAGE_SCN_MEM_DISCARDABLE: [u8; 4] = [0x00, 0x00, 0x00, 0x02]; // The section can be discarded as needed.
-    pub const IMAGE_SCN_MEM_NOT_CACHED: [u8; 4] = [0x00, 0x00, 0x00, 0x04]; // The section cannot be cached.
-    pub const IMAGE_SCN_MEM_NOT_PAGED: [u8; 4] = [0x00, 0x00, 0x00, 0x08]; // The section is not pageable.
-    pub const IMAGE_SCN_MEM_SHARED: [u8; 4] = [0x00, 0x00, 0x00, 0x10]; // The section can be shared in memory.
-    pub const IMAGE_SCN_MEM_EXECUTE: [u8; 4] = [0x00, 0x00, 0x00, 0x20]; // The section can be executed as code.
-    pub const IMAGE_SCN_MEM_READ: [u8; 4] = [0x00, 0x00, 0x00, 0x40]; // The section can be read.
-    pub const IMAGE_SCN_MEM_WRITE: [u8; 4] = [0x00, 0x00, 0x00, 0x80]; // The section can be written to.
-}
-
-mod win_sybsystem {
-    const IMAGE_SUBSYSTEM_UNKNOWN: [u8; 2] = [0x00, 0x00];
-    const IMAGE_SUBSYSTEM_NATIVE: [u8; 2] = [0x01, 0x00];
-    const IMAGE_SUBSYSTEM_WINDOWS_GUI: [u8; 2] = [0x02, 0x00];
-    const IMAGE_SUBSYSTEM_WINDOWS_CUI: [u8; 2] = [0x03, 0x00];
-    const IMAGE_SUBSYSTEM_OS2_CUI: [u8; 2] = [0x05, 0x00];
-    const IMAGE_SUBSYSTEM_POSIX_CUI: [u8; 2] = [0x07, 0x00];
-    const IMAGE_SUBSYSTEM_NATIVE_WINDOWS: [u8; 2] = [0x08, 0x00];
-    const IMAGE_SUBSYSTEM_WINDOWS_CE_GUI: [u8; 2] = [0x09, 0x00];
-    const IMAGE_SUBSYSTEM_EFI_APPLICATION: [u8; 2] = [0x0A, 0x00];
-    const IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER: [u8; 2] = [0x0B, 0x00];
-    const IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER: [u8; 2] = [0x0C, 0x00];
-    const IMAGE_SUBSYSTEM_EFI_ROM: [u8; 2] = [0x0D, 0x00];
-    const IMAGE_SUBSYSTEM_XBOX: [u8; 2] = [0x0E, 0x00];
-    const IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION: [u8; 2] = [0x10, 0x00];
-}
-
-mod dll_characteristics {
-    const IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA: [u8; 2] = [0x20, 0x00]; // Image can handle a high entropy 64-bit virtual address space.
-    const IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE: [u8; 2] = [0x40, 0x00]; // DLL can be relocated at load time.
-    const IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY: [u8; 2] = [0x80, 0x00]; // Code Integrity checks are enforced.
-    const IMAGE_DLLCHARACTERISTICS_NX_COMPAT: [u8; 2] = [0x00, 0x01]; // Image is NX compatible.
-    const IMAGE_DLLCHARACTERISTICS_NO_ISOLATION: [u8; 2] = [0x00, 0x02]; // Isolation aware, but do not isolate the image.
-    const IMAGE_DLLCHARACTERISTICS_NO_SEH: [u8; 2] = [0x00, 0x04]; // Does not use structured exception (SE) handling. No SE handler may be called in this image.
-    const IMAGE_DLLCHARACTERISTICS_NO_BIND: [u8; 2] = [0x00, 0x08]; // Do not bind the image.
-    const IMAGE_DLLCHARACTERISTICS_APPCONTAINER: [u8; 2] = [0x00, 0x10]; // Image must execute in an AppContainer.
-    const IMAGE_DLLCHARACTERISTICS_WDM_DRIVER: [u8; 2] = [0x00, 0x20]; // A WDM driver.
-    const IMAGE_DLLCHARACTERISTICS_GUARD_CF: [u8; 2] = [0x00, 0x40]; // Image supports Control Flow Guard.
-    const IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE: [u8; 2] = [0x00, 0x80]; // Terminal Server aware.
-}
+mod dll_characteristics;
 
 pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: [u8; 2] = [0x0B, 0x01]; // The file is an executable image of 32-bit application
 pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: [u8; 2] = [0x0B, 0x02]; // The file is an executable image of 64-bit application
