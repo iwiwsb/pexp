@@ -44,7 +44,7 @@ const FILE_HEADER_SIZE: u64 = 20;
 const OPTIONAL_HDR32_SIZE: u64 = 92;
 const OPTIONAL_HDR64_SIZE: u64 = 108;
 
-enum PortExeImageType {
+enum ImageType {
     PortExeImage32,
     PortExeImage64,
     PortExeImageRom,
@@ -90,6 +90,16 @@ impl<R: Read + Seek> ImageParser<R> {
 impl<R: Read + Seek> PortExeParse for ImageParser<R> {
     fn file_header(&mut self) -> FileHeader {
         read_file_header(&mut self.reader, self.file_header_offset).unwrap()
+    }
+}
+
+impl<'a, R: Read + Seek> PortExeImageParse<'a, R> for ImageParser<R> {
+    fn optional_header(&mut self) -> OptionalHeader {
+        read_optional_header(&mut self.reader, self.file_header_offset).unwrap()
+    }
+
+    fn data_directories(&mut self) -> DataDirectories<'a, R> {
+        todo!()
     }
 }
 
@@ -202,11 +212,11 @@ pub struct OptionalHeader {
 }
 
 impl OptionalHeader {
-    fn image_type(&self) -> PortExeImageType {
+    fn image_type(&self) -> ImageType {
         match self.magic {
-            IMAGE_NT_OPTIONAL_HDR32_MAGIC => PortExeImageType::PortExeImage32,
-            IMAGE_NT_OPTIONAL_HDR64_MAGIC => PortExeImageType::PortExeImage64,
-            IMAGE_ROM_OPTIONAL_HDR_MAGIC => PortExeImageType::PortExeImageRom,
+            IMAGE_NT_OPTIONAL_HDR32_MAGIC => ImageType::PortExeImage32,
+            IMAGE_NT_OPTIONAL_HDR64_MAGIC => ImageType::PortExeImage64,
+            IMAGE_ROM_OPTIONAL_HDR_MAGIC => ImageType::PortExeImageRom,
             _ => panic!(),
         }
     }
@@ -332,7 +342,6 @@ fn read_file_header<R: Read + Seek>(
 fn read_optional_header<R: Read + Seek>(
     reader: &mut R,
     file_header_offset: u64,
-    image_type: PortExeImageType,
 ) -> io::Result<OptionalHeader> {
     let mut magic = [0u8; 2];
     let mut major_linker_version = [0u8; 1];
@@ -374,13 +383,14 @@ fn read_optional_header<R: Read + Seek>(
     reader.read_exact(&mut size_of_uninitialized_data)?;
     reader.read_exact(&mut address_of_entry_point)?;
     reader.read_exact(&mut base_of_code)?;
-    base_of_data = match image_type {
-        PortExeImageType::PortExeImage32 | PortExeImageType::PortExeImageRom => {
+    base_of_data = match magic {
+        IMAGE_NT_OPTIONAL_HDR32_MAGIC | IMAGE_ROM_OPTIONAL_HDR_MAGIC => {
             let mut buf = [0u8; 4];
             reader.read_exact(&mut buf)?;
             Some(buf)
         }
-        PortExeImageType::PortExeImage64 => None,
+        IMAGE_NT_OPTIONAL_HDR64_MAGIC => None,
+        _ => panic!(),
     };
     reader.read_exact(&mut image_base)?;
     reader.read_exact(&mut section_alignment)?;
@@ -454,9 +464,9 @@ trait PortExeParse {
     fn file_header(&mut self) -> FileHeader;
 }
 
-trait PortExeImageParse: PortExeParse {
-    fn optional_header(&self) -> OptionalHeader;
-    fn data_directories<R: Read + Seek>(&self) -> DataDirectories<R>;
+trait PortExeImageParse<'a, R: Read + Seek>: PortExeParse {
+    fn optional_header(&mut self) -> OptionalHeader;
+    fn data_directories(&mut self) -> DataDirectories<'a, R>;
 }
 
 trait PortExeObjectParse: PortExeParse {}
