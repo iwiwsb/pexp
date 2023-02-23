@@ -141,6 +141,23 @@ pub mod section_flags {
     pub const IMAGE_SCN_MEM_WRITE: [u8; 4] = [0x00, 0x00, 0x00, 0x80]; // The section can be written to.
 }
 
+mod win_sybsystem {
+    const IMAGE_SUBSYSTEM_UNKNOWN: [u8; 2] = [0x00, 0x00];
+    const IMAGE_SUBSYSTEM_NATIVE: [u8; 2] = [0x01, 0x00];
+    const IMAGE_SUBSYSTEM_WINDOWS_GUI: [u8; 2] = [0x02, 0x00];
+    const IMAGE_SUBSYSTEM_WINDOWS_CUI: [u8; 2] = [0x03, 0x00];
+    const IMAGE_SUBSYSTEM_OS2_CUI: [u8; 2] = [0x05, 0x00];
+    const IMAGE_SUBSYSTEM_POSIX_CUI: [u8; 2] = [0x07, 0x00];
+    const IMAGE_SUBSYSTEM_NATIVE_WINDOWS: [u8; 2] = [0x08, 0x00];
+    const IMAGE_SUBSYSTEM_WINDOWS_CE_GUI: [u8; 2] = [0x09, 0x00];
+    const IMAGE_SUBSYSTEM_EFI_APPLICATION: [u8; 2] = [0x0A, 0x00];
+    const IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER: [u8; 2] = [0x0B, 0x00];
+    const IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER: [u8; 2] = [0x0C, 0x00];
+    const IMAGE_SUBSYSTEM_EFI_ROM: [u8; 2] = [0x0D, 0x00];
+    const IMAGE_SUBSYSTEM_XBOX: [u8; 2] = [0x0E, 0x00];
+    const IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION: [u8; 2] = [0x10, 0x00];
+}
+
 pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: [u8; 2] = [0x0B, 0x01]; // The file is an executable image of 32-bit application
 pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: [u8; 2] = [0x0B, 0x02]; // The file is an executable image of 64-bit application
 pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: [u8; 2] = [0x07, 0x01]; // The file is a ROM image.
