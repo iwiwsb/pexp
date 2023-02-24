@@ -4,7 +4,7 @@ pub mod header;
 pub mod machine_types;
 pub mod parser;
 pub mod section_flags;
-pub mod win_sybsystem;
+pub mod win_subsystem;
 
 use parser::{ImageParser, ObjectParser, PortExeParse, PortExeType};
 use std::env::args;
