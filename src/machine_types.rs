@@ -1,3 +1,6 @@
+//! The [machine](crate::header::FileHeader#structfield.machine) field has one of the following values, which specify the CPU type.
+//! An image file can be run only on the specified machine or on a system that emulates the specified machine.
+
 use std::fmt::Display;
 
 /// The content of this field is assumed to be applicable to any machine type
