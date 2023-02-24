@@ -1,23 +1,29 @@
-use crate::machine_types::Machine;
+use crate::{machine_types::Machine, section_flags::SectionFlags};
 use chrono::{DateTime, TimeZone, Utc};
 use std::{
     fmt::Display,
     io::{self, Read, Seek, SeekFrom},
 };
 
-pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: [u8; 2] = [0x0B, 0x01]; // The file is an executable image of 32-bit application
-pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: [u8; 2] = [0x0B, 0x02]; // The file is an executable image of 64-bit application
-pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: [u8; 2] = [0x07, 0x01]; // The file is a ROM image.
+/// The file is an executable image of 32-bit application
+pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: [u8; 2] = [0x0B, 0x01];
+/// The file is an executable image of 64-bit application
+pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: [u8; 2] = [0x0B, 0x02];
+/// The file is a ROM image.
+pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: [u8; 2] = [0x07, 0x01];
+/// Size of COFF File Header
 pub const FILE_HEADER_SIZE: u64 = 20;
-pub const OPTIONAL_HDR32_SIZE: u64 = 92;
-pub const OPTIONAL_HDR64_SIZE: u64 = 108;
 
 pub enum ImageType {
+    /// Represents 32-bit PE image
     Image32 = 0x010B,
+    /// Represents 64-bit PE image
     Image64 = 0x020B,
+    /// Represents ROM PE Image
     ImageRom = 0x0107,
 }
 
+/// COFF File Header structure
 #[derive(Debug)]
 pub struct FileHeader {
     machine: [u8; 2],
@@ -97,6 +103,7 @@ impl Display for FileHeader {
     }
 }
 
+/// Optional Header structure
 #[derive(Debug)]
 pub struct OptionalHeader {
     magic: [u8; 2],
@@ -132,6 +139,7 @@ pub struct OptionalHeader {
     data_directories: Vec<DataDir>,
 }
 
+/// Iterator over data directories
 pub type DataDirectories<'a> = std::slice::Iter<'a, DataDir>;
 
 impl OptionalHeader {
@@ -157,6 +165,7 @@ impl OptionalHeader {
     }
 }
 
+/// Data directory structure
 #[derive(Debug)]
 pub struct DataDir {
     virtual_address: [u8; 4],
@@ -169,6 +178,14 @@ impl DataDir {
     }
 }
 
+/// Section header structure
+/// 
+/// The basic unit of code or data within a PE or COFF file.
+/// For example, all code in an object file can be combined within a single section or (depending on compiler behavior) each function can occupy its own section.
+/// With more sections, there is more file overhead, but the linker is able to link in code more selectively.
+/// A section is similar to a segment in Intel 8086 architecture.
+/// All the raw data in a section must be loaded contiguously.
+/// In addition, an image file can contain a number of sections, such as `.tls` or `.reloc` , which have special purposes.
 #[derive(Debug)]
 pub struct Section {
     name: [u8; 8],
