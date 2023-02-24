@@ -155,10 +155,13 @@ pub struct OptionalHeader {
     /// The default for Windows CE EXEs is `0x00010000`.
     /// The default for Windows NT, Windows 2000, Windows XP, Windows 95, Windows 98, and Windows Me is `0x00400000`.
     image_base: [u8; 8],
-    section_alignment: [u8; 4],
     /// The alignment (in bytes) of sections when they are loaded into memory.
     /// It must be greater than or equal to `file_alignment`.
     /// The default is the page size for the architecture.
+    section_alignment: [u8; 4],
+    /// The alignment factor (in bytes) that is used to align the raw data of sections in the image file.
+    /// The value should be a power of 2 between 512 and 64 K, inclusive.
+    /// The default is 512. If the `section_alignment` is less than the architecture's page size, then FileAlignment must match `section_alignment`.
     file_alignment: [u8; 4],
     /// The major version number of the required operating system.
     major_operating_system_version: [u8; 2],
