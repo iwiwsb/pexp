@@ -1,3 +1,5 @@
+//! The following values are defined for the [`dll_characteristics`](crate::header::OptionalHeader#structfield.dll_characteristics) field of the [`OptionalHeader`](crate::header::OptionalHeader).
+
 /// Image can handle a high entropy 64-bit virtual address space
 pub const IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA: [u8; 2] = [0x20, 0x00];
 /// DLL can be relocated at load time
