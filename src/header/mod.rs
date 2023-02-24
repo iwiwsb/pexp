@@ -179,7 +179,7 @@ impl DataDir {
 }
 
 /// Section header structure
-/// 
+///
 /// The basic unit of code or data within a PE or COFF file.
 /// For example, all code in an object file can be combined within a single section or (depending on compiler behavior) each function can occupy its own section.
 /// With more sections, there is more file overhead, but the linker is able to link in code more selectively.
@@ -203,6 +203,10 @@ pub struct Section {
 impl Section {
     pub fn name(&self) -> String {
         self.name.iter().map(|&b| b as char).collect()
+    }
+
+    pub fn characteristics(&self) -> SectionFlags {
+        todo!()
     }
 }
 
