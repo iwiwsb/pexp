@@ -1,32 +1,59 @@
 use std::fmt::Display;
 
-pub const IMAGE_FILE_MACHINE_UNKNOWN: [u8; 2] = [0x00, 0x00]; //The content of this field is assumed to be applicable to any machine type
-pub const IMAGE_FILE_MACHINE_AM33: [u8; 2] = [0xD3, 0x01]; // Matsushita AM33
-pub const IMAGE_FILE_MACHINE_AMD64: [u8; 2] = [0x64, 0x86]; // x64
-pub const IMAGE_FILE_MACHINE_ARM: [u8; 2] = [0xC0, 0x01]; // ARM little endian
-pub const IMAGE_FILE_MACHINE_ARM64: [u8; 2] = [0x64, 0xAA]; // ARM64 little endian
-pub const IMAGE_FILE_MACHINE_ARMNT: [u8; 2] = [0xC4, 0x01]; // ARM Thumb-2 little endian
-pub const IMAGE_FILE_MACHINE_EBC: [u8; 2] = [0xBC, 0x0E]; // EFI byte code
-pub const IMAGE_FILE_MACHINE_I386: [u8; 2] = [0x4C, 0x01]; // Intel 386 or later processors and compatible processors
-pub const IMAGE_FILE_MACHINE_IA64: [u8; 2] = [0x00, 0x02]; // Intel Itanium processor family
-pub const IMAGE_FILE_MACHINE_LOONGARCH32: [u8; 2] = [0x32, 0x62]; // LoongArch 32-bit processor family
-pub const IMAGE_FILE_MACHINE_LOONGARCH64: [u8; 2] = [0x64, 0x62]; // LoongArch 64-bit processor family
-pub const IMAGE_FILE_MACHINE_M32R: [u8; 2] = [0x41, 0x90]; // Mitsubishi M32R little endian
-pub const IMAGE_FILE_MACHINE_MIPS16: [u8; 2] = [0x66, 0x02]; // MIPS16
-pub const IMAGE_FILE_MACHINE_MIPSFPU: [u8; 2] = [0x66, 0x03]; // MIPS with FPU
-pub const IMAGE_FILE_MACHINE_MIPSFPU16: [u8; 2] = [0x66, 0x04]; // MIPS16 with FPU
-pub const IMAGE_FILE_MACHINE_POWERPC: [u8; 2] = [0xF0, 0x01]; // Power PC little endian
-pub const IMAGE_FILE_MACHINE_POWERPCFP: [u8; 2] = [0xF1, 0x01]; // Power PC with floating point support
-pub const IMAGE_FILE_MACHINE_R4000: [u8; 2] = [0x66, 0x01]; // MIPS little endian
-pub const IMAGE_FILE_MACHINE_RISCV32: [u8; 2] = [0x32, 0x50]; // RISC-V 32-bit address space
-pub const IMAGE_FILE_MACHINE_RISCV64: [u8; 2] = [0x64, 0x50]; // RISC-V 64-bit address space
-pub const IMAGE_FILE_MACHINE_RISCV128: [u8; 2] = [0x28, 0x51]; // RISC-V 128-bit address space
-pub const IMAGE_FILE_MACHINE_SH3: [u8; 2] = [0xA2, 0x01]; // Hitachi SH3
-pub const IMAGE_FILE_MACHINE_SH3DSP: [u8; 2] = [0xA3, 0x01]; // Hitachi SH3 DSP
-pub const IMAGE_FILE_MACHINE_SH4: [u8; 2] = [0xA6, 0x01]; // Hitachi SH4
-pub const IMAGE_FILE_MACHINE_SH5: [u8; 2] = [0xA8, 0x01]; // Hitachi SH5
-pub const IMAGE_FILE_MACHINE_THUMB: [u8; 2] = [0xC2, 0x01]; // Thumb
-pub const IMAGE_FILE_MACHINE_WCEMIPSV2: [u8; 2] = [0x69, 0x01]; // MIPS little-endian WCE v2
+/// The content of this field is assumed to be applicable to any machine type
+pub const IMAGE_FILE_MACHINE_UNKNOWN: [u8; 2] = [0x00, 0x00];
+/// Matsushita AM33
+pub const IMAGE_FILE_MACHINE_AM33: [u8; 2] = [0xD3, 0x01];
+/// x64
+pub const IMAGE_FILE_MACHINE_AMD64: [u8; 2] = [0x64, 0x86];
+/// ARM little endian
+pub const IMAGE_FILE_MACHINE_ARM: [u8; 2] = [0xC0, 0x01];
+/// ARM64 little endian
+pub const IMAGE_FILE_MACHINE_ARM64: [u8; 2] = [0x64, 0xAA];
+/// ARM Thumb-2 little endian
+pub const IMAGE_FILE_MACHINE_ARMNT: [u8; 2] = [0xC4, 0x01];
+/// EFI byte code
+pub const IMAGE_FILE_MACHINE_EBC: [u8; 2] = [0xBC, 0x0E];
+/// Intel 386 or later processors and compatible processors
+pub const IMAGE_FILE_MACHINE_I386: [u8; 2] = [0x4C, 0x01];
+/// Intel Itanium processor family
+pub const IMAGE_FILE_MACHINE_IA64: [u8; 2] = [0x00, 0x02];
+/// LoongArch 32-bit processor family
+pub const IMAGE_FILE_MACHINE_LOONGARCH32: [u8; 2] = [0x32, 0x62];
+/// LoongArch 64-bit processor family
+pub const IMAGE_FILE_MACHINE_LOONGARCH64: [u8; 2] = [0x64, 0x62];
+/// Mitsubishi M32R little endian
+pub const IMAGE_FILE_MACHINE_M32R: [u8; 2] = [0x41, 0x90];
+/// MIPS16
+pub const IMAGE_FILE_MACHINE_MIPS16: [u8; 2] = [0x66, 0x02];
+/// MIPS with FPU
+pub const IMAGE_FILE_MACHINE_MIPSFPU: [u8; 2] = [0x66, 0x03];
+/// MIPS16 with FPU
+pub const IMAGE_FILE_MACHINE_MIPSFPU16: [u8; 2] = [0x66, 0x04];
+/// Power PC little endian
+pub const IMAGE_FILE_MACHINE_POWERPC: [u8; 2] = [0xF0, 0x01];
+/// Power PC with floating point support
+pub const IMAGE_FILE_MACHINE_POWERPCFP: [u8; 2] = [0xF1, 0x01];
+/// MIPS little endian
+pub const IMAGE_FILE_MACHINE_R4000: [u8; 2] = [0x66, 0x01];
+/// RISC-V 32-bit address space
+pub const IMAGE_FILE_MACHINE_RISCV32: [u8; 2] = [0x32, 0x50];
+/// RISC-V 64-bit address space
+pub const IMAGE_FILE_MACHINE_RISCV64: [u8; 2] = [0x64, 0x50];
+/// RISC-V 128-bit address space
+pub const IMAGE_FILE_MACHINE_RISCV128: [u8; 2] = [0x28, 0x51];
+/// Hitachi SH3
+pub const IMAGE_FILE_MACHINE_SH3: [u8; 2] = [0xA2, 0x01];
+/// Hitachi SH3 DSP
+pub const IMAGE_FILE_MACHINE_SH3DSP: [u8; 2] = [0xA3, 0x01];
+/// Hitachi SH4
+pub const IMAGE_FILE_MACHINE_SH4: [u8; 2] = [0xA6, 0x01];
+/// Hitachi SH5
+pub const IMAGE_FILE_MACHINE_SH5: [u8; 2] = [0xA8, 0x01];
+/// Thumb
+pub const IMAGE_FILE_MACHINE_THUMB: [u8; 2] = [0xC2, 0x01];
+/// MIPS little-endian WCE v2
+pub const IMAGE_FILE_MACHINE_WCEMIPSV2: [u8; 2] = [0x69, 0x01];
 
 pub struct Machine([u8; 2]);
 
