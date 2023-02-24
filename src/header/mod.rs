@@ -26,12 +26,23 @@ pub enum ImageType {
 /// COFF File Header structure
 #[derive(Debug)]
 pub struct FileHeader {
+    /// Identifies the type of target machine. For more information, see [`machine_types`](crate::machine_types).
     machine: [u8; 2],
+    /// The number of sections. This indicates the size of the section table, which immediately follows the headers.
     number_of_sections: [u8; 2],
+    /// The low 32 bits of the number of seconds since 00:00 January 1, 1970 (a C run-time time_t value), which indicates when the file was created.
     time_date_stamp: [u8; 4],
+    /// The file offset of the COFF symbol table, or zero if no COFF symbol table is present.
+    /// This value should be zero for an image because COFF debugging information is deprecated.
     pointer_to_symbol_table: [u8; 4],
+    /// The number of entries in the symbol table.
+    /// This data can be used to locate the string table, which immediately follows the symbol table.
+    /// This value should be zero for an image because COFF debugging information is deprecated.
     number_of_symbols: [u8; 4],
+    /// The size of the [`OptionalHeader`](crate::header::OptionalHeader), which is required for executable files but not for object files.
+    /// This value should be zero for an object file.
     size_of_optional_header: [u8; 2],
+    /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](crate::characteristics)
     characteristics: [u8; 2],
 }
 
@@ -104,38 +115,90 @@ impl Display for FileHeader {
 }
 
 /// Optional Header structure
+///
+/// Every image file has an optional header that provides information to the loader.
+/// This header is optional in the sense that some files (specifically, object files) do not have it.
+/// For image files, this header is required.
+/// An object file can have an optional header, but generally this header has no function in an object file except to increase its size.
+/// Note that the size of the optional header is not fixed.
+/// The [`size_of_optional_header`](crate::header::FileHeader#structfield.size_of_optional_header) field in the COFF header must be used
+/// to validate that a probe into the file for a particular data directory does not go beyond [`size_of_optional_header`](crate::header::FileHeader#structfield.size_of_optional_header).
 #[derive(Debug)]
 pub struct OptionalHeader {
+    /// Identifies the state of the image file.
+    /// The most common number is `0x10B`, which identifies it as a 32-bit (PE32) executable file.
+    /// `0x107` identifies it as a ROM image, and `0x20B` identifies it as a 64-bit (PE32+) executable file.
     magic: [u8; 2],
+    /// The linker major version number.
     major_linker_version: [u8; 1],
+    /// The linker minor version number.
     minor_linker_version: [u8; 1],
+    /// The size of the code (`.text`) section, or the sum of all code sections if there are multiple sections.
     size_of_code: [u8; 4],
+    /// The size of the initialized data section, or the sum of all such sections if there are multiple data sections.
     size_of_initialized_data: [u8; 4],
+    /// The size of the uninitialized data section (`BSS`), or the sum of all such sections if there are multiple `BSS` sections.
     size_of_uninitialized_data: [u8; 4],
+    /// The address of the entry point relative to the image base when the executable file is loaded into memory.
+    /// For program images, this is the starting address.
+    /// For device drivers, this is the address of the initialization function.
+    /// An entry point is optional for DLLs.
+    /// When no entry point is present, this field must be zero.
     address_of_entry_point: [u8; 4],
+    /// The address that is relative to the image base of the beginning-of-code section when it is loaded into memory.
     base_of_code: [u8; 4],
+    /// The address that is relative to the image base of the beginning-of-data section when it is loaded into memory.
+    /// PE32 contains this additional field, which is absent in PE32+
     base_of_data: Option<[u8; 4]>,
+    /// The preferred address of the first byte of image when loaded into memory; must be a multiple of 64 K.
+    /// The default for DLLs is `0x10000000`.
+    /// The default for Windows CE EXEs is `0x00010000`.
+    /// The default for Windows NT, Windows 2000, Windows XP, Windows 95, Windows 98, and Windows Me is `0x00400000`.
     image_base: [u8; 8],
     section_alignment: [u8; 4],
+    /// The alignment (in bytes) of sections when they are loaded into memory.
+    /// It must be greater than or equal to `file_alignment`.
+    /// The default is the page size for the architecture.
     file_alignment: [u8; 4],
+    /// The major version number of the required operating system.
     major_operating_system_version: [u8; 2],
+    /// The minor version number of the required operating system.
     minor_operating_system_version: [u8; 2],
+    /// The major version number of the image.
     major_image_version: [u8; 2],
+    /// The minor version number of the image.
     minor_image_version: [u8; 2],
+    /// The major version number of the subsystem.
     major_subsystem_version: [u8; 2],
+    /// The minor version number of the subsystem.
     minor_subsystem_version: [u8; 2],
+    /// Reserved, must be zero.
     win32_version_value: [u8; 4],
+    /// The size (in bytes) of the image, including all headers, as the image is loaded in memory.
+    /// It must be a multiple of `section_alignment`.
     size_of_image: [u8; 4],
+    /// The combined size of an MS-DOS stub, PE header, and section headers rounded up to a multiple of `file_alignment`.
     size_of_headers: [u8; 4],
+    /// The image file checksum.
+    /// The algorithm for computing the checksum is incorporated into IMAGHELP.DLL.
+    /// The following are checked for validation at load time: all drivers, any DLL loaded at boot time, and any DLL that is loaded into a critical Windows process.
     check_sum: [u8; 4],
+    /// The subsystem that is required to run this image. For more information, see [`win_subsystem`](crate::win_subsystem) module.
     subsystem: [u8; 2],
+    /// See [`dll_characteristics`](crate::dll_characteristics) module.
     dll_characteristics: [u8; 2],
+    /// The size of the stack to reserve. Only `size_of_stack_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
     size_of_stack_reserve: [u8; 8],
+    /// The size of the stack to commit.
     size_of_stack_commit: [u8; 8],
+    /// The size of the local heap space to reserve. Only `size_of_heap_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
     size_of_heap_reserve: [u8; 8],
+    /// The size of the local heap space to commit.
     size_of_heap_commit: [u8; 8],
+    /// Reserved, must be zero.
     loader_flags: [u8; 4],
     number_of_rva_and_sizes: [u8; 4],
+    /// The number of data-directory entries in the remainder of the optional header. Each describes a location and size.
     data_directories: Vec<DataDir>,
 }
 
@@ -208,6 +271,30 @@ impl Section {
     pub fn characteristics(&self) -> SectionFlags {
         todo!()
     }
+}
+
+/// Relavive virtual address (RVA)
+///
+/// In an image file, this is the address of an item after it is loaded into memory, with the base address of the image file subtracted from it.
+/// The RVA of an item almost always differs from its position within the file on disk (file pointer).
+/// In an object file, an RVA is less meaningful because memory locations are not assigned.
+/// In this case, an RVA would be an address within a section (described later in this table), to which a relocation is later applied during linking.
+/// For simplicity, a compiler should just set the first RVA in each section to zero.
+#[derive(Debug)]
+pub struct RelativeVirtualAddress {
+    addr: VirtualAddress,
+    image_base: VirtualAddress,
+}
+
+/// Virtual address (VA)
+///
+/// Same as [RVA](RelativeVirtualAddress), except that the base address of the image file is not subtracted.
+/// The address is called a VA because Windows creates a distinct VA space for each process, independent of physical memory.
+/// For almost all purposes, a VA should be considered just an address.
+/// A VA is not as predictable as an [RVA](RelativeVirtualAddress) because the loader might not load the image at its preferred location.
+#[derive(Debug)]
+pub struct VirtualAddress {
+    addr: u64,
 }
 
 fn read_file_header<R: Read + Seek>(
