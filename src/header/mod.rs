@@ -123,6 +123,11 @@ impl Display for FileHeader {
 /// Note that the size of the optional header is not fixed.
 /// The [`size_of_optional_header`](crate::header::FileHeader#structfield.size_of_optional_header) field in the COFF header must be used
 /// to validate that a probe into the file for a particular data directory does not go beyond [`size_of_optional_header`](crate::header::FileHeader#structfield.size_of_optional_header).
+///
+/// The first 8 fields of the optional header are standard fields that are defined for every implementation of COFF.
+/// PE32 contains additional field `base_of_data`, which is absent in PE32+, following `base_of_code`.
+/// These fields contain general information that is useful for loading and running an executable file. They are unchanged for the PE32+ format.
+/// The next 21 fields are an extension to the COFF optional header format. They contain additional information that is required by the linker and loader in Windows.
 #[derive(Debug)]
 pub struct OptionalHeader {
     /// Identifies the state of the image file.
@@ -200,8 +205,11 @@ pub struct OptionalHeader {
     size_of_heap_commit: [u8; 8],
     /// Reserved, must be zero.
     loader_flags: [u8; 4],
-    number_of_rva_and_sizes: [u8; 4],
     /// The number of data-directory entries in the remainder of the optional header. Each describes a location and size.
+    number_of_rva_and_sizes: [u8; 4],
+    /// Address/size pairs for special tables that are found in the image file and are used by the operating system (for example, the import table and the export table).
+    /// Note that the number of directories is not fixed. Before looking for a specific directory,
+    /// check the `number_of_rva_and_sizes` field.
     data_directories: Vec<DataDir>,
 }
 
@@ -231,10 +239,15 @@ impl OptionalHeader {
     }
 }
 
-/// Data directory structure
+/// Data Directory structure
+///
+/// Each data directory gives the address and size of a table or string that Windows uses.
+/// These data directory entries are all loaded into memory so that the system can use them at run time.
 #[derive(Debug)]
 pub struct DataDir {
+    /// The [`RVA`](crate::header::RelativeVirtualAddress) of the table
     virtual_address: [u8; 4],
+    /// Size in bytes
     size: [u8; 4],
 }
 
