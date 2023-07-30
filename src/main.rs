@@ -1,17 +1,14 @@
-pub mod characteristics;
-pub mod dll_characteristics;
 pub mod header;
-pub mod machine_types;
 pub mod parser;
-pub mod section_flags;
-pub mod win_subsystem;
 
-use parser::{ImageParser, ObjectParser, PortExeParse, PortExeType};
+use header::machine_types::Machine;
+use parser::PortExeType;
 use std::env::args;
 use std::fs::File;
-use std::io::{self, Read, Seek};
+use std::io::{self, ErrorKind, Read, Seek, SeekFrom};
 use std::path::PathBuf;
-use std::process::exit;
+
+use crate::header::read_file_header;
 
 fn main() -> io::Result<()> {
     let mut cmdline_args = args();
@@ -19,16 +16,26 @@ fn main() -> io::Result<()> {
         Some(p) => PathBuf::from(p),
         None => {
             println!("Usage: pe_parser path");
-            exit(0);
+            return Ok(());
         }
     };
     let mut pe_file = File::open(&path)?;
-    let pe_type = detect_pe_type(&mut pe_file).unwrap();
-    let file_header = match pe_type {
-        PortExeType::Image => ImageParser::new(&mut pe_file).file_header(),
-        PortExeType::Object => ObjectParser::new(&mut pe_file).file_header(),
-    };
-    println!("{file_header}");
+    let pe_type = detect_pe_type(&mut pe_file);
+    match pe_type {
+        Ok(PortExeType::Image) => {
+            println!("File is an image");
+            let file_header_offset =
+                parser::get_file_header_offset(&mut pe_file, &PortExeType::Image)?;
+            pe_file.seek(SeekFrom::Start(file_header_offset))?;
+            let file_header = read_file_header(&mut pe_file, file_header_offset)?;
+
+            println!("{}", file_header)
+        }
+        Ok(PortExeType::Object) => {
+            println!("File is an object")
+        }
+        Err(e) => return Err(e),
+    }
     Ok(())
 }
 
@@ -38,8 +45,10 @@ fn detect_pe_type<R: Read + Seek>(reader: &mut R) -> io::Result<PortExeType> {
     reader.read_exact(&mut mz)?;
     if mz == [b'M', b'Z'] {
         Ok(PortExeType::Image)
-    } else {
+    } else if Machine::try_from(mz).is_ok() {
         Ok(PortExeType::Object)
+    } else {
+        Err(io::Error::from(ErrorKind::InvalidData))
     }
 }
 

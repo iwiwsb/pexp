@@ -58,11 +58,49 @@ pub const IMAGE_FILE_MACHINE_THUMB: [u8; 2] = [0xC2, 0x01];
 /// MIPS little-endian WCE v2
 pub const IMAGE_FILE_MACHINE_WCEMIPSV2: [u8; 2] = [0x69, 0x01];
 
+const MACHINE_TYPES: [[u8; 2]; 25] = [
+    IMAGE_FILE_MACHINE_UNKNOWN,
+    IMAGE_FILE_MACHINE_AM33,
+    IMAGE_FILE_MACHINE_AMD64,
+    IMAGE_FILE_MACHINE_ARM,
+    IMAGE_FILE_MACHINE_ARMNT,
+    IMAGE_FILE_MACHINE_EBC,
+    IMAGE_FILE_MACHINE_I386,
+    IMAGE_FILE_MACHINE_IA64,
+    IMAGE_FILE_MACHINE_LOONGARCH32,
+    IMAGE_FILE_MACHINE_M32R,
+    IMAGE_FILE_MACHINE_MIPS16,
+    IMAGE_FILE_MACHINE_MIPSFPU,
+    IMAGE_FILE_MACHINE_MIPSFPU16,
+    IMAGE_FILE_MACHINE_POWERPC,
+    IMAGE_FILE_MACHINE_POWERPCFP,
+    IMAGE_FILE_MACHINE_R4000,
+    IMAGE_FILE_MACHINE_RISCV32,
+    IMAGE_FILE_MACHINE_RISCV64,
+    IMAGE_FILE_MACHINE_RISCV128,
+    IMAGE_FILE_MACHINE_SH3,
+    IMAGE_FILE_MACHINE_SH3DSP,
+    IMAGE_FILE_MACHINE_SH4,
+    IMAGE_FILE_MACHINE_SH5,
+    IMAGE_FILE_MACHINE_THUMB,
+    IMAGE_FILE_MACHINE_WCEMIPSV2,
+];
+
+#[derive(Debug)]
 pub struct Machine([u8; 2]);
 
-impl From<[u8; 2]> for Machine {
-    fn from(value: [u8; 2]) -> Self {
-        Self(value)
+#[derive(Debug)]
+pub struct NonExistentMachineError;
+
+impl TryFrom<[u8; 2]> for Machine {
+    type Error = NonExistentMachineError;
+
+    fn try_from(value: [u8; 2]) -> Result<Self, Self::Error> {
+        if MACHINE_TYPES.contains(&value) {
+            return Ok(Self(value));
+        } else {
+            return Err(NonExistentMachineError);
+        }
     }
 }
 

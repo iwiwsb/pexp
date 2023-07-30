@@ -1,7 +1,9 @@
-use crate::header::{FileHeader, OptionalHeader, FILE_HEADER_SIZE};
+use crate::header::{
+    read_file_header, read_optional_header, FileHeader, OptionalHeader, FILE_HEADER_SIZE,
+};
 use std::io::{self, Read, Seek, SeekFrom};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum PortExeType {
     Object,
     Image,
@@ -23,15 +25,15 @@ impl<R: Read + Seek> ImageParser<R> {
 }
 
 impl<R: Read + Seek> PortExeParse for ImageParser<R> {
-    fn file_header(&mut self) -> FileHeader {
-        FileHeader::new(&mut self.reader, self.file_header_offset)
+    fn file_header(&mut self) -> io::Result<FileHeader> {
+        read_file_header(&mut self.reader, self.file_header_offset)
     }
 }
 
 impl<R: Read + Seek> PortExeImageParse for ImageParser<R> {
     fn optional_header(&mut self) -> OptionalHeader {
         let opt_header_offset = self.file_header_offset + FILE_HEADER_SIZE;
-        OptionalHeader::new(&mut self.reader, opt_header_offset)
+        read_optional_header(&mut self.reader, opt_header_offset).unwrap()
     }
 }
 
@@ -46,14 +48,14 @@ impl<R: Read + Seek> ObjectParser<R> {
 }
 
 impl<R: Read + Seek> PortExeParse for ObjectParser<R> {
-    fn file_header(&mut self) -> FileHeader {
-        FileHeader::new(&mut self.reader, 0)
+    fn file_header(&mut self) -> io::Result<FileHeader> {
+        read_file_header(&mut self.reader, 0)
     }
 }
 
 pub trait PortExeParse {
     /// Returns file header
-    fn file_header(&mut self) -> FileHeader;
+    fn file_header(&mut self) -> io::Result<FileHeader>;
 }
 
 trait PortExeImageParse: PortExeParse {
@@ -63,7 +65,7 @@ trait PortExeImageParse: PortExeParse {
 
 trait PortExeObjectParse: PortExeParse {}
 
-fn get_file_header_offset<R: Read + Seek>(
+pub fn get_file_header_offset<R: Read + Seek>(
     reader: &mut R,
     pe_type: &PortExeType,
 ) -> io::Result<u64> {
