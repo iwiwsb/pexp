@@ -7,7 +7,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use machine_types::Machine;
 use std::{
     fmt::Display,
-    io::{self, Read, Seek, SeekFrom},
+    io::{self, Cursor, Read, Seek, SeekFrom},
     ops::Add,
 };
 
@@ -27,6 +27,40 @@ pub enum ImageType {
     Image64 = 0x020B,
     /// Represents ROM PE Image
     ImageRom = 0x0107,
+}
+
+struct FileHeaderBuffer {
+    buffer: Cursor<Vec<u8>>,
+}
+
+impl FileHeaderBuffer {
+    pub fn read_file_header(&mut self) -> io::Result<FileHeader> {
+        let mut machine = [0u8; 2];
+        let mut number_of_sections = [0u8; 2];
+        let mut time_date_stamp = [0u8; 4];
+        let mut pointer_to_symbol_table = [0u8; 4];
+        let mut number_of_symbols = [0u8; 4];
+        let mut size_of_optional_header = [0u8; 2];
+        let mut characteristics = [0u8; 2];
+
+        self.buffer.read_exact(&mut machine)?;
+        self.buffer.read_exact(&mut number_of_sections)?;
+        self.buffer.read_exact(&mut time_date_stamp)?;
+        self.buffer.read_exact(&mut pointer_to_symbol_table)?;
+        self.buffer.read_exact(&mut number_of_symbols)?;
+        self.buffer.read_exact(&mut size_of_optional_header)?;
+        self.buffer.read_exact(&mut characteristics)?;
+
+        Ok(FileHeader {
+            machine,
+            number_of_sections,
+            time_date_stamp,
+            pointer_to_symbol_table,
+            number_of_symbols,
+            size_of_optional_header,
+            characteristics,
+        })
+    }
 }
 
 /// COFF File Header structure
@@ -113,6 +147,130 @@ impl Display for FileHeader {
             "Characteristics: 0x{0:04X}\n",
             self.characteristics()
         ))
+    }
+}
+
+struct OptionalHeaderBuffer {
+    buffer: Cursor<Vec<u8>>,
+}
+
+impl OptionalHeaderBuffer {
+    pub fn read_optional_header(&mut self) -> io::Result<OptionalHeader> {
+        let mut magic = [0u8; 2];
+        let mut major_linker_version = [0u8; 1];
+        let mut minor_linker_version = [0u8; 1];
+        let mut size_of_code = [0u8; 4];
+        let mut size_of_initialized_data = [0u8; 4];
+        let mut size_of_uninitialized_data = [0u8; 4];
+        let mut address_of_entry_point = [0u8; 4];
+        let mut base_of_code = [0u8; 4];
+        let mut base_of_data: Option<[u8; 4]> = Some([0u8; 4]);
+        let mut image_base = [0u8; 8];
+        let mut section_alignment = [0u8; 4];
+        let mut file_alignment = [0u8; 4];
+        let mut major_operating_system_version = [0u8; 2];
+        let mut minor_operating_system_version = [0u8; 2];
+        let mut major_image_version = [0u8; 2];
+        let mut minor_image_version = [0u8; 2];
+        let mut major_subsystem_version = [0u8; 2];
+        let mut minor_subsystem_version = [0u8; 2];
+        let mut win32_version_value = [0u8; 4];
+        let mut size_of_image = [0u8; 4];
+        let mut size_of_headers = [0u8; 4];
+        let mut check_sum = [0u8; 4];
+        let mut subsystem = [0u8; 2];
+        let mut dll_characteristics = [0u8; 2];
+        let mut size_of_stack_reserve = [0u8; 8];
+        let mut size_of_stack_commit = [0u8; 8];
+        let mut size_of_heap_reserve = [0u8; 8];
+        let mut size_of_heap_commit = [0u8; 8];
+        let mut loader_flags = [0u8; 4];
+        let mut number_of_rva_and_sizes = [0u8; 4];
+        let mut data_directories: Vec<DataDir> = Vec::new();
+
+        self.buffer.read_exact(&mut magic)?;
+        self.buffer.read_exact(&mut major_linker_version)?;
+        self.buffer.read_exact(&mut minor_linker_version)?;
+        self.buffer.read_exact(&mut size_of_code)?;
+        self.buffer.read_exact(&mut size_of_initialized_data)?;
+        self.buffer.read_exact(&mut size_of_uninitialized_data)?;
+        self.buffer.read_exact(&mut address_of_entry_point)?;
+        self.buffer.read_exact(&mut base_of_code)?;
+        base_of_data = match magic {
+            IMAGE_NT_OPTIONAL_HDR32_MAGIC | IMAGE_ROM_OPTIONAL_HDR_MAGIC => {
+                let mut buf = [0u8; 4];
+                self.buffer.read_exact(&mut buf)?;
+                Some(buf)
+            }
+            IMAGE_NT_OPTIONAL_HDR64_MAGIC => None,
+            _ => {
+                eprintln!("Wrong magic type");
+                None
+            }
+        };
+        self.buffer.read_exact(&mut image_base)?;
+        self.buffer.read_exact(&mut section_alignment)?;
+        self.buffer.read_exact(&mut file_alignment)?;
+        self.buffer
+            .read_exact(&mut major_operating_system_version)?;
+        self.buffer
+            .read_exact(&mut minor_operating_system_version)?;
+        self.buffer.read_exact(&mut major_image_version)?;
+        self.buffer.read_exact(&mut minor_image_version)?;
+        self.buffer.read_exact(&mut major_subsystem_version)?;
+        self.buffer.read_exact(&mut minor_subsystem_version)?;
+        self.buffer.read_exact(&mut win32_version_value)?;
+        self.buffer.read_exact(&mut size_of_image)?;
+        self.buffer.read_exact(&mut size_of_headers)?;
+        self.buffer.read_exact(&mut check_sum)?;
+        self.buffer.read_exact(&mut subsystem)?;
+        self.buffer.read_exact(&mut dll_characteristics)?;
+        self.buffer.read_exact(&mut size_of_stack_reserve)?;
+        self.buffer.read_exact(&mut size_of_stack_commit)?;
+        self.buffer.read_exact(&mut size_of_heap_reserve)?;
+        self.buffer.read_exact(&mut size_of_heap_commit)?;
+        self.buffer.read_exact(&mut loader_flags)?;
+        self.buffer.read_exact(&mut number_of_rva_and_sizes)?;
+
+        let data_dir_offset = self.buffer.seek(SeekFrom::Current(0))?;
+        for _ in 0..u32::from_le_bytes(number_of_rva_and_sizes) {
+            let value = read_data_dir(&mut self.buffer, data_dir_offset)?;
+            data_directories.push(value);
+        }
+
+        Ok(OptionalHeader {
+            magic,
+            major_linker_version,
+            minor_linker_version,
+            size_of_code,
+            size_of_initialized_data,
+            size_of_uninitialized_data,
+            address_of_entry_point,
+            base_of_code,
+            base_of_data,
+            image_base,
+            section_alignment,
+            file_alignment,
+            major_operating_system_version,
+            minor_operating_system_version,
+            major_image_version,
+            minor_image_version,
+            major_subsystem_version,
+            minor_subsystem_version,
+            win32_version_value,
+            size_of_image,
+            size_of_headers,
+            check_sum,
+            subsystem,
+            dll_characteristics,
+            size_of_stack_reserve,
+            size_of_stack_commit,
+            size_of_heap_reserve,
+            size_of_heap_commit,
+            loader_flags,
+            number_of_rva_and_sizes,
+            data_directories,
+        })
     }
 }
 
@@ -222,16 +380,8 @@ impl OptionalHeader {
             IMAGE_NT_OPTIONAL_HDR32_MAGIC => ImageType::Image32,
             IMAGE_NT_OPTIONAL_HDR64_MAGIC => ImageType::Image64,
             IMAGE_ROM_OPTIONAL_HDR_MAGIC => ImageType::ImageRom,
-            _ => panic!(),
+            _ => panic!("Wrong image type"),
         }
-    }
-
-    pub fn size_of_uninitialized_data(&self) -> u32 {
-        todo!()
-    }
-
-    pub fn number_of_rva_and_sizes(&self) -> u32 {
-        u32::from_le_bytes(self.number_of_rva_and_sizes)
     }
 
     pub fn major_linker_version(&self) -> u8 {
@@ -252,9 +402,8 @@ impl OptionalHeader {
         u32::from_le_bytes(bytes)
     }
 
-    pub fn size_of_uninitialized_data_mut(&self) -> u32 {
-        let bytes = self.size_of_uninitialized_data;
-        u32::from_le_bytes(bytes)
+    pub fn size_of_uninitialized_data(&self) -> u32 {
+        u32::from_le_bytes(self.size_of_uninitialized_data)
     }
 
     pub fn address_of_entry_point(&self) -> RelativeVirtualAddress {
@@ -267,6 +416,10 @@ impl OptionalHeader {
         let addr: VirtualAddress = self.base_of_code.into();
         let image_base: VirtualAddress = self.image_base.into();
         RelativeVirtualAddress { addr, image_base }
+    }
+
+    pub fn number_of_rva_and_sizes(&self) -> u32 {
+        u32::from_le_bytes(self.number_of_rva_and_sizes)
     }
 
     pub fn base_of_data(&self) -> Option<RelativeVirtualAddress> {
@@ -613,155 +766,6 @@ impl From<[u8; 8]> for VirtualAddress {
             addr: u64::from_le_bytes(value),
         }
     }
-}
-
-pub fn read_file_header<R: Read + Seek>(
-    reader: &mut R,
-    file_header_offset: u64,
-) -> io::Result<FileHeader> {
-    let mut machine = [0u8; 2];
-    let mut number_of_sections = [0u8; 2];
-    let mut time_date_stamp = [0u8; 4];
-    let mut pointer_to_symbol_table = [0u8; 4];
-    let mut number_of_symbols = [0u8; 4];
-    let mut size_of_optional_header = [0u8; 2];
-    let mut characteristics = [0u8; 2];
-
-    reader.seek(SeekFrom::Start(file_header_offset))?;
-    reader.read_exact(&mut machine)?;
-    reader.read_exact(&mut number_of_sections)?;
-    reader.read_exact(&mut time_date_stamp)?;
-    reader.read_exact(&mut pointer_to_symbol_table)?;
-    reader.read_exact(&mut number_of_symbols)?;
-    reader.read_exact(&mut size_of_optional_header)?;
-    reader.read_exact(&mut characteristics)?;
-
-    Ok(FileHeader {
-        machine,
-        number_of_sections,
-        time_date_stamp,
-        pointer_to_symbol_table,
-        number_of_symbols,
-        size_of_optional_header,
-        characteristics,
-    })
-}
-
-pub fn read_optional_header<R: Read + Seek>(
-    reader: &mut R,
-    opt_header_offset: u64,
-) -> io::Result<OptionalHeader> {
-    let mut magic = [0u8; 2];
-    let mut major_linker_version = [0u8; 1];
-    let mut minor_linker_version = [0u8; 1];
-    let mut size_of_code = [0u8; 4];
-    let mut size_of_initialized_data = [0u8; 4];
-    let mut size_of_uninitialized_data = [0u8; 4];
-    let mut address_of_entry_point = [0u8; 4];
-    let mut base_of_code = [0u8; 4];
-    let mut base_of_data: Option<[u8; 4]> = Some([0u8; 4]);
-    let mut image_base = [0u8; 8];
-    let mut section_alignment = [0u8; 4];
-    let mut file_alignment = [0u8; 4];
-    let mut major_operating_system_version = [0u8; 2];
-    let mut minor_operating_system_version = [0u8; 2];
-    let mut major_image_version = [0u8; 2];
-    let mut minor_image_version = [0u8; 2];
-    let mut major_subsystem_version = [0u8; 2];
-    let mut minor_subsystem_version = [0u8; 2];
-    let mut win32_version_value = [0u8; 4];
-    let mut size_of_image = [0u8; 4];
-    let mut size_of_headers = [0u8; 4];
-    let mut check_sum = [0u8; 4];
-    let mut subsystem = [0u8; 2];
-    let mut dll_characteristics = [0u8; 2];
-    let mut size_of_stack_reserve = [0u8; 8];
-    let mut size_of_stack_commit = [0u8; 8];
-    let mut size_of_heap_reserve = [0u8; 8];
-    let mut size_of_heap_commit = [0u8; 8];
-    let mut loader_flags = [0u8; 4];
-    let mut number_of_rva_and_sizes = [0u8; 4];
-    let mut data_directories: Vec<DataDir> = Vec::new();
-
-    reader.seek(SeekFrom::Start(opt_header_offset))?;
-    reader.read_exact(&mut magic)?;
-    reader.read_exact(&mut major_linker_version)?;
-    reader.read_exact(&mut minor_linker_version)?;
-    reader.read_exact(&mut size_of_code)?;
-    reader.read_exact(&mut size_of_initialized_data)?;
-    reader.read_exact(&mut size_of_uninitialized_data)?;
-    reader.read_exact(&mut address_of_entry_point)?;
-    reader.read_exact(&mut base_of_code)?;
-    base_of_data = match magic {
-        IMAGE_NT_OPTIONAL_HDR32_MAGIC | IMAGE_ROM_OPTIONAL_HDR_MAGIC => {
-            let mut buf = [0u8; 4];
-            reader.read_exact(&mut buf)?;
-            Some(buf)
-        }
-        IMAGE_NT_OPTIONAL_HDR64_MAGIC => None,
-        _ => panic!(),
-    };
-    reader.read_exact(&mut image_base)?;
-    reader.read_exact(&mut section_alignment)?;
-    reader.read_exact(&mut file_alignment)?;
-    reader.read_exact(&mut major_operating_system_version)?;
-    reader.read_exact(&mut minor_operating_system_version)?;
-    reader.read_exact(&mut major_image_version)?;
-    reader.read_exact(&mut minor_image_version)?;
-    reader.read_exact(&mut major_subsystem_version)?;
-    reader.read_exact(&mut minor_subsystem_version)?;
-    reader.read_exact(&mut win32_version_value)?;
-    reader.read_exact(&mut size_of_image)?;
-    reader.read_exact(&mut size_of_headers)?;
-    reader.read_exact(&mut check_sum)?;
-    reader.read_exact(&mut subsystem)?;
-    reader.read_exact(&mut dll_characteristics)?;
-    reader.read_exact(&mut size_of_stack_reserve)?;
-    reader.read_exact(&mut size_of_stack_commit)?;
-    reader.read_exact(&mut size_of_heap_reserve)?;
-    reader.read_exact(&mut size_of_heap_commit)?;
-    reader.read_exact(&mut loader_flags)?;
-    reader.read_exact(&mut number_of_rva_and_sizes)?;
-
-    let data_dir_offset = reader.seek(SeekFrom::Current(0))?;
-    for _ in 0..u32::from_le_bytes(number_of_rva_and_sizes) {
-        let value = read_data_dir(reader, data_dir_offset)?;
-        data_directories.push(value);
-    }
-
-    Ok(OptionalHeader {
-        magic,
-        major_linker_version,
-        minor_linker_version,
-        size_of_code,
-        size_of_initialized_data,
-        size_of_uninitialized_data,
-        address_of_entry_point,
-        base_of_code,
-        base_of_data,
-        image_base,
-        section_alignment,
-        file_alignment,
-        major_operating_system_version,
-        minor_operating_system_version,
-        major_image_version,
-        minor_image_version,
-        major_subsystem_version,
-        minor_subsystem_version,
-        win32_version_value,
-        size_of_image,
-        size_of_headers,
-        check_sum,
-        subsystem,
-        dll_characteristics,
-        size_of_stack_reserve,
-        size_of_stack_commit,
-        size_of_heap_reserve,
-        size_of_heap_commit,
-        loader_flags,
-        number_of_rva_and_sizes,
-        data_directories,
-    })
 }
 
 fn read_data_dir<R: Read + Seek>(reader: &mut R, data_dir_offset: u64) -> io::Result<DataDir> {

@@ -1,6 +1,4 @@
-use crate::header::{
-    read_file_header, read_optional_header, FileHeader, OptionalHeader, FILE_HEADER_SIZE,
-};
+use crate::header::{FileHeader, OptionalHeader, FILE_HEADER_SIZE};
 use std::io::{self, Read, Seek, SeekFrom};
 
 #[derive(Debug, PartialEq)]
@@ -26,14 +24,13 @@ impl<R: Read + Seek> ImageParser<R> {
 
 impl<R: Read + Seek> PortExeParse for ImageParser<R> {
     fn file_header(&mut self) -> io::Result<FileHeader> {
-        read_file_header(&mut self.reader, self.file_header_offset)
+        todo!()
     }
 }
 
 impl<R: Read + Seek> PortExeImageParse for ImageParser<R> {
     fn optional_header(&mut self) -> OptionalHeader {
-        let opt_header_offset = self.file_header_offset + FILE_HEADER_SIZE;
-        read_optional_header(&mut self.reader, opt_header_offset).unwrap()
+        todo!()
     }
 }
 
@@ -49,7 +46,7 @@ impl<R: Read + Seek> ObjectParser<R> {
 
 impl<R: Read + Seek> PortExeParse for ObjectParser<R> {
     fn file_header(&mut self) -> io::Result<FileHeader> {
-        read_file_header(&mut self.reader, 0)
+        todo!()
     }
 }
 
