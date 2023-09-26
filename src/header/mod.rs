@@ -232,45 +232,41 @@ impl OptionalHeaderBuffer {
         self.buffer.read_exact(&mut loader_flags)?;
         self.buffer.read_exact(&mut number_of_rva_and_sizes)?;
 
-        let data_dir_offset = self.buffer.seek(SeekFrom::Current(0))?;
-        for _ in 0..u32::from_le_bytes(number_of_rva_and_sizes) {
-            let value = read_data_dir(&mut self.buffer, data_dir_offset)?;
-            data_directories.push(value);
-        }
+        todo!()
 
-        Ok(OptionalHeader {
-            magic,
-            major_linker_version,
-            minor_linker_version,
-            size_of_code,
-            size_of_initialized_data,
-            size_of_uninitialized_data,
-            address_of_entry_point,
-            base_of_code,
-            base_of_data,
-            image_base,
-            section_alignment,
-            file_alignment,
-            major_operating_system_version,
-            minor_operating_system_version,
-            major_image_version,
-            minor_image_version,
-            major_subsystem_version,
-            minor_subsystem_version,
-            win32_version_value,
-            size_of_image,
-            size_of_headers,
-            check_sum,
-            subsystem,
-            dll_characteristics,
-            size_of_stack_reserve,
-            size_of_stack_commit,
-            size_of_heap_reserve,
-            size_of_heap_commit,
-            loader_flags,
-            number_of_rva_and_sizes,
-            data_directories,
-        })
+        // Ok(OptionalHeader {
+        //     magic,
+        //     major_linker_version,
+        //     minor_linker_version,
+        //     size_of_code,
+        //     size_of_initialized_data,
+        //     size_of_uninitialized_data,
+        //     address_of_entry_point,
+        //     base_of_code,
+        //     base_of_data,
+        //     image_base,
+        //     section_alignment,
+        //     file_alignment,
+        //     major_operating_system_version,
+        //     minor_operating_system_version,
+        //     major_image_version,
+        //     minor_image_version,
+        //     major_subsystem_version,
+        //     minor_subsystem_version,
+        //     win32_version_value,
+        //     size_of_image,
+        //     size_of_headers,
+        //     check_sum,
+        //     subsystem,
+        //     dll_characteristics,
+        //     size_of_stack_reserve,
+        //     size_of_stack_commit,
+        //     size_of_heap_reserve,
+        //     size_of_heap_commit,
+        //     loader_flags,
+        //     number_of_rva_and_sizes,
+        //     data_directories,
+        // })
     }
 }
 
@@ -289,7 +285,6 @@ impl OptionalHeaderBuffer {
 /// These fields contain general information that is useful for loading and running an executable file. They are unchanged for the PE32+ format.
 /// The next 21 fields are an extension to the COFF optional header format. They contain additional information that is required by the linker and loader in Windows.
 #[derive(Debug)]
-#[allow(unused)]
 pub struct OptionalHeader {
     /// Identifies the state of the image file.
     /// The most common number is `0x10B`, which identifies it as a 32-bit (PE32) executable file.
@@ -438,6 +433,23 @@ impl OptionalHeader {
     }
 }
 
+struct DataDirBuffer {
+    buffer: Cursor<Vec<u8>>,
+}
+
+impl DataDirBuffer {
+    pub fn read_data_dir(&mut self) -> io::Result<DataDir> {
+        let mut virtual_address: [u8; 4] = [0u8; 4];
+        let mut size: [u8; 4] = [0u8; 4];
+        self.buffer.read_exact(&mut virtual_address)?;
+        self.buffer.read_exact(&mut size)?;
+        Ok(DataDir {
+            virtual_address,
+            size,
+        })
+    }
+}
+
 /// Data Directory structure
 ///
 /// Each data directory gives the address and size of a table or string that Windows uses.
@@ -461,7 +473,6 @@ impl DataDir {
 }
 
 #[derive(Debug)]
-#[allow(unused)]
 pub struct DataDirectories {
     /// The export table address and size.
     export_table: Option<DataDir>,
@@ -592,6 +603,10 @@ impl From<Vec<DataDir>> for DataDirectories {
             clr_runtime_header,
         }
     }
+}
+
+struct SectionBuffer {
+    buffer: Cursor<Vec<u8>>,
 }
 
 /// Section header structure
@@ -766,16 +781,4 @@ impl From<[u8; 8]> for VirtualAddress {
             addr: u64::from_le_bytes(value),
         }
     }
-}
-
-fn read_data_dir<R: Read + Seek>(reader: &mut R, data_dir_offset: u64) -> io::Result<DataDir> {
-    let mut virtual_address: [u8; 4] = [0u8; 4];
-    let mut size: [u8; 4] = [0u8; 4];
-    reader.seek(SeekFrom::Start(data_dir_offset))?;
-    reader.read_exact(&mut virtual_address)?;
-    reader.read_exact(&mut size)?;
-    Ok(DataDir {
-        virtual_address,
-        size,
-    })
 }

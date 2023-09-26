@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 pub mod header;
 pub mod parser;
 
