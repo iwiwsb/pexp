@@ -7,7 +7,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use machine_types::Machine;
 use std::{
     fmt::Display,
-    io::{self, Cursor, Read, Seek, SeekFrom},
+    io::{self, Cursor, Read},
     ops::Add,
 };
 

@@ -1,16 +1,19 @@
 #![allow(unused)]
 
 pub mod header;
-pub mod parser;
 
 use header::machine_types::Machine;
-use parser::PortExeType;
 use std::io::{self, ErrorKind, Read, Seek};
 
 const MZ_SIGNATURE: [u8; 2] = [b'M', b'Z'];
 
 fn main() -> io::Result<()> {
     Ok(())
+}
+
+enum PortExeType {
+    Image,
+    Object,
 }
 
 fn detect_pe_type<R: Read + Seek>(reader: &mut R) -> io::Result<PortExeType> {
