@@ -1,12 +1,12 @@
 pub mod characteristics;
+pub mod dll_characteristics;
 pub mod machine_types;
 pub mod section_flags;
 pub mod win_subsystem;
 
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc};
 use machine_types::*;
 use std::{
-    default,
     fmt::{self, Debug, Display},
     io::{self, Cursor, Read},
     ops::Add,
@@ -21,6 +21,7 @@ pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: [u8; 2] = [0x07, 0x01];
 /// Size of COFF File Header
 pub const FILE_HEADER_SIZE: u64 = 20;
 
+#[derive(Debug)]
 pub enum ImageType {
     /// Represents 32-bit PE image
     Image32 = 0x010B,
@@ -28,6 +29,12 @@ pub enum ImageType {
     Image64 = 0x020B,
     /// Represents ROM PE Image
     ImageRom = 0x0107,
+}
+
+impl Display for ImageType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
 }
 
 /// COFF File Header structure
@@ -40,9 +47,9 @@ pub struct FileHeader {
 #[allow(non_snake_case)]
 impl FileHeader {
     /// Identifies the type of target machine. For more information, see [`machine_types`](machine_types).
-    fn read_machine(&mut self) -> Field<Machine> {
+    fn machine(&mut self) -> Field<Machine> {
         let mut buf = [0u8; 2];
-        self.buffer.read(&mut buf);
+        let _ = self.buffer.read(&mut buf);
         let data = Machine::try_from(buf).unwrap();
         Field {
             offset: 0x3C,
@@ -84,7 +91,7 @@ impl FileHeader {
     }
 
     /// Indicates the size of the section table, which immediately follows the headers.
-    fn read_number_of_sections(&self) -> Field<u16> {
+    fn number_of_sections(&self) -> Field<u16> {
         todo!()
     }
 
@@ -112,7 +119,7 @@ impl FileHeader {
         todo!()
     }
 
-    /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](crate::characteristics)
+    /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](characteristics)
     fn characteristics(&self) -> Field<u16> {
         todo!()
     }
@@ -121,126 +128,6 @@ impl FileHeader {
 impl Display for FileHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
-    }
-}
-
-struct OptionalHeaderBuffer {
-    buffer: Cursor<Vec<u8>>,
-}
-
-impl OptionalHeaderBuffer {
-    pub fn read_optional_header(&mut self) -> io::Result<OptionalHeader> {
-        let mut magic = [0u8; 2];
-        let mut major_linker_version = [0u8; 1];
-        let mut minor_linker_version = [0u8; 1];
-        let mut size_of_code = [0u8; 4];
-        let mut size_of_initialized_data = [0u8; 4];
-        let mut size_of_uninitialized_data = [0u8; 4];
-        let mut address_of_entry_point = [0u8; 4];
-        let mut base_of_code = [0u8; 4];
-        let mut base_of_data: Option<[u8; 4]> = Some([0u8; 4]);
-        let mut image_base = [0u8; 8];
-        let mut section_alignment = [0u8; 4];
-        let mut file_alignment = [0u8; 4];
-        let mut major_operating_system_version = [0u8; 2];
-        let mut minor_operating_system_version = [0u8; 2];
-        let mut major_image_version = [0u8; 2];
-        let mut minor_image_version = [0u8; 2];
-        let mut major_subsystem_version = [0u8; 2];
-        let mut minor_subsystem_version = [0u8; 2];
-        let mut win32_version_value = [0u8; 4];
-        let mut size_of_image = [0u8; 4];
-        let mut size_of_headers = [0u8; 4];
-        let mut check_sum = [0u8; 4];
-        let mut subsystem = [0u8; 2];
-        let mut dll_characteristics = [0u8; 2];
-        let mut size_of_stack_reserve = [0u8; 8];
-        let mut size_of_stack_commit = [0u8; 8];
-        let mut size_of_heap_reserve = [0u8; 8];
-        let mut size_of_heap_commit = [0u8; 8];
-        let mut loader_flags = [0u8; 4];
-        let mut number_of_rva_and_sizes = [0u8; 4];
-        let mut data_directories: Vec<DataDir> = Vec::new();
-
-        self.buffer.read_exact(&mut magic)?;
-        self.buffer.read_exact(&mut major_linker_version)?;
-        self.buffer.read_exact(&mut minor_linker_version)?;
-        self.buffer.read_exact(&mut size_of_code)?;
-        self.buffer.read_exact(&mut size_of_initialized_data)?;
-        self.buffer.read_exact(&mut size_of_uninitialized_data)?;
-        self.buffer.read_exact(&mut address_of_entry_point)?;
-        self.buffer.read_exact(&mut base_of_code)?;
-        base_of_data = match magic {
-            IMAGE_NT_OPTIONAL_HDR32_MAGIC | IMAGE_ROM_OPTIONAL_HDR_MAGIC => {
-                let mut buf = [0u8; 4];
-                self.buffer.read_exact(&mut buf)?;
-                Some(buf)
-            }
-            IMAGE_NT_OPTIONAL_HDR64_MAGIC => None,
-            _ => {
-                eprintln!("Wrong magic type");
-                None
-            }
-        };
-        self.buffer.read_exact(&mut image_base)?;
-        self.buffer.read_exact(&mut section_alignment)?;
-        self.buffer.read_exact(&mut file_alignment)?;
-        self.buffer
-            .read_exact(&mut major_operating_system_version)?;
-        self.buffer
-            .read_exact(&mut minor_operating_system_version)?;
-        self.buffer.read_exact(&mut major_image_version)?;
-        self.buffer.read_exact(&mut minor_image_version)?;
-        self.buffer.read_exact(&mut major_subsystem_version)?;
-        self.buffer.read_exact(&mut minor_subsystem_version)?;
-        self.buffer.read_exact(&mut win32_version_value)?;
-        self.buffer.read_exact(&mut size_of_image)?;
-        self.buffer.read_exact(&mut size_of_headers)?;
-        self.buffer.read_exact(&mut check_sum)?;
-        self.buffer.read_exact(&mut subsystem)?;
-        self.buffer.read_exact(&mut dll_characteristics)?;
-        self.buffer.read_exact(&mut size_of_stack_reserve)?;
-        self.buffer.read_exact(&mut size_of_stack_commit)?;
-        self.buffer.read_exact(&mut size_of_heap_reserve)?;
-        self.buffer.read_exact(&mut size_of_heap_commit)?;
-        self.buffer.read_exact(&mut loader_flags)?;
-        self.buffer.read_exact(&mut number_of_rva_and_sizes)?;
-
-        todo!()
-
-        // Ok(OptionalHeader {
-        //     magic,
-        //     major_linker_version,
-        //     minor_linker_version,
-        //     size_of_code,
-        //     size_of_initialized_data,
-        //     size_of_uninitialized_data,
-        //     address_of_entry_point,
-        //     base_of_code,
-        //     base_of_data,
-        //     image_base,
-        //     section_alignment,
-        //     file_alignment,
-        //     major_operating_system_version,
-        //     minor_operating_system_version,
-        //     major_image_version,
-        //     minor_image_version,
-        //     major_subsystem_version,
-        //     minor_subsystem_version,
-        //     win32_version_value,
-        //     size_of_image,
-        //     size_of_headers,
-        //     check_sum,
-        //     subsystem,
-        //     dll_characteristics,
-        //     size_of_stack_reserve,
-        //     size_of_stack_commit,
-        //     size_of_heap_reserve,
-        //     size_of_heap_commit,
-        //     loader_flags,
-        //     number_of_rva_and_sizes,
-        //     data_directories,
-        // })
     }
 }
 
@@ -260,168 +147,202 @@ impl OptionalHeaderBuffer {
 /// The next 21 fields are an extension to the COFF optional header format. They contain additional information that is required by the linker and loader in Windows.
 #[derive(Debug)]
 pub struct OptionalHeader {
+    offset: u64,
+    buffer: Cursor<Vec<u8>>,
+}
+
+#[derive(Debug)]
+pub struct LinkerVersion {
+    major: u8,
+    minor: u8,
+}
+
+impl OptionalHeader {
     /// Identifies the state of the image file.
     /// The most common number is `0x10B`, which identifies it as a 32-bit (PE32) executable file.
     /// `0x107` identifies it as a ROM image, and `0x20B` identifies it as a 64-bit (PE32+) executable file.
-    magic: [u8; 2],
+    pub fn image_type(&self) -> Field<ImageType> {
+        todo!()
+    }
+
     /// The linker major version number.
-    major_linker_version: [u8; 1],
+    pub fn major_linker_version(&self) -> Field<u8> {
+        todo!()
+    }
+
     /// The linker minor version number.
-    minor_linker_version: [u8; 1],
+    pub fn minor_linker_version(&self) -> Field<u8> {
+        todo!()
+    }
+
     /// The size of the code (`.text`) section, or the sum of all code sections if there are multiple sections.
-    size_of_code: [u8; 4],
+    pub fn size_of_code(&self) -> Field<u32> {
+        todo!()
+    }
+
     /// The size of the initialized data section, or the sum of all such sections if there are multiple data sections.
-    size_of_initialized_data: [u8; 4],
+    pub fn size_of_initialized_data(&self) -> Field<u32> {
+        todo!()
+    }
+
     /// The size of the uninitialized data section (`BSS`), or the sum of all such sections if there are multiple `BSS` sections.
-    size_of_uninitialized_data: [u8; 4],
+    pub fn size_of_uninitialized_data(&self) -> Field<u32> {
+        todo!()
+    }
+
     /// The address of the entry point relative to the image base when the executable file is loaded into memory.
     /// For program images, this is the starting address.
     /// For device drivers, this is the address of the initialization function.
     /// An entry point is optional for DLLs.
     /// When no entry point is present, this field must be zero.
-    address_of_entry_point: [u8; 4],
+    pub fn address_of_entry_point(&self) -> Field<RelativeVirtualAddress> {
+        todo!()
+    }
+
     /// The address that is relative to the image base of the beginning-of-code section when it is loaded into memory.
-    base_of_code: [u8; 4],
+    pub fn base_of_code(&self) -> Field<RelativeVirtualAddress> {
+        todo!()
+    }
+
     /// The address that is relative to the image base of the beginning-of-data section when it is loaded into memory.
     /// PE32 contains this additional field, which is absent in PE32+
-    base_of_data: Option<[u8; 4]>,
+    pub fn base_of_data(&self) -> Option<Field<RelativeVirtualAddress>> {
+        todo!()
+    }
+
     /// The preferred address of the first byte of image when loaded into memory; must be a multiple of 64 K.
     /// The default for DLLs is `0x10000000`.
     /// The default for Windows CE EXEs is `0x00010000`.
     /// The default for Windows NT, Windows 2000, Windows XP, Windows 95, Windows 98, and Windows Me is `0x00400000`.
-    image_base: [u8; 8],
+    pub fn image_base(&self) -> Field<u64> {
+        todo!()
+    }
+
     /// The alignment (in bytes) of sections when they are loaded into memory.
     /// It must be greater than or equal to `file_alignment`.
     /// The default is the page size for the architecture.
-    section_alignment: [u8; 4],
+    pub fn section_alignment(&self) -> Field<u32> {
+        todo!()
+    }
+
     /// The alignment factor (in bytes) that is used to align the raw data of sections in the image file.
     /// The value should be a power of 2 between 512 and 64 K, inclusive.
     /// The default is 512. If the `section_alignment` is less than the architecture's page size, then FileAlignment must match `section_alignment`.
-    file_alignment: [u8; 4],
+    pub fn file_alignment(&self) -> Field<u32> {
+        todo!()
+    }
+
     /// The major version number of the required operating system.
-    major_operating_system_version: [u8; 2],
+    pub fn major_operating_system_version(&self) -> Field<u16> {
+        todo!()
+    }
+
     /// The minor version number of the required operating system.
-    minor_operating_system_version: [u8; 2],
+    pub fn minor_operating_system_version(&self) -> Field<u16> {
+        todo!()
+    }
+
     /// The major version number of the image.
-    major_image_version: [u8; 2],
+    pub fn major_image_version(&self) -> Field<u16> {
+        todo!()
+    }
+
     /// The minor version number of the image.
-    minor_image_version: [u8; 2],
+    pub fn minor_image_version(&self) -> Field<u16> {
+        todo!()
+    }
+
     /// The major version number of the subsystem.
-    major_subsystem_version: [u8; 2],
+    pub fn major_subsystem_version(&self) -> Field<u16> {
+        todo!()
+    }
+
     /// The minor version number of the subsystem.
-    minor_subsystem_version: [u8; 2],
+    pub fn minor_subsystem_version(&self) -> Field<u16> {
+        todo!()
+    }
+
     /// Reserved, must be zero.
-    win32_version_value: [u8; 4],
+    pub fn win32_version_value(&self) -> Field<u32> {
+        todo!()
+    }
+
     /// The size (in bytes) of the image, including all headers, as the image is loaded in memory.
     /// It must be a multiple of `section_alignment`.
-    size_of_image: [u8; 4],
+    pub fn size_of_image(&self) -> Field<u32> {
+        todo!()
+    }
+
     /// The combined size of an MS-DOS stub, PE header, and section headers rounded up to a multiple of `file_alignment`.
-    size_of_headers: [u8; 4],
+    pub fn size_of_headers(&self) -> Field<u32> {
+        todo!()
+    }
+
     /// The image file checksum.
     /// The algorithm for computing the checksum is incorporated into IMAGHELP.DLL.
     /// The following are checked for validation at load time: all drivers, any DLL loaded at boot time, and any DLL that is loaded into a critical Windows process.
-    check_sum: [u8; 4],
-    /// The subsystem that is required to run this image. For more information, see [`win_subsystem`](crate::win_subsystem) module.
-    subsystem: [u8; 2],
-    /// See [`dll_characteristics`](crate::dll_characteristics) module.
-    dll_characteristics: [u8; 2],
+    pub fn check_sum(&self) -> Field<u32> {
+        todo!()
+    }
+
+    /// The subsystem that is required to run this image. For more information, see [`win_subsystem`](win_subsystem) module.
+    pub fn subsystem(&self) -> Field<u16> {
+        todo!()
+    }
+
+    /// See [`dll_characteristics`](dll_characteristics) module.
+    pub fn dll_characteristics(&self) -> Field<u16> {
+        todo!()
+    }
+
     /// The size of the stack to reserve. Only `size_of_stack_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
-    size_of_stack_reserve: [u8; 8],
+    pub fn size_of_stack_reserve(&self) -> Field<u64> {
+        todo!()
+    }
+
     /// The size of the stack to commit.
-    size_of_stack_commit: [u8; 8],
+    pub fn size_of_stack_commit(&self) -> Field<u64> {
+        todo!()
+    }
+
     /// The size of the local heap space to reserve. Only `size_of_heap_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
-    size_of_heap_reserve: [u8; 8],
+    pub fn size_of_heap_reserve(&self) -> Field<u64> {
+        todo!()
+    }
+
     /// The size of the local heap space to commit.
-    size_of_heap_commit: [u8; 8],
+    pub fn size_of_heap_commit(&self) -> Field<u64> {
+        todo!()
+    }
+
     /// Reserved, must be zero.
-    loader_flags: [u8; 4],
+    pub fn loader_flags(&self) -> Field<u32> {
+        todo!()
+    }
+
     /// The number of data-directory entries in the remainder of the optional header. Each describes a location and size.
-    number_of_rva_and_sizes: [u8; 4],
+    pub fn number_of_rva_and_sizes(&self) -> Field<u32> {
+        todo!()
+    }
+
     /// Address/size pairs for special tables that are found in the image file and are used by the operating system (for example, the import table and the export table).
     /// Note that the number of directories is not fixed. Before looking for a specific directory,
     /// check the `number_of_rva_and_sizes` field.
-    data_directories: Vec<DataDir>,
-}
-
-impl OptionalHeader {
-    pub fn image_type(&self) -> ImageType {
-        match self.magic {
-            IMAGE_NT_OPTIONAL_HDR32_MAGIC => ImageType::Image32,
-            IMAGE_NT_OPTIONAL_HDR64_MAGIC => ImageType::Image64,
-            IMAGE_ROM_OPTIONAL_HDR_MAGIC => ImageType::ImageRom,
-            _ => panic!("Wrong image type"),
-        }
-    }
-
-    pub fn major_linker_version(&self) -> u8 {
-        self.major_linker_version[0]
-    }
-
-    pub fn minor_linker_version(&self) -> u8 {
-        self.minor_linker_version[0]
-    }
-
-    pub fn size_of_code(&self) -> u32 {
-        let bytes = self.size_of_code;
-        u32::from_le_bytes(bytes)
-    }
-
-    pub fn size_of_initialized_data(&self) -> u32 {
-        let bytes = self.size_of_initialized_data;
-        u32::from_le_bytes(bytes)
-    }
-
-    pub fn size_of_uninitialized_data(&self) -> u32 {
-        u32::from_le_bytes(self.size_of_uninitialized_data)
-    }
-
-    pub fn address_of_entry_point(&self) -> RelativeVirtualAddress {
-        let addr: VirtualAddress = self.address_of_entry_point.into();
-        let image_base: VirtualAddress = self.image_base.into();
-        RelativeVirtualAddress { addr, image_base }
-    }
-
-    pub fn base_of_code(&self) -> RelativeVirtualAddress {
-        let addr: VirtualAddress = self.base_of_code.into();
-        let image_base: VirtualAddress = self.image_base.into();
-        RelativeVirtualAddress { addr, image_base }
-    }
-
-    pub fn number_of_rva_and_sizes(&self) -> u32 {
-        u32::from_le_bytes(self.number_of_rva_and_sizes)
-    }
-
-    pub fn base_of_data(&self) -> Option<RelativeVirtualAddress> {
-        match self.base_of_data {
-            Some(base) => {
-                let addr: VirtualAddress = base.into();
-                let image_base = self.image_base.into();
-                Some(RelativeVirtualAddress { addr, image_base })
-            }
-            None => None,
-        }
-    }
-
-    pub fn data_directories(&self) -> DataDirectories {
-        DataDirectories::from(self.data_directories.clone())
+    pub fn data_directories(&self) -> Field<DataDirectories> {
+        todo!()
     }
 }
 
-struct DataDirBuffer {
-    buffer: Cursor<Vec<u8>>,
-}
-
-impl DataDirBuffer {
-    pub fn read_data_dir(&mut self) -> io::Result<DataDir> {
-        let mut virtual_address: [u8; 4] = [0u8; 4];
-        let mut size: [u8; 4] = [0u8; 4];
-        self.buffer.read_exact(&mut virtual_address)?;
-        self.buffer.read_exact(&mut size)?;
-        Ok(DataDir {
-            virtual_address,
-            size,
-        })
-    }
+#[derive(Debug, Clone)]
+enum DataDirType {
+    Export,
+    Import,
+    Resource,
+    Exception,
+    Certificate,
+    BaseRelocation,
+    Debug,
+    Architecture,
 }
 
 /// Data Directory structure
@@ -430,157 +351,119 @@ impl DataDirBuffer {
 /// These data directory entries are all loaded into memory so that the system can use them at run time.
 #[derive(Debug, Clone)]
 pub struct DataDir {
-    /// The [`RVA`](crate::header::RelativeVirtualAddress) of the table
-    virtual_address: [u8; 4],
-    /// Size in bytes
-    size: [u8; 4],
+    offset: u64,
+    buffer: Cursor<Vec<u8>>,
+    data_dir_type: DataDirType,
 }
 
 impl DataDir {
+    /// The [`RVA`](crate::header::RelativeVirtualAddress) of the table
     pub fn virtual_address(&self) -> [u8; 4] {
-        self.virtual_address
+        todo!()
     }
 
+    /// Size in bytes
     pub fn size(&self) -> [u8; 4] {
-        self.size
+        todo!()
+    }
+}
+
+impl Display for DataDir {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
     }
 }
 
 #[derive(Debug)]
 pub struct DataDirectories {
-    /// The export table address and size.
-    export_table: Option<DataDir>,
-    /// The import table address and size.
-    import_table: Option<DataDir>,
-    /// The resource table address and size.
-    resource_table: Option<DataDir>,
-    /// The exception table address and size.
-    exception_table: Option<DataDir>,
-    /// The attribute certificate table address and size.
-    /// This entry points to a table of attribute certificates.
-    /// These certificates are not loaded into memory as part of the image.
-    /// As such, the first field of this entry, which is normally an [`RVA`](RelativeVirtualAddress), is a file pointer instead.
-    certificate_table: Option<DataDir>,
-    /// The base relocation table address and size.
-    base_relocation_table: Option<DataDir>,
-    /// The debug data starting address and size.
-    debug: Option<DataDir>,
-    /// Reserved, must be 0
-    architecture: Option<DataDir>,
-    /// The [`RVA`](RelativeVirtualAddress) of the value to be stored in the global pointer register. The size member of this structure must be set to zero.
-    global_ptr: Option<DataDir>,
-    /// The thread local storage (TLS) table address and size.
-    tls_table: Option<DataDir>,
-    /// The load configuration table address and size.
-    load_config_table: Option<DataDir>,
-    /// The bound import table address and size.
-    bound_import: Option<DataDir>,
-    /// The import address table address and size.
-    import_address_table: Option<DataDir>,
-    /// The delay import descriptor address and size.
-    delay_import_descriptor: Option<DataDir>,
-    /// The CLR runtime header address and size.
-    clr_runtime_header: Option<DataDir>,
+    offset: u64,
+    buffer: Cursor<Vec<u8>>,
 }
 
 impl DataDirectories {
-    pub fn export_table(&self) -> Option<&DataDir> {
-        self.export_table.as_ref()
+    /// The export table address and size.
+    pub fn export(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn import_table(&self) -> Option<&DataDir> {
-        self.import_table.as_ref()
+    /// The import table address and size.
+    pub fn import(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn resource_table(&self) -> Option<&DataDir> {
-        self.resource_table.as_ref()
+    /// The resource table address and size.
+    pub fn resource(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn exception_table(&self) -> Option<&DataDir> {
-        self.exception_table.as_ref()
+    /// The exception table address and size.
+    pub fn exception(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn certificate_table(&self) -> Option<&DataDir> {
-        self.certificate_table.as_ref()
+    // The attribute certificate table address and size.
+    /// This entry points to a table of attribute certificates.
+    /// These certificates are not loaded into memory as part of the image.
+    /// As such, the first field of this entry, which is normally an [`RVA`](RelativeVirtualAddress), is a file pointer instead.
+    pub fn certificate(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn base_relocation_table(&self) -> Option<&DataDir> {
-        self.base_relocation_table.as_ref()
+    /// The base relocation table address and size.
+    pub fn base_relocation(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn architecture(&self) -> Option<&DataDir> {
-        self.architecture.as_ref()
+    /// The debug data starting address and size.
+    pub fn debug(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn global_ptr(&self) -> Option<&DataDir> {
-        self.global_ptr.as_ref()
+    /// Reserved, must be 0
+    pub fn architecture(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn tls_table(&self) -> Option<&DataDir> {
-        self.tls_table.as_ref()
+    /// The [`RVA`](RelativeVirtualAddress) of the value to be stored in the global pointer register. The size member of this structure must be set to zero.
+    pub fn global_ptr(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn load_config_table(&self) -> Option<&DataDir> {
-        self.load_config_table.as_ref()
+    /// The thread local storage (TLS) table address and size.
+    pub fn tls_table(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn bound_import(&self) -> Option<&DataDir> {
-        self.bound_import.as_ref()
+    /// The load configuration table address and size.
+    pub fn load_config_table(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn import_address_table(&self) -> Option<&DataDir> {
-        self.import_address_table.as_ref()
+    /// The bound import table address and size.
+    pub fn bound_import(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn delay_import_descriptor(&self) -> Option<&DataDir> {
-        self.delay_import_descriptor.as_ref()
+    /// The import address table address and size.
+    pub fn import_address_table(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 
-    pub fn clr_runtime_header(&self) -> Option<&DataDir> {
-        self.clr_runtime_header.as_ref()
+    /// The delay import descriptor address and size.
+    pub fn delay_import_descriptor(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
-}
 
-impl From<Vec<DataDir>> for DataDirectories {
-    fn from(value: Vec<DataDir>) -> Self {
-        let export_table = value.get(0).cloned();
-        let import_table = value.get(1).cloned();
-        let resource_table = value.get(2).cloned();
-        let exception_table = value.get(3).cloned();
-        let certificate_table = value.get(4).cloned();
-        let base_relocation_table = value.get(5).cloned();
-        let debug = value.get(6).cloned();
-        let architecture = value.get(7).cloned();
-        let global_ptr = value.get(8).cloned();
-        let tls_table = value.get(9).cloned();
-        let load_config_table = value.get(10).cloned();
-        let bound_import = value.get(11).cloned();
-        let import_address_table = value.get(12).cloned();
-        let delay_import_descriptor = value.get(13).cloned();
-        let clr_runtime_header = value.get(14).cloned();
-
-        Self {
-            export_table,
-            import_table,
-            resource_table,
-            exception_table,
-            certificate_table,
-            base_relocation_table,
-            debug,
-            architecture,
-            global_ptr,
-            tls_table,
-            load_config_table,
-            bound_import,
-            import_address_table,
-            delay_import_descriptor,
-            clr_runtime_header,
-        }
+    /// The CLR runtime header address and size.
+    pub fn clr_runtime_header(&self) -> Option<Field<DataDir>> {
+        todo!()
     }
 }
 
-struct SectionBuffer {
-    buffer: Cursor<Vec<u8>>,
+impl Display for DataDirectories {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
 }
 
 /// Section header structure
@@ -593,93 +476,79 @@ struct SectionBuffer {
 /// In addition, an image file can contain a number of sections, such as `.tls` or `.reloc` , which have special purposes.
 #[derive(Debug)]
 pub struct Section {
+    offset: u64,
+    buffer: Cursor<Vec<u8>>,
+}
+
+impl Section {
     /// An 8-byte, null-padded UTF-8 encoded string.
     /// If the string is exactly 8 characters long, there is no terminating null.
     /// For longer names, this field contains a slash (/) that is followed by an ASCII representation of a decimal number that is an offset into the string table.
     /// Executable images do not use a string table and do not support section names longer than 8 characters.
     /// Long names in object files are truncated if they are emitted to an executable file.
-    name: [u8; 8],
+    pub fn name(&self) -> Field<String> {
+        todo!()
+    }
+
     /// The total size of the section when loaded into memory.
     /// If this value is greater than `size_of_raw_data`, the section is zero-padded.
     /// This field is valid only for executable images and should be set to zero for object files.
-    virtual_size: [u8; 4],
+    pub fn virtual_size(&self) -> u32 {
+        todo!()
+    }
+
     /// For executable images, the address of the first byte of the section relative to the image base when the section is loaded into memory.
     /// For object files, this field is the address of the first byte before relocation is applied; for simplicity, compilers should set this to zero.
     /// Otherwise, it is an arbitrary value that is subtracted from offsets during relocation.
-    virtual_address: [u8; 4],
+    pub fn virtual_address(&self, image_base: VirtualAddress) -> RelativeVirtualAddress {
+        todo!()
+    }
+
     /// The size of the section (for object files) or the size of the initialized data on disk (for image files).
     /// For executable images, this must be a multiple of [`file_alignment`](OptionalHeader#structfield.file_alignment) from the [`OptionalHeader`].
     /// If this is less than `virtual_size`, the remainder of the section is zero-filled.
     /// Because the `size_of_raw_data` field is rounded but the `virtual_size` field is not, it is possible for `size_of_raw_data` to be greater than `virtual_size` as well.
     /// When a section contains only uninitialized data, this field should be zero.
-    size_of_raw_data: [u8; 4],
+    pub fn size_of_raw_data(&self) -> u32 {
+        todo!()
+    }
+
     /// The file pointer to the first page of the section within the COFF file.
     /// For executable images, this must be a multiple of [`file_alignment`](OptionalHeader#structfield.file_alignment) from the [`OptionalHeader`].
     /// For object files, the value should be aligned on a 4-byte boundary for best performance.
     /// When a section contains only uninitialized data, this field should be zero.
-    pointer_to_raw_data: [u8; 4],
+    pub fn pointer_to_raw_data(&self) -> u64 {
+        todo!()
+    }
+
     /// The file pointer to the beginning of relocation entries for the section.
     /// This is set to zero for executable images or if there are no relocations.
-    pointer_to_relocations: [u8; 4],
+    pub fn pointer_to_relocations(&self) -> u64 {
+        todo!()
+    }
+
     /// The file pointer to the beginning of line-number entries for the section.
     /// This is set to zero if there are no COFF line numbers.
     /// This value should be zero for an image because COFF debugging information is deprecated.
-    pointer_to_linenumbers: [u8; 4],
+    pub fn pointer_to_linenumbers(&self) -> u64 {
+        todo!()
+    }
+
     /// The number of relocation entries for the section.
     /// This is set to zero for executable images.
-    number_of_relocations: [u8; 2],
+    pub fn number_of_relocations(&self) -> u16 {
+        todo!()
+    }
+
     /// The number of line-number entries for the section.
     /// This value should be zero for an image because COFF debugging information is deprecated.
-    number_of_linenumbers: [u8; 2],
-    /// The [flags](crate::section_flags) that describe the characteristics of the section.
-    characteristics: [u8; 4],
-}
-
-impl Section {
-    pub fn name(&self) -> String {
-        self.name
-            .iter()
-            .take_while(|&c| *c != 0)
-            .map(|c| *c as char)
-            .collect()
-    }
-
-    pub fn virtual_size(&self) -> u32 {
-        u32::from_le_bytes(self.virtual_size)
-    }
-
-    pub fn virtual_address(&self, image_base: VirtualAddress) -> RelativeVirtualAddress {
-        let addr: VirtualAddress = u32::from_le_bytes(self.virtual_address).into();
-        RelativeVirtualAddress { addr, image_base }
-    }
-
-    pub fn size_of_raw_data(&self) -> u32 {
-        u32::from_le_bytes(self.size_of_raw_data)
-    }
-
-    pub fn pointer_to_raw_data(&self) -> u64 {
-        let pos: u64 = u32::from_le_bytes(self.pointer_to_raw_data).into();
-        pos
-    }
-
-    pub fn pointer_to_relocations(&self) -> u64 {
-        u32::from_le_bytes(self.pointer_to_relocations).into()
-    }
-
-    pub fn pointer_to_linenumbers(&self) -> u64 {
-        u32::from_le_bytes(self.pointer_to_linenumbers).into()
-    }
-
-    pub fn number_of_relocations(&self) -> u16 {
-        u16::from_le_bytes(self.number_of_relocations)
-    }
-
     pub fn number_of_linenumbers(&self) -> u16 {
-        u16::from_le_bytes(self.number_of_linenumbers)
+        todo!()
     }
 
+    /// The [flags](section_flags) that describe the characteristics of the section.
     pub fn characteristics(&self) -> [u8; 4] {
-        self.characteristics
+        todo!()
     }
 }
 
@@ -694,6 +563,12 @@ impl Section {
 pub struct RelativeVirtualAddress {
     addr: VirtualAddress,
     image_base: VirtualAddress,
+}
+
+impl Display for RelativeVirtualAddress {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
 }
 
 /// Virtual address (VA)
@@ -758,7 +633,7 @@ impl From<[u8; 8]> for VirtualAddress {
 }
 
 #[derive(Debug)]
-struct Field<T: fmt::Debug + Display> {
+pub struct Field<T: fmt::Debug + Display> {
     offset: u64,
     raw_bytes: Vec<u8>,
     data: T,

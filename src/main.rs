@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 pub mod header;
 
 use header::machine_types::Machine;
