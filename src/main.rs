@@ -5,8 +5,6 @@ pub mod header;
 use header::machine_types::Machine;
 use std::io::{self, ErrorKind, Read, Seek};
 
-const MZ_SIGNATURE: [u8; 2] = [b'M', b'Z'];
-
 fn main() -> io::Result<()> {
     Ok(())
 }
@@ -17,6 +15,7 @@ enum PortExeType {
 }
 
 fn detect_pe_type<R: Read + Seek>(reader: &mut R) -> io::Result<PortExeType> {
+    const MZ_SIGNATURE: [u8; 2] = [b'M', b'Z'];
     let mut mz = [0u8; 2];
     reader.rewind()?;
     reader.read_exact(&mut mz)?;

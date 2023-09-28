@@ -4,9 +4,10 @@ pub mod section_flags;
 pub mod win_subsystem;
 
 use chrono::{DateTime, TimeZone, Utc};
-use machine_types::Machine;
+use machine_types::*;
 use std::{
-    fmt::Display,
+    default,
+    fmt::{self, Debug, Display},
     io::{self, Cursor, Read},
     ops::Add,
 };
@@ -86,9 +87,33 @@ pub struct FileHeader {
     characteristics: [u8; 2],
 }
 
+#[allow(non_snake_case)]
 impl FileHeader {
-    fn machine(&self) -> Machine {
-        Machine::try_from(self.machine).unwrap()
+    fn machine(&self) -> Field<Machine, 2> {
+        Field {
+            offset: 0x3C,
+            raw_bytes: self.machine,
+            data: Machine::try_from(self.machine).unwrap(),
+            meaning: match self.machine {
+                IMAGE_FILE_MACHINE_UNKNOWN => "Unknown".to_string(),
+                IMAGE_FILE_MACHINE_AM33 => "Matsushita AM33".to_string(),
+                IMAGE_FILE_MACHINE_AMD64 => "x64".to_string(),
+                IMAGE_FILE_MACHINE_ARM => "ARM little endian".to_string(),
+                IMAGE_FILE_MACHINE_ARM64 => "ARM64 little endian".to_string(),
+                IMAGE_FILE_MACHINE_ARMNT => "ARM Thumb-2 little endian".to_string(),
+                IMAGE_FILE_MACHINE_EBC => "EFI byte code".to_string(),
+                IMAGE_FILE_MACHINE_I386 => {
+                    "Intel 386 or later processors and compatible processors".to_string()
+                }
+                IMAGE_FILE_MACHINE_IA64 => "Intel Itanium processor family".to_string(),
+                IMAGE_FILE_MACHINE_LOONGARCH32 => "LoongArch 32-bit processor family".to_string(),
+                IMAGE_FILE_MACHINE_LOONGARCH64 => "LoongArch 64-bit processor family".to_string(),
+                IMAGE_FILE_MACHINE_M32R => "Mitsubishi M32R little endian".to_string(),
+                IMAGE_FILE_MACHINE_MIPS16 => "MIPS16".to_string(),
+                IMAGE_FILE_MACHINE_MIPSFPU => "MIPS16 with FPU".to_string(),
+                _ => panic!(),
+            },
+        }
     }
 
     fn number_of_sections(&self) -> u16 {
@@ -780,5 +805,22 @@ impl From<[u8; 8]> for VirtualAddress {
         Self {
             addr: u64::from_le_bytes(value),
         }
+    }
+}
+
+#[derive(Debug)]
+struct Field<T: fmt::Debug + Display, const N: usize> {
+    offset: u64,
+    raw_bytes: [u8; N],
+    data: T,
+    meaning: String,
+}
+
+impl<T: Debug + Display, const N: usize> Display for Field<T, N> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!(
+            "{}\t{:#?}\t{:#?}\t{}",
+            self.offset, self.raw_bytes, self.data, self.meaning
+        ))
     }
 }
