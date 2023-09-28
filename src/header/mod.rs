@@ -30,71 +30,25 @@ pub enum ImageType {
     ImageRom = 0x0107,
 }
 
-struct FileHeaderBuffer {
-    buffer: Cursor<Vec<u8>>,
-}
-
-impl FileHeaderBuffer {
-    pub fn read_file_header(&mut self) -> io::Result<FileHeader> {
-        let mut machine = [0u8; 2];
-        let mut number_of_sections = [0u8; 2];
-        let mut time_date_stamp = [0u8; 4];
-        let mut pointer_to_symbol_table = [0u8; 4];
-        let mut number_of_symbols = [0u8; 4];
-        let mut size_of_optional_header = [0u8; 2];
-        let mut characteristics = [0u8; 2];
-
-        self.buffer.read_exact(&mut machine)?;
-        self.buffer.read_exact(&mut number_of_sections)?;
-        self.buffer.read_exact(&mut time_date_stamp)?;
-        self.buffer.read_exact(&mut pointer_to_symbol_table)?;
-        self.buffer.read_exact(&mut number_of_symbols)?;
-        self.buffer.read_exact(&mut size_of_optional_header)?;
-        self.buffer.read_exact(&mut characteristics)?;
-
-        Ok(FileHeader {
-            machine,
-            number_of_sections,
-            time_date_stamp,
-            pointer_to_symbol_table,
-            number_of_symbols,
-            size_of_optional_header,
-            characteristics,
-        })
-    }
-}
-
 /// COFF File Header structure
 #[derive(Debug)]
 pub struct FileHeader {
-    /// Identifies the type of target machine. For more information, see [`machine_types`](crate::machine_types).
-    machine: [u8; 2],
-    /// The number of sections. This indicates the size of the section table, which immediately follows the headers.
-    number_of_sections: [u8; 2],
-    /// The low 32 bits of the number of seconds since 00:00 January 1, 1970 (a C run-time time_t value), which indicates when the file was created.
-    time_date_stamp: [u8; 4],
-    /// The file offset of the COFF symbol table, or zero if no COFF symbol table is present.
-    /// This value should be zero for an image because COFF debugging information is deprecated.
-    pointer_to_symbol_table: [u8; 4],
-    /// The number of entries in the symbol table.
-    /// This data can be used to locate the string table, which immediately follows the symbol table.
-    /// This value should be zero for an image because COFF debugging information is deprecated.
-    number_of_symbols: [u8; 4],
-    /// The size of the [`OptionalHeader`](crate::header::OptionalHeader), which is required for executable files but not for object files.
-    /// This value should be zero for an object file.
-    size_of_optional_header: [u8; 2],
-    /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](crate::characteristics)
-    characteristics: [u8; 2],
+    offset: u64,
+    buffer: Cursor<Vec<u8>>,
 }
 
 #[allow(non_snake_case)]
 impl FileHeader {
-    fn machine(&self) -> Field<Machine, 2> {
+    /// Identifies the type of target machine. For more information, see [`machine_types`](crate::machine_types).
+    fn read_machine(&mut self) -> Field<Machine> {
+        let mut buf = [0u8; 2];
+        self.buffer.read(&mut buf);
+        let data = Machine::try_from(buf).unwrap();
         Field {
             offset: 0x3C,
-            raw_bytes: self.machine,
-            data: Machine::try_from(self.machine).unwrap(),
-            meaning: match self.machine {
+            raw_bytes: self.buffer.clone().into_inner(),
+            data,
+            meaning: match buf {
                 IMAGE_FILE_MACHINE_UNKNOWN => "Unknown".to_string(),
                 IMAGE_FILE_MACHINE_AM33 => "Matsushita AM33".to_string(),
                 IMAGE_FILE_MACHINE_AMD64 => "x64".to_string(),
@@ -110,68 +64,63 @@ impl FileHeader {
                 IMAGE_FILE_MACHINE_LOONGARCH64 => "LoongArch 64-bit processor family".to_string(),
                 IMAGE_FILE_MACHINE_M32R => "Mitsubishi M32R little endian".to_string(),
                 IMAGE_FILE_MACHINE_MIPS16 => "MIPS16".to_string(),
-                IMAGE_FILE_MACHINE_MIPSFPU => "MIPS16 with FPU".to_string(),
+                IMAGE_FILE_MACHINE_MIPSFPU => "MIPS with FPU".to_string(),
+                IMAGE_FILE_MACHINE_MIPSFPU16 => "MIPS16 with FPU".to_string(),
+                IMAGE_FILE_MACHINE_POWERPC => "Power PC little endian".to_string(),
+                IMAGE_FILE_MACHINE_POWERPCFP => "Power PC with floating point support".to_string(),
+                IMAGE_FILE_MACHINE_R4000 => "MIPS little endian".to_string(),
+                IMAGE_FILE_MACHINE_RISCV32 => "RISC-V 32-bit address space".to_string(),
+                IMAGE_FILE_MACHINE_RISCV64 => "RISC-V 64-bit address space".to_string(),
+                IMAGE_FILE_MACHINE_RISCV128 => "RISC-V 128-bit address space".to_string(),
+                IMAGE_FILE_MACHINE_SH3 => "Hitachi SH3".to_string(),
+                IMAGE_FILE_MACHINE_SH3DSP => "Hitachi SH3 DSP".to_string(),
+                IMAGE_FILE_MACHINE_SH4 => "Hitachi SH4".to_string(),
+                IMAGE_FILE_MACHINE_SH5 => "Hitachi SH5".to_string(),
+                IMAGE_FILE_MACHINE_THUMB => "Thumb".to_string(),
+                IMAGE_FILE_MACHINE_WCEMIPSV2 => "MIPS little-endian WCE v2".to_string(),
                 _ => panic!(),
             },
         }
     }
 
-    fn number_of_sections(&self) -> u16 {
-        u16::from_le_bytes(self.number_of_sections)
+    /// Indicates the size of the section table, which immediately follows the headers.
+    fn read_number_of_sections(&self) -> Field<u16> {
+        todo!()
     }
 
-    fn time_date_stamp(&self) -> DateTime<Utc> {
-        Utc.timestamp_opt(u32::from_le_bytes(self.time_date_stamp) as i64, 0)
-            .unwrap()
+    /// The low 32 bits of the number of seconds since 00:00 January 1, 1970 (a C run-time time_t value), which indicates when the file was created.
+    fn time_date_stamp(&self) -> Field<DateTime<Utc>> {
+        todo!()
     }
 
-    fn pointer_to_symbol_table(&self) -> u32 {
-        u32::from_le_bytes(self.pointer_to_symbol_table)
+    /// The file offset of the COFF symbol table, or zero if no COFF symbol table is present.
+    /// This value should be zero for an image because COFF debugging information is deprecated.
+    fn pointer_to_symbol_table(&self) -> Field<u32> {
+        todo!()
     }
 
-    fn number_of_symbols(&self) -> u32 {
-        u32::from_le_bytes(self.number_of_symbols)
+    /// The number of entries in the symbol table.
+    /// This data can be used to locate the string table, which immediately follows the symbol table.
+    /// This value should be zero for an image because COFF debugging information is deprecated.
+    fn number_of_symbols(&self) -> Field<u32> {
+        todo!()
     }
 
-    fn size_of_optional_header(&self) -> u16 {
-        u16::from_le_bytes(self.size_of_optional_header)
+    /// The size of the [`OptionalHeader`](crate::header::OptionalHeader), which is required for executable files but not for object files.
+    /// This value should be zero for an object file.
+    fn size_of_optional_header(&self) -> Field<u16> {
+        todo!()
     }
 
-    fn characteristics(&self) -> u16 {
-        u16::from_le_bytes(self.characteristics)
+    /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](crate::characteristics)
+    fn characteristics(&self) -> Field<u16> {
+        todo!()
     }
 }
 
 impl Display for FileHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("Machine: {0}\n", self.machine()))
-            .unwrap();
-        f.write_fmt(format_args!(
-            "Number of sections: {0}\n",
-            self.number_of_sections()
-        ))
-        .unwrap();
-        f.write_fmt(format_args!("Timestamp: {0}\n", self.time_date_stamp()))
-            .unwrap();
-        f.write_fmt(format_args!(
-            "Pointer to symbol table: 0x{0:08X}\n",
-            self.pointer_to_symbol_table()
-        ))
-        .unwrap();
-        f.write_fmt(format_args!(
-            "Number of symbols: {0}\n",
-            self.number_of_symbols()
-        ))
-        .unwrap();
-        f.write_fmt(format_args!(
-            "Size of optional header: {0} bytes\n",
-            self.size_of_optional_header()
-        ))
-        .unwrap();
-        f.write_fmt(format_args!(
-            "Characteristics: 0x{0:04X}\n",
-            self.characteristics()
-        ))
+        todo!()
     }
 }
 
@@ -809,14 +758,14 @@ impl From<[u8; 8]> for VirtualAddress {
 }
 
 #[derive(Debug)]
-struct Field<T: fmt::Debug + Display, const N: usize> {
+struct Field<T: fmt::Debug + Display> {
     offset: u64,
-    raw_bytes: [u8; N],
+    raw_bytes: Vec<u8>,
     data: T,
     meaning: String,
 }
 
-impl<T: Debug + Display, const N: usize> Display for Field<T, N> {
+impl<T: Debug + Display> Display for Field<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
             "{}\t{:#?}\t{:#?}\t{}",
