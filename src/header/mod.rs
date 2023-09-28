@@ -39,7 +39,7 @@ pub struct FileHeader {
 
 #[allow(non_snake_case)]
 impl FileHeader {
-    /// Identifies the type of target machine. For more information, see [`machine_types`](crate::machine_types).
+    /// Identifies the type of target machine. For more information, see [`machine_types`](machine_types).
     fn read_machine(&mut self) -> Field<Machine> {
         let mut buf = [0u8; 2];
         self.buffer.read(&mut buf);
