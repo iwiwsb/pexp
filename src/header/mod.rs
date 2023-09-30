@@ -95,6 +95,12 @@ impl FileHeader {
     }
 }
 
+impl ParseStruct for FileHeader {
+    fn parse_struct(offset: usize, buffer: Vec<u8>) -> Self {
+        todo!()
+    }
+}
+
 impl Display for FileHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
@@ -673,4 +679,13 @@ impl<T: Debug + Display> Display for StructField<T> {
 
 trait ReadU16LE {
     fn read_u16_le(&mut self) -> u16;
+}
+
+trait ParseStruct {
+    fn parse_struct(offset: usize, buffer: Vec<u8>) -> Self
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
 }
