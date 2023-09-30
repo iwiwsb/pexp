@@ -40,87 +40,57 @@ impl Display for ImageType {
 /// COFF File Header structure
 #[derive(Debug)]
 pub struct FileHeader {
+    #[doc(hidden)]
+    /// file header offset
     offset: u64,
     buffer: Cursor<Vec<u8>>,
+    /// Identifies the type of target machine. For more information, see [`machine_types`](machine_types).
+    pub machine: StructField<Machine>,
+    /// Indicates the size of the section table, which immediately follows the headers.
+    pub number_of_sections: StructField<u16>,
+    /// The low 32 bits of the number of seconds since 00:00 January 1, 1970 (a C run-time time_t value), which indicates when the file was created.
+    pub time_date_stamp: StructField<DateTime<Utc>>,
+    /// The file offset of the COFF symbol table, or zero if no COFF symbol table is present.
+    /// This value should be zero for an image because COFF debugging information is deprecated.
+    pub pointer_to_symbol_table: StructField<u32>,
+    /// The number of entries in the symbol table.
+    /// This data can be used to locate the string table, which immediately follows the symbol table.
+    /// This value should be zero for an image because COFF debugging information is deprecated.
+    pub number_of_symbols: StructField<u32>,
+    /// The size of the [`OptionalHeader`](crate::header::OptionalHeader), which is required for executable files but not for object files.
+    /// This value should be zero for an object file.
+    pub size_of_optional_header: StructField<u16>,
+    /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](characteristics)
+    pub characteristics: StructField<u16>,
 }
 
 #[allow(non_snake_case)]
 impl FileHeader {
-    /// Identifies the type of target machine. For more information, see [`machine_types`](machine_types).
-    fn machine(&mut self) -> Field<Machine> {
-        let mut buf = [0u8; 2];
-        let _ = self.buffer.read(&mut buf);
-        let data = Machine::try_from(buf).unwrap();
-        Field {
-            offset: 0x3C,
-            raw_bytes: self.buffer.clone().into_inner(),
-            data,
-            meaning: match buf {
-                IMAGE_FILE_MACHINE_UNKNOWN => "Unknown".to_string(),
-                IMAGE_FILE_MACHINE_AM33 => "Matsushita AM33".to_string(),
-                IMAGE_FILE_MACHINE_AMD64 => "x64".to_string(),
-                IMAGE_FILE_MACHINE_ARM => "ARM little endian".to_string(),
-                IMAGE_FILE_MACHINE_ARM64 => "ARM64 little endian".to_string(),
-                IMAGE_FILE_MACHINE_ARMNT => "ARM Thumb-2 little endian".to_string(),
-                IMAGE_FILE_MACHINE_EBC => "EFI byte code".to_string(),
-                IMAGE_FILE_MACHINE_I386 => {
-                    "Intel 386 or later processors and compatible processors".to_string()
-                }
-                IMAGE_FILE_MACHINE_IA64 => "Intel Itanium processor family".to_string(),
-                IMAGE_FILE_MACHINE_LOONGARCH32 => "LoongArch 32-bit processor family".to_string(),
-                IMAGE_FILE_MACHINE_LOONGARCH64 => "LoongArch 64-bit processor family".to_string(),
-                IMAGE_FILE_MACHINE_M32R => "Mitsubishi M32R little endian".to_string(),
-                IMAGE_FILE_MACHINE_MIPS16 => "MIPS16".to_string(),
-                IMAGE_FILE_MACHINE_MIPSFPU => "MIPS with FPU".to_string(),
-                IMAGE_FILE_MACHINE_MIPSFPU16 => "MIPS16 with FPU".to_string(),
-                IMAGE_FILE_MACHINE_POWERPC => "Power PC little endian".to_string(),
-                IMAGE_FILE_MACHINE_POWERPCFP => "Power PC with floating point support".to_string(),
-                IMAGE_FILE_MACHINE_R4000 => "MIPS little endian".to_string(),
-                IMAGE_FILE_MACHINE_RISCV32 => "RISC-V 32-bit address space".to_string(),
-                IMAGE_FILE_MACHINE_RISCV64 => "RISC-V 64-bit address space".to_string(),
-                IMAGE_FILE_MACHINE_RISCV128 => "RISC-V 128-bit address space".to_string(),
-                IMAGE_FILE_MACHINE_SH3 => "Hitachi SH3".to_string(),
-                IMAGE_FILE_MACHINE_SH3DSP => "Hitachi SH3 DSP".to_string(),
-                IMAGE_FILE_MACHINE_SH4 => "Hitachi SH4".to_string(),
-                IMAGE_FILE_MACHINE_SH5 => "Hitachi SH5".to_string(),
-                IMAGE_FILE_MACHINE_THUMB => "Thumb".to_string(),
-                IMAGE_FILE_MACHINE_WCEMIPSV2 => "MIPS little-endian WCE v2".to_string(),
-                _ => panic!(),
-            },
-        }
-    }
-
-    /// Indicates the size of the section table, which immediately follows the headers.
-    fn number_of_sections(&self) -> Field<u16> {
+    fn read_machine(&mut self) -> StructField<Machine> {
         todo!()
     }
 
-    /// The low 32 bits of the number of seconds since 00:00 January 1, 1970 (a C run-time time_t value), which indicates when the file was created.
-    fn time_date_stamp(&self) -> Field<DateTime<Utc>> {
+    fn read_number_of_sections(&mut self) -> StructField<u16> {
         todo!()
     }
 
-    /// The file offset of the COFF symbol table, or zero if no COFF symbol table is present.
-    /// This value should be zero for an image because COFF debugging information is deprecated.
-    fn pointer_to_symbol_table(&self) -> Field<u32> {
+    fn read_time_date_stamp(&mut self) -> StructField<DateTime<Utc>> {
         todo!()
     }
 
-    /// The number of entries in the symbol table.
-    /// This data can be used to locate the string table, which immediately follows the symbol table.
-    /// This value should be zero for an image because COFF debugging information is deprecated.
-    fn number_of_symbols(&self) -> Field<u32> {
+    fn read_pointer_to_symbol_table(&self) -> StructField<u32> {
         todo!()
     }
 
-    /// The size of the [`OptionalHeader`](crate::header::OptionalHeader), which is required for executable files but not for object files.
-    /// This value should be zero for an object file.
-    fn size_of_optional_header(&self) -> Field<u16> {
+    fn read_number_of_symbols(&self) -> StructField<u32> {
         todo!()
     }
 
-    /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](characteristics)
-    fn characteristics(&self) -> Field<u16> {
+    fn read_size_of_optional_header(&self) -> StructField<u16> {
+        todo!()
+    }
+
+    fn read_characteristics(&self) -> StructField<u16> {
         todo!()
     }
 }
@@ -147,188 +117,240 @@ impl Display for FileHeader {
 /// The next 21 fields are an extension to the COFF optional header format. They contain additional information that is required by the linker and loader in Windows.
 #[derive(Debug)]
 pub struct OptionalHeader {
+    #[doc(hidden)]
     offset: u64,
+
+    #[doc(hidden)]
     buffer: Cursor<Vec<u8>>,
-}
 
-#[derive(Debug)]
-pub struct LinkerVersion {
-    major: u8,
-    minor: u8,
-}
-
-impl OptionalHeader {
     /// Identifies the state of the image file.
     /// The most common number is `0x10B`, which identifies it as a 32-bit (PE32) executable file.
     /// `0x107` identifies it as a ROM image, and `0x20B` identifies it as a 64-bit (PE32+) executable file.
-    pub fn image_type(&self) -> Field<ImageType> {
-        todo!()
-    }
+    pub image_type: StructField<ImageType>,
 
     /// The linker major version number.
-    pub fn major_linker_version(&self) -> Field<u8> {
-        todo!()
-    }
+    pub major_linker_version: StructField<u8>,
 
     /// The linker minor version number.
-    pub fn minor_linker_version(&self) -> Field<u8> {
-        todo!()
-    }
+    pub minor_linker_version: StructField<u8>,
 
     /// The size of the code (`.text`) section, or the sum of all code sections if there are multiple sections.
-    pub fn size_of_code(&self) -> Field<u32> {
-        todo!()
-    }
+    pub size_of_code: StructField<u32>,
 
     /// The size of the initialized data section, or the sum of all such sections if there are multiple data sections.
-    pub fn size_of_initialized_data(&self) -> Field<u32> {
-        todo!()
-    }
+    pub size_of_initialized_data: StructField<u32>,
 
     /// The size of the uninitialized data section (`BSS`), or the sum of all such sections if there are multiple `BSS` sections.
-    pub fn size_of_uninitialized_data(&self) -> Field<u32> {
-        todo!()
-    }
+    pub size_of_uninitialized_data: StructField<u32>,
 
     /// The address of the entry point relative to the image base when the executable file is loaded into memory.
     /// For program images, this is the starting address.
     /// For device drivers, this is the address of the initialization function.
     /// An entry point is optional for DLLs.
-    /// When no entry point is present, this field must be zero.
-    pub fn address_of_entry_point(&self) -> Field<RelativeVirtualAddress> {
-        todo!()
-    }
+    pub address_of_entry_point: StructField<RelativeVirtualAddress>,
 
     /// The address that is relative to the image base of the beginning-of-code section when it is loaded into memory.
-    pub fn base_of_code(&self) -> Field<RelativeVirtualAddress> {
-        todo!()
-    }
+    pub base_of_code: StructField<RelativeVirtualAddress>,
 
     /// The address that is relative to the image base of the beginning-of-data section when it is loaded into memory.
     /// PE32 contains this additional field, which is absent in PE32+
-    pub fn base_of_data(&self) -> Option<Field<RelativeVirtualAddress>> {
-        todo!()
-    }
+    pub base_of_data: Option<StructField<RelativeVirtualAddress>>,
 
     /// The preferred address of the first byte of image when loaded into memory; must be a multiple of 64 K.
     /// The default for DLLs is `0x10000000`.
     /// The default for Windows CE EXEs is `0x00010000`.
     /// The default for Windows NT, Windows 2000, Windows XP, Windows 95, Windows 98, and Windows Me is `0x00400000`.
-    pub fn image_base(&self) -> Field<u64> {
-        todo!()
-    }
+    pub image_base: StructField<u64>,
 
-    /// The alignment (in bytes) of sections when they are loaded into memory.
-    /// It must be greater than or equal to `file_alignment`.
-    /// The default is the page size for the architecture.
-    pub fn section_alignment(&self) -> Field<u32> {
-        todo!()
-    }
+    pub section_alignment: StructField<u32>,
 
-    /// The alignment factor (in bytes) that is used to align the raw data of sections in the image file.
-    /// The value should be a power of 2 between 512 and 64 K, inclusive.
-    /// The default is 512. If the `section_alignment` is less than the architecture's page size, then FileAlignment must match `section_alignment`.
-    pub fn file_alignment(&self) -> Field<u32> {
-        todo!()
-    }
+    pub file_alignment: StructField<u32>,
 
-    /// The major version number of the required operating system.
-    pub fn major_operating_system_version(&self) -> Field<u16> {
-        todo!()
-    }
+    pub major_operating_system_version: StructField<u16>,
 
     /// The minor version number of the required operating system.
-    pub fn minor_operating_system_version(&self) -> Field<u16> {
-        todo!()
-    }
+    pub minor_operating_system_version: StructField<u16>,
 
     /// The major version number of the image.
-    pub fn major_image_version(&self) -> Field<u16> {
-        todo!()
-    }
+    pub major_image_version: StructField<u16>,
 
     /// The minor version number of the image.
-    pub fn minor_image_version(&self) -> Field<u16> {
-        todo!()
-    }
+    pub minor_image_version: StructField<u16>,
 
     /// The major version number of the subsystem.
-    pub fn major_subsystem_version(&self) -> Field<u16> {
-        todo!()
-    }
+    pub major_subsystem_version: StructField<u16>,
 
     /// The minor version number of the subsystem.
-    pub fn minor_subsystem_version(&self) -> Field<u16> {
-        todo!()
-    }
+    pub minor_subsystem_version: StructField<u16>,
 
     /// Reserved, must be zero.
-    pub fn win32_version_value(&self) -> Field<u32> {
-        todo!()
-    }
+    pub win32_version_value: StructField<u32>,
 
     /// The size (in bytes) of the image, including all headers, as the image is loaded in memory.
     /// It must be a multiple of `section_alignment`.
-    pub fn size_of_image(&self) -> Field<u32> {
-        todo!()
-    }
+    pub size_of_image: StructField<u32>,
 
     /// The combined size of an MS-DOS stub, PE header, and section headers rounded up to a multiple of `file_alignment`.
-    pub fn size_of_headers(&self) -> Field<u32> {
-        todo!()
-    }
+    pub size_of_headers: StructField<u32>,
 
     /// The image file checksum.
     /// The algorithm for computing the checksum is incorporated into IMAGHELP.DLL.
     /// The following are checked for validation at load time: all drivers, any DLL loaded at boot time, and any DLL that is loaded into a critical Windows process.
-    pub fn check_sum(&self) -> Field<u32> {
-        todo!()
-    }
+    pub check_sum: StructField<u32>,
 
     /// The subsystem that is required to run this image. For more information, see [`win_subsystem`](win_subsystem) module.
-    pub fn subsystem(&self) -> Field<u16> {
-        todo!()
-    }
+    pub subsystem: StructField<u16>,
 
     /// See [`dll_characteristics`](dll_characteristics) module.
-    pub fn dll_characteristics(&self) -> Field<u16> {
-        todo!()
-    }
+    pub dll_characteristics: StructField<u16>,
 
     /// The size of the stack to reserve. Only `size_of_stack_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
-    pub fn size_of_stack_reserve(&self) -> Field<u64> {
-        todo!()
-    }
+    pub size_of_stack_reserve: StructField<u64>,
 
     /// The size of the stack to commit.
-    pub fn size_of_stack_commit(&self) -> Field<u64> {
-        todo!()
-    }
+    pub size_of_stack_commit: StructField<u64>,
 
     /// The size of the local heap space to reserve. Only `size_of_heap_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
-    pub fn size_of_heap_reserve(&self) -> Field<u64> {
-        todo!()
-    }
+    pub size_of_heap_reserve: StructField<u64>,
 
     /// The size of the local heap space to commit.
-    pub fn size_of_heap_commit(&self) -> Field<u64> {
-        todo!()
-    }
+    pub size_of_heap_commit: StructField<u64>,
 
     /// Reserved, must be zero.
-    pub fn loader_flags(&self) -> Field<u32> {
-        todo!()
-    }
+    pub loader_flags: StructField<u32>,
 
     /// The number of data-directory entries in the remainder of the optional header. Each describes a location and size.
-    pub fn number_of_rva_and_sizes(&self) -> Field<u32> {
-        todo!()
-    }
+    pub number_of_rva_and_sizes: StructField<u32>,
 
     /// Address/size pairs for special tables that are found in the image file and are used by the operating system (for example, the import table and the export table).
     /// Note that the number of directories is not fixed. Before looking for a specific directory,
     /// check the `number_of_rva_and_sizes` field.
-    pub fn data_directories(&self) -> Field<DataDirectories> {
+    pub data_directories: StructField<DataDirectories>,
+}
+
+impl OptionalHeader {
+    #[doc(hidden)]
+    fn read_image_type(&mut self) -> StructField<ImageType> {
+        todo!()
+    }
+
+    fn read_major_linker_version(&mut self) -> StructField<u8> {
+        todo!()
+    }
+
+    fn read_minor_linker_version(&mut self) -> StructField<u8> {
+        todo!()
+    }
+
+    fn read_size_of_code(&mut self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_size_of_initialized_data(&mut self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_size_of_uninitialized_data(&mut self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_address_of_entry_point(&mut self) -> StructField<RelativeVirtualAddress> {
+        todo!()
+    }
+
+    fn read_base_of_code(&mut self) -> StructField<RelativeVirtualAddress> {
+        todo!()
+    }
+
+    fn read_base_of_data(&mut self) -> Option<StructField<RelativeVirtualAddress>> {
+        todo!()
+    }
+
+    fn image_base(&mut self) -> StructField<u64> {
+        todo!()
+    }
+
+    fn read_section_alignment(&mut self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_file_alignment(&mut self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_major_operating_system_version(&mut self) -> StructField<u16> {
+        todo!()
+    }
+
+    fn read_minor_operating_system_version(&mut self) -> StructField<u16> {
+        todo!()
+    }
+
+    fn read_major_image_version(&mut self) -> StructField<u16> {
+        todo!()
+    }
+
+    fn read_minor_image_version(&mut self) -> StructField<u16> {
+        todo!()
+    }
+
+    fn read_major_subsystem_version(&mut self) -> StructField<u16> {
+        todo!()
+    }
+
+    fn read_minor_subsystem_version(&mut self) -> StructField<u16> {
+        todo!()
+    }
+
+    fn read_win32_version_value(&mut self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_size_of_image(&mut self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_size_of_headers(&mut self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_check_sum(&mut self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_subsystem(&mut self) -> StructField<u16> {
+        todo!()
+    }
+
+    fn read_dll_characteristics(&mut self) -> StructField<u16> {
+        todo!()
+    }
+
+    fn read_size_of_stack_reserve(&mut self) -> StructField<u64> {
+        todo!()
+    }
+
+    fn read_size_of_stack_commit(&mut self) -> StructField<u64> {
+        todo!()
+    }
+
+    fn read_size_of_heap_reserve(&mut self) -> StructField<u64> {
+        todo!()
+    }
+
+    fn read_size_of_heap_commit(&self) -> StructField<u64> {
+        todo!()
+    }
+
+    fn read_loader_flags(&self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_number_of_rva_and_sizes(&self) -> StructField<u32> {
+        todo!()
+    }
+
+    fn read_data_directories(&self) -> StructField<DataDirectories> {
         todo!()
     }
 }
@@ -382,22 +404,22 @@ pub struct DataDirectories {
 
 impl DataDirectories {
     /// The export table address and size.
-    pub fn export(&self) -> Option<Field<DataDir>> {
+    pub fn export(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The import table address and size.
-    pub fn import(&self) -> Option<Field<DataDir>> {
+    pub fn import(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The resource table address and size.
-    pub fn resource(&self) -> Option<Field<DataDir>> {
+    pub fn resource(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The exception table address and size.
-    pub fn exception(&self) -> Option<Field<DataDir>> {
+    pub fn exception(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
@@ -405,57 +427,57 @@ impl DataDirectories {
     /// This entry points to a table of attribute certificates.
     /// These certificates are not loaded into memory as part of the image.
     /// As such, the first field of this entry, which is normally an [`RVA`](RelativeVirtualAddress), is a file pointer instead.
-    pub fn certificate(&self) -> Option<Field<DataDir>> {
+    pub fn certificate(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The base relocation table address and size.
-    pub fn base_relocation(&self) -> Option<Field<DataDir>> {
+    pub fn base_relocation(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The debug data starting address and size.
-    pub fn debug(&self) -> Option<Field<DataDir>> {
+    pub fn debug(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// Reserved, must be 0
-    pub fn architecture(&self) -> Option<Field<DataDir>> {
+    pub fn architecture(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The [`RVA`](RelativeVirtualAddress) of the value to be stored in the global pointer register. The size member of this structure must be set to zero.
-    pub fn global_ptr(&self) -> Option<Field<DataDir>> {
+    pub fn global_ptr(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The thread local storage (TLS) table address and size.
-    pub fn tls_table(&self) -> Option<Field<DataDir>> {
+    pub fn tls_table(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The load configuration table address and size.
-    pub fn load_config_table(&self) -> Option<Field<DataDir>> {
+    pub fn load_config_table(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The bound import table address and size.
-    pub fn bound_import(&self) -> Option<Field<DataDir>> {
+    pub fn bound_import(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The import address table address and size.
-    pub fn import_address_table(&self) -> Option<Field<DataDir>> {
+    pub fn import_address_table(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The delay import descriptor address and size.
-    pub fn delay_import_descriptor(&self) -> Option<Field<DataDir>> {
+    pub fn delay_import_descriptor(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 
     /// The CLR runtime header address and size.
-    pub fn clr_runtime_header(&self) -> Option<Field<DataDir>> {
+    pub fn clr_runtime_header(&self) -> Option<StructField<DataDir>> {
         todo!()
     }
 }
@@ -486,7 +508,7 @@ impl Section {
     /// For longer names, this field contains a slash (/) that is followed by an ASCII representation of a decimal number that is an offset into the string table.
     /// Executable images do not use a string table and do not support section names longer than 8 characters.
     /// Long names in object files are truncated if they are emitted to an executable file.
-    pub fn name(&self) -> Field<String> {
+    pub fn name(&self) -> StructField<String> {
         todo!()
     }
 
@@ -633,18 +655,22 @@ impl From<[u8; 8]> for VirtualAddress {
 }
 
 #[derive(Debug)]
-pub struct Field<T: fmt::Debug + Display> {
+pub struct StructField<T: fmt::Debug + Display> {
     offset: u64,
     raw_bytes: Vec<u8>,
     data: T,
     meaning: String,
 }
 
-impl<T: Debug + Display> Display for Field<T> {
+impl<T: Debug + Display> Display for StructField<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
             "{}\t{:#?}\t{:#?}\t{}",
             self.offset, self.raw_bytes, self.data, self.meaning
         ))
     }
+}
+
+trait ReadU16LE {
+    fn read_u16_le(&mut self) -> u16;
 }
