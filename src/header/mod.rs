@@ -66,6 +66,10 @@ pub struct FileHeader {
 
 #[allow(non_snake_case)]
 impl FileHeader {
+    fn read_signature(&mut self) -> StructField<[u8; 4]> {
+        todo!()
+    }
+
     fn read_machine(&mut self) -> StructField<Machine> {
         todo!()
     }
@@ -661,14 +665,14 @@ impl From<[u8; 8]> for VirtualAddress {
 }
 
 #[derive(Debug)]
-pub struct StructField<T: fmt::Debug + Display> {
+pub struct StructField<T: fmt::Debug> {
     offset: u64,
     raw_bytes: Vec<u8>,
     data: T,
     meaning: String,
 }
 
-impl<T: Debug + Display> Display for StructField<T> {
+impl<T: Debug> Display for StructField<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
             "{}\t{:#?}\t{:#?}\t{}",
