@@ -166,7 +166,7 @@ trait ParseStruct {
 }
 
 impl ParseStruct for FileHeader {
-    fn parse_struct(offset: usize, buffer: Vec<u8>) -> Self {
+    fn parse_struct(_offset: usize, _buffer: Vec<u8>) -> Self {
         todo!()
     }
 }
