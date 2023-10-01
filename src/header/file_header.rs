@@ -174,7 +174,10 @@ impl ParseStruct for FileHeader {
 impl Display for FileHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let _ = writeln!(f, "File header:");
-        let _ = writeln!(f, "Field name, Offset, Raw value, Value, Meaning");
+        let _ = writeln!(
+            f,
+            "Field name, Offset (dec), Raw value (hex), Value, Meaning"
+        );
         let _ = writeln!(f, "Signature, {}", self.signature);
         let _ = writeln!(f, "Machine, {}", self.machine);
         let _ = writeln!(f, "Num. of Sections, {}", self.number_of_sections);

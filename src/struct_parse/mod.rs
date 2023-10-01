@@ -22,7 +22,7 @@ impl Display for StructField<[u8; 4]> {
         let _ = write!(f, "{:00}, ", self.offset,);
         let _ = write!(
             f,
-            "{:00X} {:00X} {:00X} {:00X}, ",
+            "0x{:00X} 0x{:00X} 0x{:00X} 0x{:00X}, ",
             bytes[0], bytes[1], bytes[2], bytes[3]
         );
         let _ = write!(f, "{:X?}, ", u32::from_le_bytes(bytes).swap_bytes());
@@ -34,7 +34,7 @@ impl Display for StructField<u16> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let bytes = [self.raw_bytes[0], self.raw_bytes[1]];
         let _ = write!(f, "{:00}, ", self.offset,);
-        let _ = write!(f, "{:00X} {:00X}, ", bytes[0], bytes[1]);
+        let _ = write!(f, "0x{:00X} 0x{:00X}, ", bytes[0], bytes[1]);
         let _ = write!(f, "{}, ", self.data);
         write!(f, " ")
     }
@@ -51,7 +51,7 @@ impl Display for StructField<u32> {
         let _ = write!(f, "{:00}, ", self.offset,);
         let _ = write!(
             f,
-            "{:00X} {:00X} {:00X} {:00X}, ",
+            "0x{:00X} 0x{:00X} 0x{:00X} 0x{:00X}, ",
             bytes[0], bytes[1], self.raw_bytes[2], self.raw_bytes[3]
         );
         let _ = write!(f, "{}, ", self.data);
@@ -70,7 +70,7 @@ impl Display for StructField<DateTime<Utc>> {
         let _ = write!(f, "{:00}, ", self.offset,);
         let _ = write!(
             f,
-            "{:00X} {:00X} {:00X} {:00X}, ",
+            "0x{:00X} 0x{:00X} 0x{:00X} 0x{:00X}, ",
             bytes[0], bytes[1], self.raw_bytes[2], self.raw_bytes[3]
         );
         let _ = write!(f, "{}, ", self.data);
@@ -82,8 +82,8 @@ impl Display for StructField<Machine> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let bytes = [self.raw_bytes[0], self.raw_bytes[1]];
         let _ = write!(f, "{:00}, ", self.offset);
-        let _ = write!(f, "{:00X} {:00X}, ", bytes[0], bytes[1]);
-        let _ = write!(f, "{:00X}, ", self.data);
+        let _ = write!(f, "0x{:00X} 0x{:00X}, ", bytes[0], bytes[1]);
+        let _ = write!(f, "0x{:00X}, ", self.data);
         write!(f, "{}", self.meaning)
     }
 }

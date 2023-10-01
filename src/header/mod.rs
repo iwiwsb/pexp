@@ -37,7 +37,7 @@ impl Display for ImageType {
 }
 
 pub mod file_header;
-pub mod optioonal_header;
+pub mod optional_header;
 
 mod section_header;
 

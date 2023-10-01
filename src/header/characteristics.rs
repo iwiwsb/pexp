@@ -15,8 +15,9 @@ pub const IMAGE_FILE_DLL: [u8; 2] = [0x00, 0x20]; // The image file is a dynamic
 pub const IMAGE_FILE_UP_SYSTEM_ONLY: [u8; 2] = [0x00, 0x40]; // The file should be run only on a uniprocessor machine.
 pub const IMAGE_FILE_BYTES_REVERSED_HI: [u8; 2] = [0x00, 0x80]; // Big endian: the MSB precedes the LSB in memory. This flag is deprecated and should be zero.
 
+#[derive(Debug, PartialEq)]
 pub struct Characteristics {
-    pub relocs_stipped: bool,
+    pub relocs_stripped: bool,
     pub executable: bool,
     pub line_nums_stripped: bool,
     pub local_syms_stripped: bool,
@@ -36,12 +37,77 @@ pub struct Characteristics {
 
 impl From<u16> for Characteristics {
     fn from(value: u16) -> Self {
-        todo!()
+        let relocs_stripped = value & u16::from_le_bytes(IMAGE_FILE_RELOCS_STRIPPED) != 0;
+        let executable = value & u16::from_le_bytes(IMAGE_FILE_EXECUTABLE_IMAGE) != 0;
+        let line_nums_stripped = value & u16::from_le_bytes(IMAGE_FILE_LINE_NUMS_STRIPPED) != 0;
+        let local_syms_stripped = value & u16::from_le_bytes(IMAGE_FILE_LOCAL_SYMS_STRIPPED) != 0;
+        let aggressive_ws_trim = value & u16::from_le_bytes(IMAGE_FILE_AGGRESSIVE_WS_TRIM) != 0;
+        let large_address_aware = value & u16::from_le_bytes(IMAGE_FILE_LARGE_ADDRESS_AWARE) != 0;
+        let reserved0 = value & u16::from_le_bytes(IMAGE_FILE_RESERVED0) != 0;
+        let bytes_reserved_lo = value & u16::from_le_bytes(IMAGE_FILE_BYTES_REVERSED_LO) != 0;
+        let _32_bit_machine = value & u16::from_le_bytes(IMAGE_FILE_32BIT_MACHINE) != 0;
+        let debug_stripped = value & u16::from_le_bytes(IMAGE_FILE_DEBUG_STRIPPED) != 0;
+        let removable_run_from_swap =
+            value & u16::from_le_bytes(IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP) != 0;
+        let net_run_from_swap = value & u16::from_le_bytes(IMAGE_FILE_NET_RUN_FROM_SWAP) != 0;
+        let system = value & u16::from_le_bytes(IMAGE_FILE_SYSTEM) != 0;
+        let dll = value & u16::from_le_bytes(IMAGE_FILE_DLL) != 0;
+        let up_system_only = value & u16::from_le_bytes(IMAGE_FILE_UP_SYSTEM_ONLY) != 0;
+        let bytes_reserved_hi = value & u16::from_le_bytes(IMAGE_FILE_BYTES_REVERSED_HI) != 0;
+
+        Self {
+            relocs_stripped,
+            executable,
+            line_nums_stripped,
+            local_syms_stripped,
+            aggressive_ws_trim,
+            large_address_aware,
+            reserved0,
+            bytes_reserved_lo,
+            _32_bit_machine,
+            debug_stripped,
+            removable_run_from_swap,
+            net_run_from_swap,
+            system,
+            dll,
+            up_system_only,
+            bytes_reserved_hi,
+        }
     }
 }
 
 impl From<[u8; 2]> for Characteristics {
     fn from(value: [u8; 2]) -> Self {
-        todo!()
+        let _u16 = u16::from_le_bytes(value);
+        Self::from(_u16)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Characteristics;
+
+    #[test]
+    fn test_executable_large_addr() {
+        let left = Characteristics {
+            relocs_stripped: false,
+            executable: true,
+            line_nums_stripped: false,
+            local_syms_stripped: false,
+            aggressive_ws_trim: false,
+            large_address_aware: true,
+            reserved0: false,
+            bytes_reserved_lo: false,
+            _32_bit_machine: false,
+            debug_stripped: false,
+            removable_run_from_swap: false,
+            net_run_from_swap: false,
+            system: false,
+            dll: false,
+            up_system_only: false,
+            bytes_reserved_hi: false,
+        };
+        let right = Characteristics::from(0x22);
+        assert_eq!(left, right);
     }
 }
