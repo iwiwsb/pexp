@@ -1,7 +1,8 @@
 pub mod header;
+pub mod struct_parse;
 
+use header::file_header::FileHeaderBuffer;
 use header::machine_types::Machine;
-use header::FileHeaderBuffer;
 use std::{
     fs::OpenOptions,
     io::{self, ErrorKind, Read, Seek, SeekFrom},
@@ -26,7 +27,7 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-enum PortExeType {
+pub enum PortExeType {
     Image,
     Object,
 }
