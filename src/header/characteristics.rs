@@ -14,3 +14,34 @@ pub const IMAGE_FILE_SYSTEM: [u8; 2] = [0x00, 0x10]; // The image file is a syst
 pub const IMAGE_FILE_DLL: [u8; 2] = [0x00, 0x20]; // The image file is a dynamic-link library (DLL). Such files are considered executable files for almost all purposes, although they cannot be directly run.
 pub const IMAGE_FILE_UP_SYSTEM_ONLY: [u8; 2] = [0x00, 0x40]; // The file should be run only on a uniprocessor machine.
 pub const IMAGE_FILE_BYTES_REVERSED_HI: [u8; 2] = [0x00, 0x80]; // Big endian: the MSB precedes the LSB in memory. This flag is deprecated and should be zero.
+
+pub struct Characteristics {
+    pub relocs_stipped: bool,
+    pub executable: bool,
+    pub line_nums_stripped: bool,
+    pub local_syms_stripped: bool,
+    pub aggressive_ws_trim: bool,
+    pub large_address_aware: bool,
+    pub reserved0: bool,
+    pub bytes_reserved_lo: bool,
+    pub _32_bit_machine: bool,
+    pub debug_stripped: bool,
+    pub removable_run_from_swap: bool,
+    pub net_run_from_swap: bool,
+    pub system: bool,
+    pub dll: bool,
+    pub up_system_only: bool,
+    pub bytes_reserved_hi: bool,
+}
+
+impl From<u16> for Characteristics {
+    fn from(value: u16) -> Self {
+        todo!()
+    }
+}
+
+impl From<[u8; 2]> for Characteristics {
+    fn from(value: [u8; 2]) -> Self {
+        todo!()
+    }
+}

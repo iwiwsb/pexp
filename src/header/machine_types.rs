@@ -91,7 +91,7 @@ pub struct Machine([u8; 2]);
 
 impl UpperHex for Machine {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{:X}", u16::from_le_bytes([self.0[0], self.0[1]]))
+        write!(f, "{:X}", u16::from_le_bytes([self.0[0], self.0[1]]))
     }
 }
 

@@ -21,9 +21,9 @@ fn main() -> io::Result<()> {
     let mut file_header_buffer = [0u8; 24];
     pe_file.read(&mut file_header_buffer)?;
     let file_header =
-        FileHeaderBuffer::new(file_header_offset as usize, file_header_buffer.to_vec());
-    println!("{}", file_header.read_signature());
-    println!("{}", file_header.read_machine());
+        FileHeaderBuffer::new(file_header_offset as usize, file_header_buffer.to_vec())
+            .read_file_header();
+    println!("{}", file_header);
     Ok(())
 }
 

@@ -1,6 +1,6 @@
-use crate::header::machine_types::Machine;
-use crate::struct_parse::StructField;
-use chrono::{DateTime, Utc};
+use crate::struct_parse::{ReadU32LE, StructField};
+use crate::{header::machine_types::Machine, struct_parse::ReadU16LE};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use std::fmt::Display;
 
 pub struct FileHeaderBuffer {
@@ -53,11 +53,11 @@ impl FileHeaderBuffer {
 
     pub fn read_machine(&self) -> StructField<Machine> {
         let relative_offset = 4;
-        let raw_bytes = self.buffer[relative_offset..relative_offset + 2].to_vec();
-        let machine = Machine::try_from([raw_bytes[0], raw_bytes[1]]).unwrap();
+        let _u16 = self.read_u16_le(relative_offset);
+        let raw_bytes = _u16.raw_bytes;
+        let data = Machine::try_from([raw_bytes[0], raw_bytes[1]]).unwrap();
         let offset = self.offset + relative_offset;
-        let data = machine.clone();
-        let meaning = machine.to_string();
+        let meaning = data.to_string();
 
         StructField {
             offset,
@@ -68,27 +68,72 @@ impl FileHeaderBuffer {
     }
 
     fn read_number_of_sections(&self) -> StructField<u16> {
-        todo!()
+        self.read_u16_le(6)
     }
 
     fn read_time_date_stamp(&self) -> StructField<DateTime<Utc>> {
-        todo!()
+        let relative_offset = 8;
+        let raw_bytes = self.buffer[relative_offset..relative_offset + 4].to_vec();
+        let secs = u32::from_le_bytes([raw_bytes[0], raw_bytes[1], raw_bytes[2], raw_bytes[3]]);
+        let nsecs = 0;
+        let data = DateTime::from_utc(NaiveDateTime::from_timestamp(secs as i64, nsecs), Utc);
+        let offset = self.offset + relative_offset;
+        let meaning = data.format("%v").to_string();
+
+        StructField {
+            offset,
+            raw_bytes,
+            data,
+            meaning,
+        }
     }
 
     fn read_pointer_to_symbol_table(&self) -> StructField<u32> {
-        todo!()
+        self.read_u32_le(12)
     }
 
     fn read_number_of_symbols(&self) -> StructField<u32> {
-        todo!()
+        self.read_u32_le(16)
     }
 
     fn read_size_of_optional_header(&self) -> StructField<u16> {
-        todo!()
+        self.read_u16_le(20)
     }
 
     fn read_characteristics(&self) -> StructField<u16> {
-        todo!()
+        self.read_u16_le(22)
+    }
+}
+
+impl ReadU16LE for FileHeaderBuffer {
+    fn read_u16_le(&self, relative_offset: usize) -> StructField<u16> {
+        let raw_bytes = self.buffer[relative_offset..relative_offset + 2].to_vec();
+        let data = u16::from_le_bytes([raw_bytes[0], raw_bytes[1]]);
+        let offset = self.offset + relative_offset;
+        let meaning = data.to_string();
+
+        StructField {
+            offset,
+            raw_bytes,
+            data,
+            meaning,
+        }
+    }
+}
+
+impl ReadU32LE for FileHeaderBuffer {
+    fn read_u32_le(&self, relative_offset: usize) -> StructField<u32> {
+        let raw_bytes = self.buffer[relative_offset..relative_offset + 4].to_vec();
+        let data = u32::from_le_bytes([raw_bytes[0], raw_bytes[1], raw_bytes[2], raw_bytes[3]]);
+        let offset = self.offset + relative_offset;
+        let meaning = data.to_string();
+
+        StructField {
+            offset,
+            raw_bytes,
+            data,
+            meaning,
+        }
     }
 }
 
@@ -128,6 +173,23 @@ impl ParseStruct for FileHeader {
 
 impl Display for FileHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        let _ = writeln!(f, "File header:");
+        let _ = writeln!(f, "Field name, Offset, Raw value, Value, Meaning");
+        let _ = writeln!(f, "Signature, {}", self.signature);
+        let _ = writeln!(f, "Machine, {}", self.machine);
+        let _ = writeln!(f, "Num. of Sections, {}", self.number_of_sections);
+        let _ = writeln!(f, "Timestamp, {}", self.time_date_stamp);
+        let _ = writeln!(
+            f,
+            "Pointer to symbol table, {}",
+            self.pointer_to_symbol_table
+        );
+        let _ = writeln!(f, "Number of symbols, {}", self.number_of_symbols);
+        let _ = writeln!(
+            f,
+            "Size of optional header, {}",
+            self.size_of_optional_header
+        );
+        writeln!(f, "Characteristics, {}", self.characteristics)
     }
 }
