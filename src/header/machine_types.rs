@@ -1,7 +1,7 @@
 //! The `machine` field has one of the following values, which specify the CPU type.
 //! An image file can be run only on the specified machine or on a system that emulates the specified machine.
 
-use std::fmt::Display;
+use std::fmt::{Display, UpperHex};
 
 /// The content of this field is assumed to be applicable to any machine type
 pub const IMAGE_FILE_MACHINE_UNKNOWN: [u8; 2] = [0x00, 0x00];
@@ -86,8 +86,14 @@ const MACHINE_TYPES: [[u8; 2]; 25] = [
     IMAGE_FILE_MACHINE_WCEMIPSV2,
 ];
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Machine([u8; 2]);
+
+impl UpperHex for Machine {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:X}", u16::from_le_bytes([self.0[0], self.0[1]]))
+    }
+}
 
 #[derive(Debug)]
 pub struct NonExistentMachineError;

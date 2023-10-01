@@ -1,9 +1,28 @@
 pub mod header;
 
 use header::machine_types::Machine;
-use std::io::{self, ErrorKind, Read, Seek};
+use header::FileHeaderBuffer;
+use std::{
+    fs::OpenOptions,
+    io::{self, ErrorKind, Read, Seek, SeekFrom},
+};
 
 fn main() -> io::Result<()> {
+    let mut pe_file = OpenOptions::new()
+        .read(true)
+        .write(false)
+        .open(r#"C:\Windows\System32\calc.exe"#)?;
+    pe_file.seek(SeekFrom::Start(0x3C))?;
+    let mut buf = [0u8; 4];
+    pe_file.read(&mut buf)?;
+    let file_header_offset = u64::from_le_bytes([buf[0], buf[1], buf[2], buf[3], 0, 0, 0, 0]);
+    pe_file.seek(SeekFrom::Start(file_header_offset))?;
+    let mut file_header_buffer = [0u8; 24];
+    pe_file.read(&mut file_header_buffer)?;
+    let file_header =
+        FileHeaderBuffer::new(file_header_offset as usize, file_header_buffer.to_vec());
+    println!("{}", file_header.read_signature());
+    println!("{}", file_header.read_machine());
     Ok(())
 }
 
@@ -14,7 +33,7 @@ enum PortExeType {
 
 fn detect_pe_type<R: Read + Seek>(reader: &mut R) -> io::Result<PortExeType> {
     use PortExeType::*;
-    
+
     const MZ_SIGNATURE: [u8; 2] = [b'M', b'Z'];
     let mut mz = [0u8; 2];
     reader.rewind()?;
