@@ -1,14 +1,14 @@
 use crate::header::{ImageType, RelativeVirtualAddress};
-use crate::struct_parse::StructField;
+use crate::struct_parse::{ReadU16LE, StructField};
 use std::fmt::{self, Display};
 
 pub struct OptionalHeaderBuffer {
-    offset: u64,
+    offset: usize,
     buffer: Vec<u8>,
 }
 
 impl OptionalHeaderBuffer {
-    pub fn new(offset: u64, buffer: Vec<u8>) -> Self {
+    pub fn new(offset: usize, buffer: Vec<u8>) -> Self {
         Self { offset, buffer }
     }
 
@@ -81,7 +81,19 @@ impl OptionalHeaderBuffer {
     }
 
     fn read_image_type(&self) -> StructField<ImageType> {
-        todo!()
+        let relative_offset = 0;
+        let value = self.read_u16_le(relative_offset);
+        let raw_bytes = value.raw_bytes;
+        let data = ImageType::try_from(u16::from_le_bytes([raw_bytes[0], raw_bytes[1]])).unwrap();
+        let offset = self.offset + relative_offset;
+        let meaning = data.to_string();
+
+        StructField {
+            offset,
+            raw_bytes,
+            data,
+            meaning,
+        }
     }
 
     fn read_major_linker_version(&self) -> StructField<u8> {
@@ -202,6 +214,22 @@ impl OptionalHeaderBuffer {
 
     fn read_data_directories(&self) -> StructField<DataDirectories> {
         todo!()
+    }
+}
+
+impl ReadU16LE for OptionalHeaderBuffer {
+    fn read_u16_le(&self, relative_offset: usize) -> StructField<u16> {
+        let raw_bytes = self.buffer[relative_offset..relative_offset + 2].to_vec();
+        let data = u16::from_le_bytes([raw_bytes[0], raw_bytes[1]]);
+        let offset = self.offset + relative_offset;
+        let meaning = data.to_string();
+
+        StructField {
+            offset,
+            raw_bytes,
+            data,
+            meaning,
+        }
     }
 }
 

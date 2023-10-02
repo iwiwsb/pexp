@@ -30,6 +30,28 @@ pub enum ImageType {
     ImageRom = 0x0107,
 }
 
+impl TryFrom<u16> for ImageType {
+    type Error = &'static str;
+
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        match value {
+            0x010B => Ok(ImageType::Image32),
+            0x020B => Ok(ImageType::Image64),
+            0x0107 => Ok(ImageType::ImageRom),
+            _ => panic!(),
+        }
+    }
+}
+
+impl TryFrom<[u8; 2]> for ImageType {
+    type Error = &'static str;
+
+    fn try_from(value: [u8; 2]) -> Result<Self, Self::Error> {
+        let x = u16::from_le_bytes(value);
+        ImageType::try_from(x)
+    }
+}
+
 impl Display for ImageType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         todo!()
