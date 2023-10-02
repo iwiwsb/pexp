@@ -13,114 +13,178 @@ impl OptionalHeaderBuffer {
     }
 
     pub fn read_optional_header(&self) -> OptionalHeader {
+        let image_type = self.read_image_type();
+        let major_linker_version = self.read_major_linker_version();
+        let minor_linker_version = self.read_minor_linker_version();
+        let size_of_code = self.read_size_of_code();
+        let size_of_initialized_data = self.read_size_of_initialized_data();
+        let size_of_uninitialized_data = self.read_size_of_uninitialized_data();
+        let address_of_entry_point = self.read_address_of_entry_point();
+        let base_of_code = self.read_base_of_code();
+        let base_of_data = self.read_base_of_data();
+        let image_base = self.read_image_base();
+        let section_alignment = self.read_section_alignment();
+        let file_alignment = self.read_file_alignment();
+        let major_operating_system_version = self.read_major_operating_system_version();
+        let minor_operating_system_version = self.read_minor_operating_system_version();
+        let major_image_version = self.read_major_image_version();
+        let minor_image_version = self.read_minor_image_version();
+        let major_subsystem_version = self.read_major_subsystem_version();
+        let minor_subsystem_version = self.read_minor_subsystem_version();
+        let win32_version_value = self.read_win32_version_value();
+        let size_of_image = self.read_size_of_image();
+        let size_of_headers = self.read_size_of_headers();
+        let check_sum = self.read_check_sum();
+        let subsystem = self.read_subsystem();
+        let dll_characteristics = self.read_dll_characteristics();
+        let size_of_stack_reserve = self.read_size_of_stack_reserve();
+        let size_of_stack_commit = self.read_size_of_stack_commit();
+        let size_of_heap_reserve = self.read_size_of_heap_reserve();
+        let size_of_heap_commit = self.read_size_of_heap_commit();
+        let loader_flags = self.read_loader_flags();
+        let number_of_rva_and_sizes = self.read_number_of_rva_and_sizes();
+        let data_directories = self.read_data_directories();
+
+        OptionalHeader {
+            image_type,
+            major_linker_version,
+            minor_linker_version,
+            size_of_code,
+            size_of_initialized_data,
+            size_of_uninitialized_data,
+            address_of_entry_point,
+            base_of_code,
+            base_of_data,
+            image_base,
+            section_alignment,
+            file_alignment,
+            major_operating_system_version,
+            minor_operating_system_version,
+            major_image_version,
+            minor_image_version,
+            major_subsystem_version,
+            minor_subsystem_version,
+            win32_version_value,
+            size_of_image,
+            size_of_headers,
+            check_sum,
+            subsystem,
+            dll_characteristics,
+            size_of_stack_reserve,
+            size_of_stack_commit,
+            size_of_heap_reserve,
+            size_of_heap_commit,
+            loader_flags,
+            number_of_rva_and_sizes,
+            data_directories,
+        }
+    }
+
+    fn read_image_type(&self) -> StructField<ImageType> {
         todo!()
     }
 
-    fn read_image_type(&mut self) -> StructField<ImageType> {
+    fn read_major_linker_version(&self) -> StructField<u8> {
         todo!()
     }
 
-    fn read_major_linker_version(&mut self) -> StructField<u8> {
+    fn read_minor_linker_version(&self) -> StructField<u8> {
         todo!()
     }
 
-    fn read_minor_linker_version(&mut self) -> StructField<u8> {
+    fn read_size_of_code(&self) -> StructField<u32> {
         todo!()
     }
 
-    fn read_size_of_code(&mut self) -> StructField<u32> {
+    fn read_size_of_initialized_data(&self) -> StructField<u32> {
         todo!()
     }
 
-    fn read_size_of_initialized_data(&mut self) -> StructField<u32> {
+    fn read_size_of_uninitialized_data(&self) -> StructField<u32> {
         todo!()
     }
 
-    fn read_size_of_uninitialized_data(&mut self) -> StructField<u32> {
+    fn read_address_of_entry_point(&self) -> StructField<RelativeVirtualAddress> {
         todo!()
     }
 
-    fn read_address_of_entry_point(&mut self) -> StructField<RelativeVirtualAddress> {
+    fn read_base_of_code(&self) -> StructField<RelativeVirtualAddress> {
         todo!()
     }
 
-    fn read_base_of_code(&mut self) -> StructField<RelativeVirtualAddress> {
+    fn read_base_of_data(&self) -> Option<StructField<RelativeVirtualAddress>> {
         todo!()
     }
 
-    fn read_base_of_data(&mut self) -> Option<StructField<RelativeVirtualAddress>> {
+    fn read_image_base(&self) -> StructField<u64> {
         todo!()
     }
 
-    fn image_base(&mut self) -> StructField<u64> {
+    fn read_section_alignment(&self) -> StructField<u32> {
         todo!()
     }
 
-    fn read_section_alignment(&mut self) -> StructField<u32> {
+    fn read_file_alignment(&self) -> StructField<u32> {
         todo!()
     }
 
-    fn read_file_alignment(&mut self) -> StructField<u32> {
+    fn read_major_operating_system_version(&self) -> StructField<u16> {
         todo!()
     }
 
-    fn read_major_operating_system_version(&mut self) -> StructField<u16> {
+    fn read_minor_operating_system_version(&self) -> StructField<u16> {
         todo!()
     }
 
-    fn read_minor_operating_system_version(&mut self) -> StructField<u16> {
+    fn read_major_image_version(&self) -> StructField<u16> {
         todo!()
     }
 
-    fn read_major_image_version(&mut self) -> StructField<u16> {
+    fn read_minor_image_version(&self) -> StructField<u16> {
         todo!()
     }
 
-    fn read_minor_image_version(&mut self) -> StructField<u16> {
+    fn read_major_subsystem_version(&self) -> StructField<u16> {
         todo!()
     }
 
-    fn read_major_subsystem_version(&mut self) -> StructField<u16> {
+    fn read_minor_subsystem_version(&self) -> StructField<u16> {
         todo!()
     }
 
-    fn read_minor_subsystem_version(&mut self) -> StructField<u16> {
+    fn read_win32_version_value(&self) -> StructField<u32> {
         todo!()
     }
 
-    fn read_win32_version_value(&mut self) -> StructField<u32> {
+    fn read_size_of_image(&self) -> StructField<u32> {
         todo!()
     }
 
-    fn read_size_of_image(&mut self) -> StructField<u32> {
+    fn read_size_of_headers(&self) -> StructField<u32> {
         todo!()
     }
 
-    fn read_size_of_headers(&mut self) -> StructField<u32> {
+    fn read_check_sum(&self) -> StructField<u32> {
         todo!()
     }
 
-    fn read_check_sum(&mut self) -> StructField<u32> {
+    fn read_subsystem(&self) -> StructField<u16> {
         todo!()
     }
 
-    fn read_subsystem(&mut self) -> StructField<u16> {
+    fn read_dll_characteristics(&self) -> StructField<u16> {
         todo!()
     }
 
-    fn read_dll_characteristics(&mut self) -> StructField<u16> {
+    fn read_size_of_stack_reserve(&self) -> StructField<u64> {
         todo!()
     }
 
-    fn read_size_of_stack_reserve(&mut self) -> StructField<u64> {
+    fn read_size_of_stack_commit(&self) -> StructField<u64> {
         todo!()
     }
 
-    fn read_size_of_stack_commit(&mut self) -> StructField<u64> {
-        todo!()
-    }
-
-    fn read_size_of_heap_reserve(&mut self) -> StructField<u64> {
+    fn read_size_of_heap_reserve(&self) -> StructField<u64> {
         todo!()
     }
 
