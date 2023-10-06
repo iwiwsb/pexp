@@ -4,10 +4,8 @@ pub mod machine_types;
 pub mod section_flags;
 pub mod win_subsystem;
 
-use crate::struct_parse::StructField;
 use std::{
     fmt::{self, Debug, Display},
-    io::Cursor,
     ops::Add,
 };
 
