@@ -2,12 +2,12 @@ use crate::header::{ImageType, RelativeVirtualAddress};
 use crate::struct_parse::{ReadU16LE, StructField};
 use std::fmt::{self, Display};
 
-pub struct OptionalHeaderBuffer {
+pub struct OptionalHeaderReader {
     offset: usize,
     buffer: Vec<u8>,
 }
 
-impl OptionalHeaderBuffer {
+impl OptionalHeaderReader {
     pub fn new(offset: usize, buffer: Vec<u8>) -> Self {
         Self { offset, buffer }
     }
@@ -217,7 +217,7 @@ impl OptionalHeaderBuffer {
     }
 }
 
-impl ReadU16LE for OptionalHeaderBuffer {
+impl ReadU16LE for OptionalHeaderReader {
     fn read_u16_le(&self, relative_offset: usize) -> StructField<u16> {
         let raw_bytes = self.buffer[relative_offset..relative_offset + 2].to_vec();
         let data = u16::from_le_bytes([raw_bytes[0], raw_bytes[1]]);

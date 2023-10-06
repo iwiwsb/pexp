@@ -3,13 +3,13 @@ use crate::{header::machine_types::Machine, struct_parse::ReadU16LE};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use std::fmt::Display;
 
-pub struct FileHeaderBuffer {
+pub struct FileHeaderReader {
     offset: usize,
     buffer: Vec<u8>,
 }
 
 #[allow(non_snake_case)]
-impl FileHeaderBuffer {
+impl FileHeaderReader {
     pub fn new(offset: usize, buffer: Vec<u8>) -> Self {
         Self { offset, buffer }
     }
@@ -105,7 +105,7 @@ impl FileHeaderBuffer {
     }
 }
 
-impl ReadU16LE for FileHeaderBuffer {
+impl ReadU16LE for FileHeaderReader {
     fn read_u16_le(&self, relative_offset: usize) -> StructField<u16> {
         let raw_bytes = self.buffer[relative_offset..relative_offset + 2].to_vec();
         let data = u16::from_le_bytes([raw_bytes[0], raw_bytes[1]]);
@@ -121,7 +121,7 @@ impl ReadU16LE for FileHeaderBuffer {
     }
 }
 
-impl ReadU32LE for FileHeaderBuffer {
+impl ReadU32LE for FileHeaderReader {
     fn read_u32_le(&self, relative_offset: usize) -> StructField<u32> {
         let raw_bytes = self.buffer[relative_offset..relative_offset + 4].to_vec();
         let data = u32::from_le_bytes([raw_bytes[0], raw_bytes[1], raw_bytes[2], raw_bytes[3]]);

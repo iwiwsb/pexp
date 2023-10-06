@@ -1,7 +1,7 @@
 pub mod header;
 pub mod struct_parse;
 
-use header::file_header::FileHeaderBuffer;
+use header::file_header::FileHeaderReader;
 use header::machine_types::Machine;
 use std::{
     fs::OpenOptions,
@@ -21,7 +21,7 @@ fn main() -> io::Result<()> {
     let mut file_header_buffer = [0u8; 24];
     pe_file.read(&mut file_header_buffer)?;
     let file_header =
-        FileHeaderBuffer::new(file_header_offset as usize, file_header_buffer.to_vec())
+        FileHeaderReader::new(file_header_offset as usize, file_header_buffer.to_vec())
             .read_file_header();
     println!("{}", file_header);
     Ok(())
