@@ -1,20 +1,24 @@
-use crate::struct_parse::{ReadU32LE, StructField};
-use crate::{header::machine_types::Machine, struct_parse::ReadU16LE};
-use chrono::{DateTime, NaiveDateTime, Utc};
-use std::fmt::Display;
+use crate::header::machine_types::Machine;
+use crate::struct_parse::StructField;
+use chrono::NaiveDateTime;
+use std::fmt::{Debug, Display};
+use std::io::{Read, Seek, SeekFrom};
 
-pub struct FileHeaderReader {
-    offset: usize,
-    buffer: Vec<u8>,
+pub struct FileHeaderReader<R: Read + Seek> {
+    offset: u64,
+    buffer: R,
 }
 
 #[allow(non_snake_case)]
-impl FileHeaderReader {
-    pub fn new(offset: usize, buffer: Vec<u8>) -> Self {
+impl<R> FileHeaderReader<R>
+where
+    R: Read + Seek,
+{
+    pub fn new(offset: u64, buffer: R) -> Self {
         Self { offset, buffer }
     }
 
-    pub fn read_file_header(&self) -> FileHeader {
+    pub fn read_file_header(&mut self) -> FileHeader {
         let signature = self.read_signature();
         let machine = self.read_machine();
         let number_of_sections = self.read_number_of_sections();
@@ -36,104 +40,96 @@ impl FileHeaderReader {
         }
     }
 
-    pub fn read_signature(&self) -> StructField<[u8; 4]> {
-        let relative_offset = 0;
-        let offset = self.offset + relative_offset;
-        let raw_bytes = self.buffer[relative_offset..relative_offset + 4].to_vec();
-        let data = [raw_bytes[0], raw_bytes[1], raw_bytes[2], raw_bytes[3]];
-        let meaning = "".to_string();
+    pub fn read_signature(&mut self) -> StructField<[u8; 4]> {
+        let offset = self.offset;
+        let buf = self.read_array(offset);
 
         StructField {
             offset,
-            raw_bytes,
-            data,
-            meaning,
+            bytes: buf.to_vec(),
+            data: buf,
         }
     }
 
-    pub fn read_machine(&self) -> StructField<Machine> {
-        let relative_offset = 4;
-        let _u16 = self.read_u16_le(relative_offset);
-        let raw_bytes = _u16.raw_bytes;
-        let data = Machine::try_from([raw_bytes[0], raw_bytes[1]]).unwrap();
-        let offset = self.offset + relative_offset;
-        let meaning = data.to_string();
+    pub fn read_machine(&mut self) -> StructField<Machine> {
+        let offset = self.offset + 4;
+        let buf = self.read_array(offset);
+        let raw_bytes = buf.to_vec();
+        let data = Machine::try_from(buf).unwrap();
 
         StructField {
             offset,
-            raw_bytes,
+            bytes: raw_bytes,
             data,
-            meaning,
         }
     }
 
-    fn read_number_of_sections(&self) -> StructField<u16> {
-        self.read_u16_le(6)
+    pub fn read_number_of_sections(&mut self) -> StructField<u16> {
+        self.read_u16_le_field(self.offset + 6)
     }
 
-    fn read_time_date_stamp(&self) -> StructField<DateTime<Utc>> {
-        let relative_offset = 8;
-        let raw_bytes = self.buffer[relative_offset..relative_offset + 4].to_vec();
-        let secs = u32::from_le_bytes([raw_bytes[0], raw_bytes[1], raw_bytes[2], raw_bytes[3]]);
-        let nsecs = 0;
-        let data = DateTime::from_utc(NaiveDateTime::from_timestamp(secs as i64, nsecs), Utc);
-        let offset = self.offset + relative_offset;
-        let meaning = data.format("%v").to_string();
+    pub fn read_time_date_stamp(&mut self) -> StructField<NaiveDateTime> {
+        let offset = self.offset + 8;
+        let buf = self.read_array(offset);
+        let timestamp = u32::from_le_bytes(buf);
+        let bytes = buf.to_vec();
+        let data = NaiveDateTime::from_timestamp_opt(timestamp as i64, 0).unwrap();
 
         StructField {
             offset,
-            raw_bytes,
+            bytes,
             data,
-            meaning,
         }
     }
 
-    fn read_pointer_to_symbol_table(&self) -> StructField<u32> {
-        self.read_u32_le(12)
+    pub fn read_pointer_to_symbol_table(&mut self) -> StructField<u32> {
+        self.read_u32_le_field(self.offset + 12)
     }
 
-    fn read_number_of_symbols(&self) -> StructField<u32> {
-        self.read_u32_le(16)
+    pub fn read_number_of_symbols(&mut self) -> StructField<u32> {
+        self.read_u32_le_field(self.offset + 16)
     }
 
-    fn read_size_of_optional_header(&self) -> StructField<u16> {
-        self.read_u16_le(20)
+    pub fn read_size_of_optional_header(&mut self) -> StructField<u16> {
+        self.read_u16_le_field(self.offset + 20)
     }
 
-    fn read_characteristics(&self) -> StructField<u16> {
-        self.read_u16_le(22)
+    pub fn read_characteristics(&mut self) -> StructField<u16> {
+        self.read_u16_le_field(self.offset + 22)
     }
-}
 
-impl ReadU16LE for FileHeaderReader {
-    fn read_u16_le(&self, relative_offset: usize) -> StructField<u16> {
-        let raw_bytes = self.buffer[relative_offset..relative_offset + 2].to_vec();
-        let data = u16::from_le_bytes([raw_bytes[0], raw_bytes[1]]);
-        let offset = self.offset + relative_offset;
-        let meaning = data.to_string();
+    fn read_u16_le_field(&mut self, offset: u64) -> StructField<u16> {
+        let offset = self.offset + offset;
+        let buf = self.read_array(offset);
+        let data = u16::from_le_bytes(buf);
+        let bytes = buf.to_vec();
 
         StructField {
             offset,
-            raw_bytes,
+            bytes,
             data,
-            meaning,
         }
     }
-}
 
-impl ReadU32LE for FileHeaderReader {
-    fn read_u32_le(&self, relative_offset: usize) -> StructField<u32> {
-        let raw_bytes = self.buffer[relative_offset..relative_offset + 4].to_vec();
-        let data = u32::from_le_bytes([raw_bytes[0], raw_bytes[1], raw_bytes[2], raw_bytes[3]]);
-        let offset = self.offset + relative_offset;
-        let meaning = data.to_string();
+    fn read_u32_le_field(&mut self, offset: u64) -> StructField<u32> {
+        let offset = self.offset + offset;
+        let buf = self.read_array(offset);
+        let bytes = buf.to_vec();
+        let data = u32::from_le_bytes(buf);
 
         StructField {
             offset,
-            raw_bytes,
+            bytes,
             data,
-            meaning,
         }
+    }
+
+    fn read_array<const N: usize>(&mut self, offset: u64) -> [u8; N] {
+        let pos = SeekFrom::Start(self.offset + offset);
+        let _ = self.buffer.seek(pos);
+        let mut buf = [0u8; N];
+        let _ = self.buffer.read_exact(&mut buf);
+        buf
     }
 }
 
@@ -146,7 +142,7 @@ pub struct FileHeader {
     /// Indicates the size of the section table, which immediately follows the headers.
     pub number_of_sections: StructField<u16>,
     /// The low 32 bits of the number of seconds since 00:00 January 1, 1970 (a C run-time time_t value), which indicates when the file was created.
-    pub time_date_stamp: StructField<DateTime<Utc>>,
+    pub time_date_stamp: StructField<NaiveDateTime>,
     /// The file offset of the COFF symbol table, or zero if no COFF symbol table is present.
     /// This value should be zero for an image because COFF debugging information is deprecated.
     pub pointer_to_symbol_table: StructField<u32>,
@@ -181,7 +177,7 @@ impl Display for FileHeader {
         let _ = writeln!(f, "Signature, {}", self.signature);
         let _ = writeln!(f, "Machine, {}", self.machine);
         let _ = writeln!(f, "Num. of Sections, {}", self.number_of_sections);
-        let _ = writeln!(f, "Timestamp, {}", self.time_date_stamp);
+        let _ = writeln!(f, "Timestamp, {:?}", self.time_date_stamp);
         let _ = writeln!(
             f,
             "Pointer to symbol table, {}",

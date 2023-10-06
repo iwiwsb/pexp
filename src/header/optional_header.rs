@@ -80,19 +80,7 @@ impl OptionalHeaderReader {
     }
 
     fn read_image_type(&self) -> StructField<ImageType> {
-        let relative_offset = 0;
-        let value = self.read_u16_le(relative_offset);
-        let raw_bytes = value.raw_bytes;
-        let data = ImageType::try_from(u16::from_le_bytes([raw_bytes[0], raw_bytes[1]])).unwrap();
-        let offset = self.offset + relative_offset;
-        let meaning = data.to_string();
-
-        StructField {
-            offset,
-            raw_bytes,
-            data,
-            meaning,
-        }
+        todo!()
     }
 
     fn read_major_linker_version(&self) -> StructField<u8> {
@@ -213,38 +201,6 @@ impl OptionalHeaderReader {
 
     fn read_data_directories(&self) -> StructField<Vec<DataDirectory>> {
         todo!()
-    }
-}
-
-impl ReadU16LE for OptionalHeaderReader {
-    fn read_u16_le(&self, relative_offset: usize) -> StructField<u16> {
-        let raw_bytes = self.buffer[relative_offset..relative_offset + 2].to_vec();
-        let data = u16::from_le_bytes([raw_bytes[0], raw_bytes[1]]);
-        let offset = self.offset + relative_offset;
-        let meaning = data.to_string();
-
-        StructField {
-            offset,
-            raw_bytes,
-            data,
-            meaning,
-        }
-    }
-}
-
-impl ReadU32LE for OptionalHeaderReader {
-    fn read_u32_le(&self, relative_offset: usize) -> StructField<u32> {
-        let raw_bytes = self.buffer[relative_offset..relative_offset + 4].to_vec();
-        let data = u32::from_le_bytes([raw_bytes[0], raw_bytes[1], raw_bytes[2], raw_bytes[3]]);
-        let offset = self.offset + relative_offset;
-        let meaning = data.to_string();
-
-        StructField {
-            offset,
-            raw_bytes,
-            data,
-            meaning,
-        }
     }
 }
 
