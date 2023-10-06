@@ -51,7 +51,7 @@ impl TryFrom<[u8; 2]> for ImageType {
 }
 
 impl Display for ImageType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
         todo!()
     }
 }
@@ -75,7 +75,7 @@ pub struct RelativeVirtualAddress {
 }
 
 impl Display for RelativeVirtualAddress {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
         todo!()
     }
 }

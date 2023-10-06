@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub mod header;
 pub mod struct_parse;
 
@@ -47,5 +49,3 @@ fn detect_pe_type<R: Read + Seek>(reader: &mut R) -> io::Result<PortExeType> {
         Err(io::Error::from(ErrorKind::InvalidData))
     }
 }
-
-trait BitFlags {}

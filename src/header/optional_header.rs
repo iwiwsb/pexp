@@ -1,6 +1,5 @@
 use crate::header::{ImageType, RelativeVirtualAddress};
-use crate::struct_parse::{ReadU16LE, StructField};
-use std::fmt::{self, Display};
+use crate::struct_parse::{ReadU16LE, ReadU32LE, StructField};
 
 pub struct OptionalHeaderReader {
     offset: usize,
@@ -212,7 +211,7 @@ impl OptionalHeaderReader {
         todo!()
     }
 
-    fn read_data_directories(&self) -> StructField<DataDirectories> {
+    fn read_data_directories(&self) -> StructField<Vec<DataDirectory>> {
         todo!()
     }
 }
@@ -221,6 +220,22 @@ impl ReadU16LE for OptionalHeaderReader {
     fn read_u16_le(&self, relative_offset: usize) -> StructField<u16> {
         let raw_bytes = self.buffer[relative_offset..relative_offset + 2].to_vec();
         let data = u16::from_le_bytes([raw_bytes[0], raw_bytes[1]]);
+        let offset = self.offset + relative_offset;
+        let meaning = data.to_string();
+
+        StructField {
+            offset,
+            raw_bytes,
+            data,
+            meaning,
+        }
+    }
+}
+
+impl ReadU32LE for OptionalHeaderReader {
+    fn read_u32_le(&self, relative_offset: usize) -> StructField<u32> {
+        let raw_bytes = self.buffer[relative_offset..relative_offset + 4].to_vec();
+        let data = u32::from_le_bytes([raw_bytes[0], raw_bytes[1], raw_bytes[2], raw_bytes[3]]);
         let offset = self.offset + relative_offset;
         let meaning = data.to_string();
 
@@ -351,7 +366,7 @@ pub struct OptionalHeader {
     /// Address/size pairs for special tables that are found in the image file and are used by the operating system (for example, the import table and the export table).
     /// Note that the number of directories is not fixed. Before looking for a specific directory,
     /// check the `number_of_rva_and_sizes` field.
-    pub data_directories: StructField<DataDirectories>,
+    pub data_directories: StructField<Vec<DataDirectory>>,
 }
 
 #[derive(Debug, Clone)]
@@ -458,39 +473,15 @@ impl DataDirectoryBuffer {
 
 #[derive(Debug)]
 pub struct DataDirectory {
-    virtual_address: RelativeVirtualAddress,
-    size: u32,
-    data_directory_type: DataDirectoryType,
-}
-
-impl DataDirectory {
     /// The [`RVA`](crate::header::RelativeVirtualAddress) of the table
-    pub fn virtual_address(&self) -> [u8; 4] {
-        todo!()
-    }
-
+    pub virtual_address: RelativeVirtualAddress,
     /// Size in bytes
-    pub fn size(&self) -> [u8; 4] {
-        todo!()
-    }
-}
-
-impl Display for DataDirectory {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
-    }
+    pub size: u32,
+    pub data_directory_type: DataDirectoryType,
 }
 
 #[derive(Debug)]
-pub struct DataDirectories {
+pub struct DataDirectoriesReader {
     offset: u64,
     buffer: Vec<u8>,
-}
-
-impl DataDirectories {}
-
-impl Display for DataDirectories {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
-    }
 }
