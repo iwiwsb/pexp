@@ -25,37 +25,37 @@ pub struct SectionHeader {
     /// The total size of the section when loaded into memory.
     /// If this value is greater than `size_of_raw_data`, the section is zero-padded.
     /// This field is valid only for executable images and should be set to zero for object files.
-    virtual_size: u32,
+    pub virtual_size: u32,
     /// For executable images, the address of the first byte of the section relative to the image base when the section is loaded into memory.
     /// For object files, this field is the address of the first byte before relocation is applied; for simplicity, compilers should set this to zero.
     /// Otherwise, it is an arbitrary value that is subtracted from offsets during relocation.
-    virtual_address: RelativeVirtualAddress,
+    pub virtual_address: RelativeVirtualAddress,
     /// The size of the section (for object files) or the size of the initialized data on disk (for image files).
-    /// For executable images, this must be a multiple of [`file_alignment`](OptionalHeader#structfield.file_alignment) from the [`OptionalHeader`].
+    /// For executable images, this must be a multiple of [`file_alignment`](crate::header::optional_header::OptionalHeader#structfield.file_alignment) from the [`OptionalHeader`](crate::header::optional_header::OptionalHeader).
     /// If this is less than `virtual_size`, the remainder of the section is zero-filled.
     /// Because the `size_of_raw_data` field is rounded but the `virtual_size` field is not, it is possible for `size_of_raw_data` to be greater than `virtual_size` as well.
     /// When a section contains only uninitialized data, this field should be zero.
-    size_of_raw_data: u32,
+    pub size_of_raw_data: u32,
     /// The file pointer to the first page of the section within the COFF file.
-    /// For executable images, this must be a multiple of [`file_alignment`](OptionalHeader#structfield.file_alignment) from the [`OptionalHeader`].
+    /// For executable images, this must be a multiple of [`file_alignment`](crate::header::optional_header::OptionalHeader#structfield.file_alignment) from the [`OptionalHeader`](crate::header::optional_header::OptionalHeader).
     /// For object files, the value should be aligned on a 4-byte boundary for best performance.
     /// When a section contains only uninitialized data, this field should be zero.
-    pointer_to_raw_data: u64,
+    pub pointer_to_raw_data: u64,
     /// The file pointer to the beginning of relocation entries for the section.
     /// This is set to zero for executable images or if there are no relocations.
-    pointer_to_relocations: u64,
+    pub pointer_to_relocations: u64,
     /// The file pointer to the beginning of line-number entries for the section.
     /// This is set to zero if there are no COFF line numbers.
     /// This value should be zero for an image because COFF debugging information is deprecated.
-    pointer_to_linenumbers: u64,
+    pub pointer_to_linenumbers: u64,
     /// The number of relocation entries for the section.
     /// This is set to zero for executable images.
-    number_of_relocations: u64,
+    pub number_of_relocations: u64,
     /// The number of line-number entries for the section.
     /// This value should be zero for an image because COFF debugging information is deprecated.
-    number_of_linenumbers: u64,
+    pub number_of_linenumbers: u64,
     /// The [flags](crate::header::section_flags) that describe the characteristics of the section.
-    characteristics: [u8; 4],
+    pub characteristics: [u8; 4],
 }
 
 impl SectionHeaderReader {

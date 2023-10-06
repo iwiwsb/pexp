@@ -141,7 +141,7 @@ impl ReadU32LE for FileHeaderReader {
 #[derive(Debug)]
 pub struct FileHeader {
     pub signature: StructField<[u8; 4]>,
-    /// Identifies the type of target machine. For more information, see [`machine_types`](machine_types).
+    /// Identifies the type of target machine. For more information, see [`machine_types`](crate::header::machine_types).
     pub machine: StructField<Machine>,
     /// Indicates the size of the section table, which immediately follows the headers.
     pub number_of_sections: StructField<u16>,
@@ -154,10 +154,10 @@ pub struct FileHeader {
     /// This data can be used to locate the string table, which immediately follows the symbol table.
     /// This value should be zero for an image because COFF debugging information is deprecated.
     pub number_of_symbols: StructField<u32>,
-    /// The size of the [`OptionalHeader`](crate::header::OptionalHeader), which is required for executable files but not for object files.
+    /// The size of the [`OptionalHeader`](crate::header::optional_header::OptionalHeader), which is required for executable files but not for object files.
     /// This value should be zero for an object file.
     pub size_of_optional_header: StructField<u16>,
-    /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](characteristics)
+    /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](crate::header::characteristics)
     pub characteristics: StructField<u16>,
 }
 

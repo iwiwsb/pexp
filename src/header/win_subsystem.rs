@@ -1,4 +1,4 @@
-//! The following values defined for the [`subsystem`](crate::header::OptionalHeader#structfield.subsystem) field of the [`OptionalHeader`](crate::header::OptionalHeader)
+//! The following values defined for the [`subsystem`](crate::header::optional_header::OptionalHeader#structfield.subsystem) field of the [`OptionalHeader`](crate::header::optional_header::OptionalHeader)
 //! determine which Windows subsystem (if any) is required to run the image.
 
 /// An unknown subsystem

@@ -1,7 +1,10 @@
 pub mod characteristics;
 pub mod dll_characteristics;
+pub mod file_header;
 pub mod machine_types;
+pub mod optional_header;
 pub mod section_flags;
+pub mod section_header;
 pub mod win_subsystem;
 
 use std::{
@@ -55,11 +58,6 @@ impl Display for ImageType {
         todo!()
     }
 }
-
-pub mod file_header;
-pub mod optional_header;
-
-mod section_header;
 
 /// Relavive virtual address (RVA)
 ///

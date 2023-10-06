@@ -255,8 +255,8 @@ impl ReadU32LE for OptionalHeaderReader {
 /// For image files, this header is required.
 /// An object file can have an optional header, but generally this header has no function in an object file except to increase its size.
 /// Note that the size of the optional header is not fixed.
-/// The [`size_of_optional_header`](crate::header::FileHeader#structfield.size_of_optional_header) field in the COFF header must be used
-/// to validate that a probe into the file for a particular data directory does not go beyond [`size_of_optional_header`](crate::header::FileHeader#structfield.size_of_optional_header).
+/// The [`size_of_optional_header`](crate::header::file_header::FileHeader#structfield.size_of_optional_header) field in the COFF header must be used
+/// to validate that a probe into the file for a particular data directory does not go beyond [`size_of_optional_header`](crate::header::file_header::FileHeader#structfield.size_of_optional_header).
 ///
 /// The first 8 fields of the optional header are standard fields that are defined for every implementation of COFF.
 /// PE32 contains additional field `base_of_data`, which is absent in PE32+, following `base_of_code`.
@@ -339,10 +339,10 @@ pub struct OptionalHeader {
     /// The following are checked for validation at load time: all drivers, any DLL loaded at boot time, and any DLL that is loaded into a critical Windows process.
     pub check_sum: StructField<u32>,
 
-    /// The subsystem that is required to run this image. For more information, see [`win_subsystem`](win_subsystem) module.
+    /// The subsystem that is required to run this image. For more information, see [`win_subsystem`](crate::header::win_subsystem) module.
     pub subsystem: StructField<u16>,
 
-    /// See [`dll_characteristics`](dll_characteristics) module.
+    /// See [`dll_characteristics`](crate::header::dll_characteristics) module.
     pub dll_characteristics: StructField<u16>,
 
     /// The size of the stack to reserve. Only `size_of_stack_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
