@@ -103,9 +103,9 @@ impl TryFrom<[u8; 2]> for Machine {
 
     fn try_from(value: [u8; 2]) -> Result<Self, Self::Error> {
         if MACHINE_TYPES.contains(&value) {
-            return Ok(Self(value));
+            Ok(Self(value))
         } else {
-            return Err(NonExistentMachineError);
+            Err(NonExistentMachineError)
         }
     }
 }

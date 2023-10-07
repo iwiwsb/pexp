@@ -194,169 +194,169 @@ impl<R: Read + Seek> OptionalHeaderReader<R> {
 
     pub fn read_address_of_entry_point(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 16;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     pub fn read_base_of_code(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 20;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     pub fn read_base_of_data(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 24;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     pub fn read_image_base_64(&self) -> StructField<u64> {
         const RELATIVE_OFFSET: u64 = 28;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     pub fn read_section_alignment(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 32;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_file_alignment(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 36;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_major_operating_system_version(&self) -> StructField<u16> {
         const RELATIVE_OFFSET: u64 = 40;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_minor_operating_system_version(&self) -> StructField<u16> {
         const RELATIVE_OFFSET: u64 = 42;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_major_image_version(&self) -> StructField<u16> {
         const RELATIVE_OFFSET: u64 = 44;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_minor_image_version(&self) -> StructField<u16> {
         const RELATIVE_OFFSET: u64 = 46;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_major_subsystem_version(&self) -> StructField<u16> {
         const RELATIVE_OFFSET: u64 = 48;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_minor_subsystem_version(&self) -> StructField<u16> {
         const RELATIVE_OFFSET: u64 = 50;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_win32_version_value(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 52;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_image(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 56;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_headers(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 60;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_check_sum(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 64;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_subsystem(&self) -> StructField<u16> {
         const RELATIVE_OFFSET: u64 = 68;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_dll_characteristics(&self) -> StructField<u16> {
         const RELATIVE_OFFSET: u64 = 70;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_stack_reserve_32(&mut self) -> StructField<u64> {
         const RELATIVE_OFFSET: u64 = 72;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_stack_reserve_64(&self) -> StructField<u64> {
         const RELATIVE_OFFSET: u64 = 72;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_stack_commit_32(&self) -> StructField<u64> {
         const RELATIVE_OFFSET: u64 = 76;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_stack_commit_64(&self) -> StructField<u64> {
         const RELATIVE_OFFSET: u64 = 80;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_heap_reserve_32(&self) -> StructField<u64> {
         const RELATIVE_OFFSET: u64 = 80;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_heap_reserve_64(&self) -> StructField<u64> {
         const RELATIVE_OFFSET: u64 = 88;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_heap_commit_64(&self) -> StructField<u64> {
         const RELATIVE_OFFSET: u64 = 96;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_loader_flags(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 94;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_number_of_rva_and_sizes(&self) -> StructField<u32> {
         const RELATIVE_OFFSET: u64 = 98;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_data_directories(&self) -> StructField<Vec<DataDirectory>> {
         const RELATIVE_OFFSET: u64 = 102;
-        let offset = self.offset + RELATIVE_OFFSET;
+        let _offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 

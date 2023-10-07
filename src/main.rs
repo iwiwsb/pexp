@@ -13,14 +13,14 @@ fn main() -> io::Result<()> {
     let mut pe_file = OpenOptions::new()
         .read(true)
         .write(false)
-        .open(r#"C:\Windows\System32\calc.exe"#)?;
+        .open(r"C:\Windows\System32\calc.exe")?;
     pe_file.seek(SeekFrom::Start(0x3C))?;
     let mut buf = [0u8; 4];
-    pe_file.read(&mut buf)?;
+    pe_file.read_exact(&mut buf)?;
     let file_header_offset = u64::from_le_bytes([buf[0], buf[1], buf[2], buf[3], 0, 0, 0, 0]);
     pe_file.seek(SeekFrom::Start(file_header_offset))?;
     let mut file_header_buffer = [0u8; 24];
-    pe_file.read(&mut file_header_buffer)?;
+    pe_file.read_exact(&mut file_header_buffer)?;
 
     Ok(())
 }
