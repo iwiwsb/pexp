@@ -1,5 +1,5 @@
 use crate::header::{ImageType, RelativeVirtualAddress};
-use crate::struct_parse::{ReadU16LE, ReadU32LE, StructField};
+use crate::struct_parse::StructField;
 
 pub struct OptionalHeaderReader {
     offset: usize,
@@ -327,14 +327,22 @@ pub struct OptionalHeader {
 
 #[derive(Debug, Clone)]
 pub enum DataDirectoryType {
-    Export,
-    Import,
-    Resource,
-    Exception,
-    Certificate,
-    BaseRelocation,
+    ExportTable,
+    ImportTable,
+    ResourceTable,
+    ExceptionTable,
+    CertificateTable,
+    BaseRelocationTable,
     Debug,
     Architecture,
+    GlobalPtr,
+    TLSTable,
+    LoadConfig,
+    BoundImport,
+    ImportAdressTable,
+    DelayImportDescriptor,
+    CLRHeader,
+    Reserved,
 }
 
 /// Data Directory structure
