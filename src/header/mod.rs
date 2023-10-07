@@ -7,10 +7,7 @@ pub mod section_flags;
 pub mod section_header;
 pub mod win_subsystem;
 
-use std::{
-    fmt::{self, Debug, Display},
-    ops::Add,
-};
+use std::fmt::{self, Debug, Display};
 
 /// The file is an executable image of 32-bit application
 pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: [u8; 2] = [0x0B, 0x01];
