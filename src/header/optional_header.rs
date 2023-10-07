@@ -1,17 +1,18 @@
 use crate::header::{ImageType, RelativeVirtualAddress};
 use crate::struct_parse::StructField;
+use std::io::{Read, Seek, SeekFrom};
 
-pub struct OptionalHeaderReader {
-    offset: usize,
-    buffer: Vec<u8>,
+pub struct OptionalHeaderReader<R: Read + Seek> {
+    offset: u64,
+    reader: R,
 }
 
-impl OptionalHeaderReader {
-    pub fn new(offset: usize, buffer: Vec<u8>) -> Self {
-        Self { offset, buffer }
+impl<R: Read + Seek> OptionalHeaderReader<R> {
+    pub fn new(offset: u64, reader: R) -> Self {
+        Self { offset, reader }
     }
 
-    pub fn read_optional_header(&self) -> OptionalHeader {
+    pub fn read_optional_header_32(&mut self) -> OptionalHeader {
         let image_type = self.read_image_type();
         let major_linker_version = self.read_major_linker_version();
         let minor_linker_version = self.read_minor_linker_version();
@@ -20,8 +21,8 @@ impl OptionalHeaderReader {
         let size_of_uninitialized_data = self.read_size_of_uninitialized_data();
         let address_of_entry_point = self.read_address_of_entry_point();
         let base_of_code = self.read_base_of_code();
-        let base_of_data = self.read_base_of_data();
-        let image_base = self.read_image_base();
+        let base_of_data = Some(self.read_base_of_data());
+        let image_base = self.read_image_base_64();
         let section_alignment = self.read_section_alignment();
         let file_alignment = self.read_file_alignment();
         let major_operating_system_version = self.read_major_operating_system_version();
@@ -36,10 +37,10 @@ impl OptionalHeaderReader {
         let check_sum = self.read_check_sum();
         let subsystem = self.read_subsystem();
         let dll_characteristics = self.read_dll_characteristics();
-        let size_of_stack_reserve = self.read_size_of_stack_reserve();
-        let size_of_stack_commit = self.read_size_of_stack_commit();
-        let size_of_heap_reserve = self.read_size_of_heap_reserve();
-        let size_of_heap_commit = self.read_size_of_heap_commit();
+        let size_of_stack_reserve = self.read_size_of_stack_reserve_32();
+        let size_of_stack_commit = self.read_size_of_stack_commit_64();
+        let size_of_heap_reserve = self.read_size_of_heap_reserve_64();
+        let size_of_heap_commit = self.read_size_of_heap_commit_64();
         let loader_flags = self.read_loader_flags();
         let number_of_rva_and_sizes = self.read_number_of_rva_and_sizes();
         let data_directories = self.read_data_directories();
@@ -79,128 +80,346 @@ impl OptionalHeaderReader {
         }
     }
 
-    fn read_image_type(&self) -> StructField<ImageType> {
+    pub fn read_optional_header_64(&mut self) -> OptionalHeader {
+        let image_type = self.read_image_type();
+        let major_linker_version = self.read_major_linker_version();
+        let minor_linker_version = self.read_minor_linker_version();
+        let size_of_code = self.read_size_of_code();
+        let size_of_initialized_data = self.read_size_of_initialized_data();
+        let size_of_uninitialized_data = self.read_size_of_uninitialized_data();
+        let address_of_entry_point = self.read_address_of_entry_point();
+        let base_of_code = self.read_base_of_code();
+        let base_of_data = None;
+        let image_base = self.read_image_base_64();
+        let section_alignment = self.read_section_alignment();
+        let file_alignment = self.read_file_alignment();
+        let major_operating_system_version = self.read_major_operating_system_version();
+        let minor_operating_system_version = self.read_minor_operating_system_version();
+        let major_image_version = self.read_major_image_version();
+        let minor_image_version = self.read_minor_image_version();
+        let major_subsystem_version = self.read_major_subsystem_version();
+        let minor_subsystem_version = self.read_minor_subsystem_version();
+        let win32_version_value = self.read_win32_version_value();
+        let size_of_image = self.read_size_of_image();
+        let size_of_headers = self.read_size_of_headers();
+        let check_sum = self.read_check_sum();
+        let subsystem = self.read_subsystem();
+        let dll_characteristics = self.read_dll_characteristics();
+        let size_of_stack_reserve = self.read_size_of_stack_reserve_64();
+        let size_of_stack_commit = self.read_size_of_stack_commit_64();
+        let size_of_heap_reserve = self.read_size_of_heap_reserve_64();
+        let size_of_heap_commit = self.read_size_of_heap_commit_64();
+        let loader_flags = self.read_loader_flags();
+        let number_of_rva_and_sizes = self.read_number_of_rva_and_sizes();
+        let data_directories = self.read_data_directories();
+
+        OptionalHeader {
+            image_type,
+            major_linker_version,
+            minor_linker_version,
+            size_of_code,
+            size_of_initialized_data,
+            size_of_uninitialized_data,
+            address_of_entry_point,
+            base_of_code,
+            base_of_data,
+            image_base,
+            section_alignment,
+            file_alignment,
+            major_operating_system_version,
+            minor_operating_system_version,
+            major_image_version,
+            minor_image_version,
+            major_subsystem_version,
+            minor_subsystem_version,
+            win32_version_value,
+            size_of_image,
+            size_of_headers,
+            check_sum,
+            subsystem,
+            dll_characteristics,
+            size_of_stack_reserve,
+            size_of_stack_commit,
+            size_of_heap_reserve,
+            size_of_heap_commit,
+            loader_flags,
+            number_of_rva_and_sizes,
+            data_directories,
+        }
+    }
+
+    pub fn read_image_type(&mut self) -> StructField<ImageType> {
+        const RELATIVE_OFFSET: u64 = 0;
+        let offset = self.offset + RELATIVE_OFFSET;
+        let magic = self.read_array(offset);
+        let bytes = magic.to_vec();
+        let data = ImageType::try_from(magic).unwrap();
+
+        StructField {
+            offset,
+            bytes,
+            data,
+        }
+    }
+
+    pub fn read_major_linker_version(&mut self) -> StructField<u8> {
+        const RELATIVE_OFFSET: u64 = 2;
+        let offset = self.offset + RELATIVE_OFFSET;
+        self.read_u8_field(offset)
+    }
+
+    pub fn read_minor_linker_version(&mut self) -> StructField<u8> {
+        const RELATIVE_OFFSET: u64 = 3;
+        let offset = self.offset + RELATIVE_OFFSET;
+        self.read_u8_field(offset)
+    }
+
+    pub fn read_size_of_code(&mut self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 4;
+        let offset = self.offset + RELATIVE_OFFSET;
+        self.read_u32_le_field(offset)
+    }
+
+    pub fn read_size_of_initialized_data(&mut self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 8;
+        let offset = self.offset + RELATIVE_OFFSET;
+        self.read_u32_le_field(offset)
+    }
+
+    pub fn read_size_of_uninitialized_data(&mut self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 12;
+        let offset = self.offset + RELATIVE_OFFSET;
+        self.read_u32_le_field(offset)
+    }
+
+    pub fn read_address_of_entry_point(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 16;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
-    fn read_major_linker_version(&self) -> StructField<u8> {
+    pub fn read_base_of_code(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 20;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
-    fn read_minor_linker_version(&self) -> StructField<u8> {
+    pub fn read_base_of_data(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 24;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
-    fn read_size_of_code(&self) -> StructField<u32> {
+    pub fn read_image_base_64(&self) -> StructField<u64> {
+        const RELATIVE_OFFSET: u64 = 28;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
-    fn read_size_of_initialized_data(&self) -> StructField<u32> {
-        todo!()
-    }
-
-    fn read_size_of_uninitialized_data(&self) -> StructField<u32> {
-        todo!()
-    }
-
-    fn read_address_of_entry_point(&self) -> StructField<RelativeVirtualAddress> {
-        todo!()
-    }
-
-    fn read_base_of_code(&self) -> StructField<RelativeVirtualAddress> {
-        todo!()
-    }
-
-    fn read_base_of_data(&self) -> Option<StructField<RelativeVirtualAddress>> {
-        todo!()
-    }
-
-    fn read_image_base(&self) -> StructField<u64> {
-        todo!()
-    }
-
-    fn read_section_alignment(&self) -> StructField<u32> {
+    pub fn read_section_alignment(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 32;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_file_alignment(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 36;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_major_operating_system_version(&self) -> StructField<u16> {
+        const RELATIVE_OFFSET: u64 = 40;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_minor_operating_system_version(&self) -> StructField<u16> {
+        const RELATIVE_OFFSET: u64 = 42;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_major_image_version(&self) -> StructField<u16> {
+        const RELATIVE_OFFSET: u64 = 44;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_minor_image_version(&self) -> StructField<u16> {
+        const RELATIVE_OFFSET: u64 = 46;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_major_subsystem_version(&self) -> StructField<u16> {
+        const RELATIVE_OFFSET: u64 = 48;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_minor_subsystem_version(&self) -> StructField<u16> {
+        const RELATIVE_OFFSET: u64 = 50;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_win32_version_value(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 52;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_image(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 56;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_size_of_headers(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 60;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_check_sum(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 64;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_subsystem(&self) -> StructField<u16> {
+        const RELATIVE_OFFSET: u64 = 68;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_dll_characteristics(&self) -> StructField<u16> {
+        const RELATIVE_OFFSET: u64 = 70;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
-    fn read_size_of_stack_reserve(&self) -> StructField<u64> {
+    fn read_size_of_stack_reserve_32(&mut self) -> StructField<u64> {
+        const RELATIVE_OFFSET: u64 = 72;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
-    fn read_size_of_stack_commit(&self) -> StructField<u64> {
+    fn read_size_of_stack_reserve_64(&self) -> StructField<u64> {
+        const RELATIVE_OFFSET: u64 = 72;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
-    fn read_size_of_heap_reserve(&self) -> StructField<u64> {
+    fn read_size_of_stack_commit_32(&self) -> StructField<u64> {
+        const RELATIVE_OFFSET: u64 = 76;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
-    fn read_size_of_heap_commit(&self) -> StructField<u64> {
+    fn read_size_of_stack_commit_64(&self) -> StructField<u64> {
+        const RELATIVE_OFFSET: u64 = 80;
+        let offset = self.offset + RELATIVE_OFFSET;
+        todo!()
+    }
+
+    fn read_size_of_heap_reserve_32(&self) -> StructField<u64> {
+        const RELATIVE_OFFSET: u64 = 80;
+        let offset = self.offset + RELATIVE_OFFSET;
+        todo!()
+    }
+
+    fn read_size_of_heap_reserve_64(&self) -> StructField<u64> {
+        const RELATIVE_OFFSET: u64 = 88;
+        let offset = self.offset + RELATIVE_OFFSET;
+        todo!()
+    }
+
+    fn read_size_of_heap_commit_64(&self) -> StructField<u64> {
+        const RELATIVE_OFFSET: u64 = 96;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_loader_flags(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 94;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_number_of_rva_and_sizes(&self) -> StructField<u32> {
+        const RELATIVE_OFFSET: u64 = 98;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
     }
 
     fn read_data_directories(&self) -> StructField<Vec<DataDirectory>> {
+        const RELATIVE_OFFSET: u64 = 102;
+        let offset = self.offset + RELATIVE_OFFSET;
         todo!()
+    }
+
+    fn read_u8(&mut self, offset: u64) -> u8 {
+        let buf: [u8; 1] = self.read_array(offset);
+        buf[0]
+    }
+
+    fn read_u8_field(&mut self, offset: u64) -> StructField<u8> {
+        let buf = self.read_u8(offset);
+        let bytes = vec![buf];
+        let data = buf;
+
+        StructField {
+            offset,
+            bytes,
+            data,
+        }
+    }
+
+    fn read_u16_le(&mut self, offset: u64) -> u16 {
+        let buf = self.read_array(offset);
+        u16::from_le_bytes(buf)
+    }
+
+    fn read_u16_le_field(&mut self, offset: u64) -> StructField<u16> {
+        let buf = self.read_array(offset);
+        let data = u16::from_le_bytes(buf);
+        let bytes = buf.to_vec();
+
+        StructField {
+            offset,
+            bytes,
+            data,
+        }
+    }
+
+    fn read_u32_le(&mut self, offset: u64) -> u32 {
+        let offset = self.offset + offset;
+        let pos = SeekFrom::Start(self.offset + offset);
+        let _ = self.reader.seek(pos);
+        let buf = self.read_array(offset);
+        u32::from_le_bytes(buf)
+    }
+
+    fn read_u32_le_field(&mut self, offset: u64) -> StructField<u32> {
+        let buf = self.read_array(offset);
+        let bytes = buf.to_vec();
+        let data = u32::from_le_bytes(buf);
+
+        StructField {
+            offset,
+            bytes,
+            data,
+        }
+    }
+
+    fn read_array<const N: usize>(&mut self, offset: u64) -> [u8; N] {
+        let pos = SeekFrom::Start(self.offset + offset);
+        let _ = self.reader.seek(pos);
+        let mut buf = [0u8; N];
+        let _ = self.reader.read_exact(&mut buf);
+        buf
     }
 }
 
@@ -244,14 +463,14 @@ pub struct OptionalHeader {
     /// For program images, this is the starting address.
     /// For device drivers, this is the address of the initialization function.
     /// An entry point is optional for DLLs.
-    pub address_of_entry_point: StructField<RelativeVirtualAddress>,
+    pub address_of_entry_point: StructField<u32>,
 
     /// The address that is relative to the image base of the beginning-of-code section when it is loaded into memory.
-    pub base_of_code: StructField<RelativeVirtualAddress>,
+    pub base_of_code: StructField<u32>,
 
     /// The address that is relative to the image base of the beginning-of-data section when it is loaded into memory.
     /// PE32 contains this additional field, which is absent in PE32+
-    pub base_of_data: Option<StructField<RelativeVirtualAddress>>,
+    pub base_of_data: Option<StructField<u32>>,
 
     /// The preferred address of the first byte of image when loaded into memory; must be a multiple of 64 K.
     /// The default for DLLs is `0x10000000`.
@@ -350,12 +569,12 @@ pub enum DataDirectoryType {
 /// Each data directory gives the address and size of a table or string that Windows uses.
 /// These data directory entries are all loaded into memory so that the system can use them at run time.
 #[derive(Debug, Clone)]
-pub struct DataDirectoryBuffer {
+pub struct DataDirectoryReader<R: Read + Seek> {
     offset: u64,
-    buffer: Vec<u8>,
+    reader: R,
 }
 
-impl DataDirectoryBuffer {
+impl<R: Read + Seek> DataDirectoryReader<R> {
     /// The export table address and size.
     pub fn export(&self) -> Option<StructField<DataDirectory>> {
         todo!()

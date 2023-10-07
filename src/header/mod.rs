@@ -68,14 +68,7 @@ impl Display for ImageType {
 /// For simplicity, a compiler should just set the first RVA in each section to zero.
 #[derive(Debug)]
 pub struct RelativeVirtualAddress {
-    addr: VirtualAddress,
-    image_base: VirtualAddress,
-}
-
-impl Display for RelativeVirtualAddress {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
-    }
+    addr: u64,
 }
 
 /// Virtual address (VA)
@@ -87,54 +80,4 @@ impl Display for RelativeVirtualAddress {
 #[derive(Debug)]
 pub struct VirtualAddress {
     addr: u64,
-}
-
-impl Add for VirtualAddress {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let addr = self.addr + rhs.addr;
-        Self { addr }
-    }
-}
-
-impl From<RelativeVirtualAddress> for VirtualAddress {
-    fn from(value: RelativeVirtualAddress) -> Self {
-        let addr: u64 = (value.addr + value.image_base).into();
-        Self { addr }
-    }
-}
-
-impl From<VirtualAddress> for u64 {
-    fn from(value: VirtualAddress) -> Self {
-        value.addr
-    }
-}
-
-impl From<u64> for VirtualAddress {
-    fn from(value: u64) -> Self {
-        VirtualAddress { addr: value }
-    }
-}
-
-impl From<u32> for VirtualAddress {
-    fn from(value: u32) -> Self {
-        Self { addr: value.into() }
-    }
-}
-
-impl From<[u8; 4]> for VirtualAddress {
-    fn from(value: [u8; 4]) -> Self {
-        Self {
-            addr: u32::from_le_bytes(value).into(),
-        }
-    }
-}
-
-impl From<[u8; 8]> for VirtualAddress {
-    fn from(value: [u8; 8]) -> Self {
-        Self {
-            addr: u64::from_le_bytes(value),
-        }
-    }
 }
