@@ -3,11 +3,12 @@
 pub mod header;
 pub mod struct_parse;
 
-use header::machine_types::Machine;
 use std::{
     fs::OpenOptions,
     io::{self, ErrorKind, Read, Seek, SeekFrom},
 };
+
+use crate::header::machine_types::MACHINE_TYPES;
 
 fn main() -> io::Result<()> {
     let mut pe_file = OpenOptions::new()
@@ -39,7 +40,7 @@ fn detect_pe_type<R: Read + Seek>(reader: &mut R) -> io::Result<PortExeType> {
     reader.read_exact(&mut mz)?;
     if mz == MZ_SIGNATURE {
         Ok(Image)
-    } else if Machine(mz).to_string() != "Unknown machine" {
+    } else if MACHINE_TYPES.contains(&u16::from_le_bytes(mz)) {
         Ok(Object)
     } else {
         Err(io::Error::from(ErrorKind::InvalidData))

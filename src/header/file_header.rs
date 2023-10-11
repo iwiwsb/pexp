@@ -49,8 +49,8 @@ where
     pub fn read_machine(&mut self) -> Machine {
         let offset = self.offset + 4;
         let buf = self.read_array(offset);
-        let data = Machine(buf);
-        data
+        let data = u16::from_le_bytes(buf);
+        data.into()
     }
 
     pub fn read_number_of_sections(&mut self) -> u16 {
@@ -143,7 +143,7 @@ mod tests {
     fn test_file_header_reading() {
         let file_header = FileHeader {
             signature: [b'P', b'E', 0, 0],
-            machine: Machine(IMAGE_FILE_MACHINE_AMD64),
+            machine: Machine::AMD64,
             number_of_sections: 6,
             time_date_stamp: NaiveDateTime::from_timestamp(0x340C410, 0),
             pointer_to_symbol_table: 0,
