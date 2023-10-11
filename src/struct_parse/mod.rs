@@ -31,9 +31,9 @@ impl StructField<u64> {
 }
 
 pub trait ReadU16LE {
-    fn read_u16_le(&mut self, relative_offset: u64) -> u16;
+    fn read_u16_le(&mut self, offset: u64) -> u16;
 }
 
 pub trait ReadU32LE {
-    fn read_u32_le(&mut self, relative_offset: u64) -> u32;
+    fn read_u32_le(&mut self, offset: u64) -> u32;
 }

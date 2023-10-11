@@ -1,5 +1,5 @@
 use crate::header::{ImageType, RelativeVirtualAddress};
-use crate::struct_parse::StructField;
+use crate::struct_parse::{ReadU16LE, ReadU32LE, StructField};
 use std::io::{Read, Seek, SeekFrom};
 
 pub struct OptionalHeaderReader<R: Read + Seek> {
@@ -359,16 +359,6 @@ impl<R: Read + Seek> OptionalHeaderReader<R> {
         buf[0]
     }
 
-    fn read_u16_le(&mut self, offset: u64) -> u16 {
-        let buf = self.read_array(offset);
-        u16::from_le_bytes(buf)
-    }
-
-    fn read_u32_le(&mut self, offset: u64) -> u32 {
-        let buf = self.read_array(offset);
-        u32::from_le_bytes(buf)
-    }
-
     fn read_u64_le(&mut self, offset: u64) -> u64 {
         let buf = self.read_array(offset);
         u64::from_le_bytes(buf)
@@ -380,6 +370,20 @@ impl<R: Read + Seek> OptionalHeaderReader<R> {
         let mut buf = [0u8; N];
         let _ = self.reader.read_exact(&mut buf);
         buf
+    }
+}
+
+impl<R: Read + Seek> ReadU16LE for OptionalHeaderReader<R> {
+    fn read_u16_le(&mut self, offset: u64) -> u16 {
+        let buf = self.read_array(offset);
+        u16::from_le_bytes(buf)
+    }
+}
+
+impl<R: Read + Seek> ReadU32LE for OptionalHeaderReader<R> {
+    fn read_u32_le(&mut self, offset: u64) -> u32 {
+        let buf = self.read_array(offset);
+        u32::from_le_bytes(buf)
     }
 }
 
@@ -628,4 +632,3 @@ pub struct DataDirectoriesReader {
     offset: u64,
     buffer: Vec<u8>,
 }
-
