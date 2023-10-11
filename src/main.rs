@@ -39,7 +39,7 @@ fn detect_pe_type<R: Read + Seek>(reader: &mut R) -> io::Result<PortExeType> {
     reader.read_exact(&mut mz)?;
     if mz == MZ_SIGNATURE {
         Ok(Image)
-    } else if Machine::try_from(mz).is_ok() {
+    } else if Machine(mz).to_string() != "Unknown machine" {
         Ok(Object)
     } else {
         Err(io::Error::from(ErrorKind::InvalidData))

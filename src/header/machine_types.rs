@@ -86,27 +86,12 @@ const MACHINE_TYPES: [[u8; 2]; 25] = [
     IMAGE_FILE_MACHINE_WCEMIPSV2,
 ];
 
-#[derive(Debug, Clone)]
-pub struct Machine([u8; 2]);
+#[derive(Debug, Clone, PartialEq)]
+pub struct Machine(pub [u8; 2]);
 
 impl UpperHex for Machine {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:X}", u16::from_le_bytes([self.0[0], self.0[1]]))
-    }
-}
-
-#[derive(Debug)]
-pub struct NonExistentMachineError;
-
-impl TryFrom<[u8; 2]> for Machine {
-    type Error = NonExistentMachineError;
-
-    fn try_from(value: [u8; 2]) -> Result<Self, Self::Error> {
-        if MACHINE_TYPES.contains(&value) {
-            Ok(Self(value))
-        } else {
-            Err(NonExistentMachineError)
-        }
     }
 }
 
@@ -140,7 +125,7 @@ impl Display for Machine {
             IMAGE_FILE_MACHINE_SH5 => "Hitachi SH5",
             IMAGE_FILE_MACHINE_THUMB => "Thumb",
             IMAGE_FILE_MACHINE_WCEMIPSV2 => "MIPS little-endian WCE v2",
-            _ => return Err(std::fmt::Error),
+            _ => "Unknown machine",
         };
         f.write_str(data)
     }
