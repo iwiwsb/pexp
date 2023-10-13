@@ -1,4 +1,4 @@
-use crate::struct_parse::{ReadU16LE, ReadU32LE, StructField};
+use crate::struct_parse::StructField;
 use std::fmt::Debug;
 use std::io::{Read, Seek, SeekFrom};
 
@@ -92,24 +92,6 @@ where
         let mut buf = [0u8; N];
         let _ = self.buffer.read_exact(&mut buf);
         buf
-    }
-}
-
-impl<R: Read + Seek> ReadU16LE for FileHeaderReader<R> {
-    fn read_u16_le(&mut self, offset: u64) -> u16 {
-        let offset = self.offset + offset;
-        let buf = self.read_array(offset);
-        let data = u16::from_le_bytes(buf);
-        data
-    }
-}
-
-impl<R: Read + Seek> ReadU32LE for FileHeaderReader<R> {
-    fn read_u32_le(&mut self, offset: u64) -> u32 {
-        let offset = self.offset + offset;
-        let buf = self.read_array(offset);
-        let data = u32::from_le_bytes(buf);
-        data
     }
 }
 
