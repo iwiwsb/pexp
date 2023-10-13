@@ -1,6 +1,4 @@
-use crate::header::machine_types::Machine;
-use crate::struct_parse::{ReadU16LE, ReadU32LE};
-use chrono::NaiveDateTime;
+use crate::struct_parse::{ReadU16LE, ReadU32LE, StructField};
 use std::fmt::Debug;
 use std::io::{Read, Seek, SeekFrom};
 
@@ -40,45 +38,52 @@ where
         }
     }
 
-    pub fn read_signature(&mut self) -> [u8; 4] {
+    pub fn read_signature(&mut self) -> StructField<[u8; 4]> {
         let offset = self.offset;
-        let buf = self.read_array(offset);
-        buf
+        let data = self.read_array(offset);
+        StructField { offset, data }
     }
 
-    pub fn read_machine(&mut self) -> Machine {
+    pub fn read_machine(&mut self) -> StructField<[u8; 2]> {
         let offset = self.offset + 4;
-        let buf = self.read_array(offset);
-        let data = u16::from_le_bytes(buf);
-        data.into()
+        let data = self.read_array(offset);
+        StructField { offset, data }
     }
 
-    pub fn read_number_of_sections(&mut self) -> u16 {
-        self.read_u16_le(self.offset + 6)
+    pub fn read_number_of_sections(&mut self) -> StructField<[u8; 2]> {
+        let offset = self.offset + 6;
+        let data = self.read_array(offset);
+        StructField { offset, data }
     }
 
-    pub fn read_time_date_stamp(&mut self) -> NaiveDateTime {
+    pub fn read_time_date_stamp(&mut self) -> StructField<[u8; 4]> {
         let offset = self.offset + 8;
-        let buf = self.read_array(offset);
-        let timestamp = u32::from_le_bytes(buf);
-        let data = NaiveDateTime::from_timestamp_opt(timestamp as i64, 0).unwrap();
-        data
+        let data = self.read_array(offset);
+        StructField { offset, data }
     }
 
-    pub fn read_pointer_to_symbol_table(&mut self) -> u32 {
-        self.read_u32_le(self.offset + 12)
+    pub fn read_pointer_to_symbol_table(&mut self) -> StructField<[u8; 4]> {
+        let offset = self.offset + 12;
+        let data = self.read_array(offset);
+        StructField { offset, data }
     }
 
-    pub fn read_number_of_symbols(&mut self) -> u32 {
-        self.read_u32_le(self.offset + 16)
+    pub fn read_number_of_symbols(&mut self) -> StructField<[u8; 4]> {
+        let offset = self.offset + 16;
+        let data = self.read_array(offset);
+        StructField { offset, data }
     }
 
-    pub fn read_size_of_optional_header(&mut self) -> u16 {
-        self.read_u16_le(self.offset + 20)
+    pub fn read_size_of_optional_header(&mut self) -> StructField<[u8; 2]> {
+        let offset = self.offset + 20;
+        let data = self.read_array(offset);
+        StructField { offset, data }
     }
 
-    pub fn read_characteristics(&mut self) -> u16 {
-        self.read_u16_le(self.offset + 22)
+    pub fn read_characteristics(&mut self) -> StructField<[u8; 2]> {
+        let offset = self.offset + 22;
+        let data = self.read_array(offset);
+        StructField { offset, data }
     }
 
     fn read_array<const N: usize>(&mut self, offset: u64) -> [u8; N] {
@@ -111,25 +116,25 @@ impl<R: Read + Seek> ReadU32LE for FileHeaderReader<R> {
 /// COFF File Header structure
 #[derive(Debug, PartialEq)]
 pub struct FileHeader {
-    pub signature: [u8; 4],
+    pub signature: StructField<[u8; 4]>,
     /// Identifies the type of target machine. For more information, see [`machine_types`](crate::header::machine_types).
-    pub machine: Machine,
+    pub machine: StructField<[u8; 2]>,
     /// Indicates the size of the section table, which immediately follows the headers.
-    pub number_of_sections: u16,
+    pub number_of_sections: StructField<[u8; 2]>,
     /// The low 32 bits of the number of seconds since 00:00 January 1, 1970 (a C run-time time_t value), which indicates when the file was created.
-    pub time_date_stamp: NaiveDateTime,
+    pub time_date_stamp: StructField<[u8; 4]>,
     /// The file offset of the COFF symbol table, or zero if no COFF symbol table is present.
     /// This value should be zero for an image because COFF debugging information is deprecated.
-    pub pointer_to_symbol_table: u32,
+    pub pointer_to_symbol_table: StructField<[u8; 4]>,
     /// The number of entries in the symbol table.
     /// This data can be used to locate the string table, which immediately follows the symbol table.
     /// This value should be zero for an image because COFF debugging information is deprecated.
-    pub number_of_symbols: u32,
+    pub number_of_symbols: StructField<[u8; 4]>,
     /// The size of the [`OptionalHeader`](crate::header::optional_header::OptionalHeader), which is required for executable files but not for object files.
     /// This value should be zero for an object file.
-    pub size_of_optional_header: u16,
+    pub size_of_optional_header: StructField<[u8; 2]>,
     /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](crate::header::characteristics)
-    pub characteristics: u16,
+    pub characteristics: StructField<[u8; 2]>,
 }
 
 #[cfg(test)]
@@ -137,19 +142,42 @@ mod tests {
     use std::io::Cursor;
 
     use super::*;
-    use crate::header::machine_types::*;
 
     #[test]
     fn test_file_header_reading() {
         let file_header = FileHeader {
-            signature: [b'P', b'E', 0, 0],
-            machine: Machine::AMD64,
-            number_of_sections: 6,
-            time_date_stamp: NaiveDateTime::from_timestamp(0x340C410, 0),
-            pointer_to_symbol_table: 0,
-            number_of_symbols: 0,
-            size_of_optional_header: 0xF0,
-            characteristics: 0x22,
+            signature: StructField {
+                offset: 0,
+                data: [b'P', b'E', 0, 0],
+            },
+            machine: StructField {
+                offset: 4,
+                data: [0x64, 0x86],
+            },
+            number_of_sections: StructField {
+                offset: 6,
+                data: [6, 0],
+            },
+            time_date_stamp: StructField {
+                offset: 8,
+                data: [0x10, 0xC4, 0x40, 0x03],
+            },
+            pointer_to_symbol_table: StructField {
+                offset: 12,
+                data: [0x00, 0x00, 0x00, 0x00],
+            },
+            number_of_symbols: StructField {
+                offset: 16,
+                data: [0x00, 0x00, 0x00, 0x00],
+            },
+            size_of_optional_header: StructField {
+                offset: 20,
+                data: [0xF0, 0x00],
+            },
+            characteristics: StructField {
+                offset: 22,
+                data: [0x22, 0x00],
+            },
         };
 
         let buf: Vec<u8> = vec![
