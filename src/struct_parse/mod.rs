@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use chrono::NaiveDateTime;
+use crate::header::characteristics::Characteristics;
 
 use crate::header::machine_types::Machine;
 
@@ -24,6 +25,10 @@ impl StructField<[u8; 2]> {
     pub fn as_machine(&self) -> Machine {
         Machine::from(self.as_u16_le())
     }
+
+    pub fn as_characteristics(&self) -> Characteristics {
+        todo!()
+    }
 }
 
 impl StructField<[u8; 4]> {
@@ -33,6 +38,12 @@ impl StructField<[u8; 4]> {
 
     pub fn as_datetime(&self) -> NaiveDateTime {
         NaiveDateTime::from_timestamp(self.as_u32_le() as i64, 0)
+    }
+}
+
+impl StructField<[u8; 8]> {
+    pub fn as_u64_le(&self) -> u64 {
+        u64::from_le_bytes(self.data)
     }
 }
 

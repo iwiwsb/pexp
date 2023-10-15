@@ -30,7 +30,6 @@ pub enum ImageType {
 }
 
 impl From<u16> for ImageType {
-
     fn from(value: u16) -> Self {
         match value {
             0x010B => ImageType::Image32,
@@ -42,7 +41,6 @@ impl From<u16> for ImageType {
 }
 
 impl From<[u8; 2]> for ImageType {
-
     fn from(value: [u8; 2]) -> Self {
         let x = u16::from_le_bytes(value);
         ImageType::from(x)
@@ -55,7 +53,7 @@ impl Display for ImageType {
             ImageType::Image32 => write!(f, "32-bit PE image"),
             ImageType::Image64 => write!(f, "64-bit PE image"),
             ImageType::ImageRom => write!(f, "ROM PE image"),
-            ImageType::ImageUnknown => write!(f, "Unknown image")
+            ImageType::ImageUnknown => write!(f, "Unknown image"),
         }
     }
 }
