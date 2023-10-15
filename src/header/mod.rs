@@ -21,42 +21,46 @@ pub const FILE_HEADER_SIZE: u64 = 20;
 #[derive(Debug)]
 pub enum ImageType {
     /// Represents 32-bit PE image
-    Image32 = 0x010B,
+    Image32,
     /// Represents 64-bit PE image
-    Image64 = 0x020B,
+    Image64,
     /// Represents ROM PE Image
-    ImageRom = 0x0107,
+    ImageRom,
+    ImageUnknown,
 }
 
-impl TryFrom<u16> for ImageType {
-    type Error = &'static str;
+impl From<u16> for ImageType {
 
-    fn try_from(value: u16) -> Result<Self, Self::Error> {
+    fn from(value: u16) -> Self {
         match value {
-            0x010B => Ok(ImageType::Image32),
-            0x020B => Ok(ImageType::Image64),
-            0x0107 => Ok(ImageType::ImageRom),
-            _ => panic!(),
+            0x010B => ImageType::Image32,
+            0x020B => ImageType::Image64,
+            0x0107 => ImageType::ImageRom,
+            _ => ImageType::ImageUnknown,
         }
     }
 }
 
-impl TryFrom<[u8; 2]> for ImageType {
-    type Error = &'static str;
+impl From<[u8; 2]> for ImageType {
 
-    fn try_from(value: [u8; 2]) -> Result<Self, Self::Error> {
+    fn from(value: [u8; 2]) -> Self {
         let x = u16::from_le_bytes(value);
-        ImageType::try_from(x)
+        ImageType::from(x)
     }
 }
 
 impl Display for ImageType {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ImageType::Image32 => write!(f, "32-bit PE image"),
+            ImageType::Image64 => write!(f, "64-bit PE image"),
+            ImageType::ImageRom => write!(f, "ROM PE image"),
+            ImageType::ImageUnknown => write!(f, "Unknown image")
+        }
     }
 }
 
-/// Relavive virtual address (RVA)
+/// Relative virtual address (RVA)
 ///
 /// In an image file, this is the address of an item after it is loaded into memory, with the base address of the image file subtracted from it.
 /// The RVA of an item almost always differs from its position within the file on disk (file pointer).

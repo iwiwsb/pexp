@@ -99,7 +99,7 @@ pub const MACHINE_TYPES: [u16; 29] = [
 pub enum Machine {
     Unknown = IMAGE_FILE_MACHINE_UNKNOWN,
     Alpha = IMAGE_FILE_MACHINE_ALPHA,
-    Aplpha64 = IMAGE_FILE_MACHINE_ALPHA64,
+    Alpha64 = IMAGE_FILE_MACHINE_ALPHA64,
     AM33 = IMAGE_FILE_MACHINE_AM33,
     AMD64 = IMAGE_FILE_MACHINE_AMD64,
     ARM = IMAGE_FILE_MACHINE_ARM,
@@ -133,7 +133,7 @@ impl Display for Machine {
         let data = match self {
             Self::Unknown => "Any machine type",
             Self::Alpha => "Alpha AXP, 32-bit address space",
-            Self::Aplpha64 => "Alpha 64, 64-bit address space",
+            Self::Alpha64 => "Alpha 64, 64-bit address space",
             Self::AM33 => "Matsushita AM33",
             Self::AMD64 => "x64",
             Self::ARM => "ARM little endian",
@@ -169,7 +169,7 @@ impl From<u16> for Machine {
     fn from(value: u16) -> Self {
         match value {
             0x0184 => Self::Alpha,
-            0x0284 => Self::Aplpha64,
+            0x0284 => Self::Alpha64,
             0x01D3 => Self::AM33,
             0x8664 => Self::AMD64,
             0x01C0 => Self::ARM,
