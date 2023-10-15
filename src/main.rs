@@ -7,6 +7,7 @@ use std::{
     fs::OpenOptions,
     io::{self, ErrorKind, Read, Seek, SeekFrom},
 };
+use crate::header::file_header::FileHeaderReader;
 
 use crate::header::machine_types::MACHINE_TYPES;
 
@@ -18,11 +19,9 @@ fn main() -> io::Result<()> {
     pe_file.seek(SeekFrom::Start(0x3C))?;
     let mut buf = [0u8; 4];
     pe_file.read_exact(&mut buf)?;
-    let file_header_offset = u64::from_le_bytes([buf[0], buf[1], buf[2], buf[3], 0, 0, 0, 0]);
-    pe_file.seek(SeekFrom::Start(file_header_offset))?;
-    let mut file_header_buffer = [0u8; 24];
-    pe_file.read_exact(&mut file_header_buffer)?;
-
+    let file_header_offset = u32::from_le_bytes(buf) as u64;
+    let file_header = FileHeaderReader::new(file_header_offset, pe_file).read_file_header();
+    println!("{}", file_header);
     Ok(())
 }
 

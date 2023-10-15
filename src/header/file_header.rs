@@ -1,5 +1,5 @@
 use crate::struct_parse::StructField;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display, Formatter};
 use std::io::{Read, Seek, SeekFrom};
 
 pub struct FileHeaderReader<R: Read + Seek> {
@@ -39,49 +39,49 @@ where
     }
 
     pub fn read_signature(&mut self) -> StructField<[u8; 4]> {
-        let offset = self.offset;
+        let offset = 0;
         let data = self.read_array(offset);
         StructField { offset, data }
     }
 
     pub fn read_machine(&mut self) -> StructField<[u8; 2]> {
-        let offset = self.offset + 4;
+        let offset = 4;
         let data = self.read_array(offset);
         StructField { offset, data }
     }
 
     pub fn read_number_of_sections(&mut self) -> StructField<[u8; 2]> {
-        let offset = self.offset + 6;
+        let offset = 6;
         let data = self.read_array(offset);
         StructField { offset, data }
     }
 
     pub fn read_time_date_stamp(&mut self) -> StructField<[u8; 4]> {
-        let offset = self.offset + 8;
+        let offset = 8;
         let data = self.read_array(offset);
         StructField { offset, data }
     }
 
     pub fn read_pointer_to_symbol_table(&mut self) -> StructField<[u8; 4]> {
-        let offset = self.offset + 12;
+        let offset = 12;
         let data = self.read_array(offset);
         StructField { offset, data }
     }
 
     pub fn read_number_of_symbols(&mut self) -> StructField<[u8; 4]> {
-        let offset = self.offset + 16;
+        let offset = 16;
         let data = self.read_array(offset);
         StructField { offset, data }
     }
 
     pub fn read_size_of_optional_header(&mut self) -> StructField<[u8; 2]> {
-        let offset = self.offset + 20;
+        let offset = 20;
         let data = self.read_array(offset);
         StructField { offset, data }
     }
 
     pub fn read_characteristics(&mut self) -> StructField<[u8; 2]> {
-        let offset = self.offset + 22;
+        let offset = 22;
         let data = self.read_array(offset);
         StructField { offset, data }
     }
@@ -117,6 +117,20 @@ pub struct FileHeader {
     pub size_of_optional_header: StructField<[u8; 2]>,
     /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](crate::header::characteristics)
     pub characteristics: StructField<[u8; 2]>,
+}
+
+impl Display for FileHeader {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let signature_data = self.signature.data;
+        let _ = writeln!(f, "Signature: {:#04X} {:#04X} {:#04X} {:#04X}", signature_data[0], signature_data[1], signature_data[2], signature_data[3]);
+        let _ = writeln!(f, "Machine: {}", self.machine.as_machine());
+        let _ = writeln!(f, "Number of sections: {}", self.number_of_sections.as_u16_le());
+        let _ = writeln!(f, "Time and date: {}", self.time_date_stamp.as_datetime());
+        let _ = writeln!(f, "Pointer to symbol table: {}", self.pointer_to_symbol_table.as_u32_le());
+        let _ = writeln!(f, "Number of symbols: {}", self.number_of_symbols.as_u32_le());
+        let _ = writeln!(f, "Size of optional header: {} bytes", self.size_of_optional_header.as_u16_le());
+        writeln!(f, "Characteristics: {:#04X}", self.characteristics.as_u16_le())
+    }
 }
 
 #[cfg(test)]
