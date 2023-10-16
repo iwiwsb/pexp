@@ -1,13 +1,13 @@
 use std::fmt::Debug;
 
-use chrono::NaiveDateTime;
 use crate::header::characteristics::Characteristics;
+use chrono::NaiveDateTime;
 
 use crate::header::machine_types::Machine;
 
 #[derive(Debug, PartialEq)]
 pub struct StructField<T: Debug> {
-    pub offset: u64,
+    pub abs_offset: u64,
     pub data: T,
 }
 

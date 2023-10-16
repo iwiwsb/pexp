@@ -41,49 +41,73 @@ where
     pub fn read_signature(&mut self) -> StructField<[u8; 4]> {
         let offset = 0;
         let data = self.read_array(offset);
-        StructField { offset, data }
+        StructField {
+            abs_offset: offset + self.offset,
+            data,
+        }
     }
 
     pub fn read_machine(&mut self) -> StructField<[u8; 2]> {
         let offset = 4;
         let data = self.read_array(offset);
-        StructField { offset, data }
+        StructField {
+            abs_offset: offset + self.offset,
+            data,
+        }
     }
 
     pub fn read_number_of_sections(&mut self) -> StructField<[u8; 2]> {
         let offset = 6;
         let data = self.read_array(offset);
-        StructField { offset, data }
+        StructField {
+            abs_offset: offset + self.offset,
+            data,
+        }
     }
 
     pub fn read_time_date_stamp(&mut self) -> StructField<[u8; 4]> {
         let offset = 8;
         let data = self.read_array(offset);
-        StructField { offset, data }
+        StructField {
+            abs_offset: offset + self.offset,
+            data,
+        }
     }
 
     pub fn read_pointer_to_symbol_table(&mut self) -> StructField<[u8; 4]> {
         let offset = 12;
         let data = self.read_array(offset);
-        StructField { offset, data }
+        StructField {
+            abs_offset: offset + self.offset,
+            data,
+        }
     }
 
     pub fn read_number_of_symbols(&mut self) -> StructField<[u8; 4]> {
         let offset = 16;
         let data = self.read_array(offset);
-        StructField { offset, data }
+        StructField {
+            abs_offset: offset + self.offset,
+            data,
+        }
     }
 
     pub fn read_size_of_optional_header(&mut self) -> StructField<[u8; 2]> {
         let offset = 20;
         let data = self.read_array(offset);
-        StructField { offset, data }
+        StructField {
+            abs_offset: offset + self.offset,
+            data,
+        }
     }
 
     pub fn read_characteristics(&mut self) -> StructField<[u8; 2]> {
         let offset = 22;
         let data = self.read_array(offset);
-        StructField { offset, data }
+        StructField {
+            abs_offset: offset + self.offset,
+            data,
+        }
     }
 
     fn read_array<const N: usize>(&mut self, offset: u64) -> [u8; N] {
@@ -122,14 +146,58 @@ pub struct FileHeader {
 impl Display for FileHeader {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let signature_data = self.signature.data;
-        let _ = writeln!(f, "Signature: {:#04X} {:#04X} {:#04X} {:#04X}", signature_data[0], signature_data[1], signature_data[2], signature_data[3]);
-        let _ = writeln!(f, "Machine: {}", self.machine.as_machine());
-        let _ = writeln!(f, "Number of sections: {}", self.number_of_sections.as_u16_le());
-        let _ = writeln!(f, "Time and date: {}", self.time_date_stamp.as_datetime());
-        let _ = writeln!(f, "Pointer to symbol table: {}", self.pointer_to_symbol_table.as_u32_le());
-        let _ = writeln!(f, "Number of symbols: {}", self.number_of_symbols.as_u32_le());
-        let _ = writeln!(f, "Size of optional header: {} bytes", self.size_of_optional_header.as_u16_le());
-        writeln!(f, "Characteristics: {:#04X}", self.characteristics.as_u16_le())
+        let _ = writeln!(f, "File Header:");
+        let _ = writeln!(
+            f,
+            "  {:#04X}  Signature: {:#04X} {:#04X} {:#04X} {:#04X}",
+            self.signature.abs_offset,
+            signature_data[0],
+            signature_data[1],
+            signature_data[2],
+            signature_data[3]
+        );
+        let _ = writeln!(
+            f,
+            "  {:#04X}  Machine: {}",
+            self.machine.abs_offset,
+            self.machine.as_machine()
+        );
+        let _ = writeln!(
+            f,
+            "  {:#04X}  Number of sections: {}",
+            self.number_of_sections.abs_offset,
+            self.number_of_sections.as_u16_le()
+        );
+        let _ = writeln!(
+            f,
+            "  {:#04X}  Time and date: {}",
+            self.time_date_stamp.abs_offset,
+            self.time_date_stamp.as_datetime()
+        );
+        let _ = writeln!(
+            f,
+            "  {:#04X}  Pointer to symbol table: {}",
+            self.pointer_to_symbol_table.abs_offset,
+            self.pointer_to_symbol_table.as_u32_le()
+        );
+        let _ = writeln!(
+            f,
+            "  {:#X}  Number of symbols: {}",
+            self.number_of_symbols.abs_offset,
+            self.number_of_symbols.as_u32_le()
+        );
+        let _ = writeln!(
+            f,
+            "  {:#X}  Size of optional header: {} bytes",
+            self.size_of_optional_header.abs_offset,
+            self.size_of_optional_header.as_u16_le()
+        );
+        writeln!(
+            f,
+            "  {:#X}  Characteristics: {:#04X}",
+            self.characteristics.abs_offset,
+            self.characteristics.as_u16_le()
+        )
     }
 }
 
@@ -143,35 +211,35 @@ mod tests {
     fn test_file_header_reading() {
         let file_header = FileHeader {
             signature: StructField {
-                offset: 0,
+                abs_offset: 0,
                 data: [b'P', b'E', 0, 0],
             },
             machine: StructField {
-                offset: 4,
+                abs_offset: 4,
                 data: [0x64, 0x86],
             },
             number_of_sections: StructField {
-                offset: 6,
+                abs_offset: 6,
                 data: [6, 0],
             },
             time_date_stamp: StructField {
-                offset: 8,
+                abs_offset: 8,
                 data: [0x10, 0xC4, 0x40, 0x03],
             },
             pointer_to_symbol_table: StructField {
-                offset: 12,
+                abs_offset: 12,
                 data: [0x00, 0x00, 0x00, 0x00],
             },
             number_of_symbols: StructField {
-                offset: 16,
+                abs_offset: 16,
                 data: [0x00, 0x00, 0x00, 0x00],
             },
             size_of_optional_header: StructField {
-                offset: 20,
+                abs_offset: 20,
                 data: [0xF0, 0x00],
             },
             characteristics: StructField {
-                offset: 22,
+                abs_offset: 22,
                 data: [0x22, 0x00],
             },
         };
