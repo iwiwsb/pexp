@@ -1,4 +1,3 @@
-use crate::header::RelativeVirtualAddress;
 use crate::struct_parse::StructField;
 use std::io::{Read, Seek, SeekFrom};
 
@@ -44,7 +43,7 @@ impl<R: Read + Seek> OptionalHeaderReader<R> {
         let size_of_heap_commit = self.read_array_field(84);
         let loader_flags = self.read_array_field(88);
         let number_of_rva_and_sizes = self.read_array_field(92);
-        let data_directories = self.read_data_directories();
+        let data_directories = self.read_data_directories(96);
 
         OptionalHeader {
             image_type,
@@ -112,7 +111,7 @@ impl<R: Read + Seek> OptionalHeaderReader<R> {
         let size_of_heap_commit = self.read_array_field(96);
         let loader_flags = self.read_array_field(104);
         let number_of_rva_and_sizes = self.read_array_field(108);
-        let data_directories = self.read_data_directories();
+        let data_directories = self.read_data_directories(112);
 
         OptionalHeader {
             image_type,
@@ -149,9 +148,7 @@ impl<R: Read + Seek> OptionalHeaderReader<R> {
         }
     }
 
-    fn read_data_directories(&mut self) -> Vec<DataDirectory> {
-        const RELATIVE_OFFSET: u64 = 102;
-        let _offset = self.offset + RELATIVE_OFFSET;
+    fn read_data_directories(&mut self, relative_offset: u64) -> DataDirectories {
         todo!()
     }
 
@@ -222,10 +219,13 @@ pub struct OptionalHeader {
     /// The default for Windows NT, Windows 2000, Windows XP, Windows 95, Windows 98, and Windows Me is `0x00400000`.
     pub image_base: StructField<[u8; 8]>,
 
+    /// The alignment (in bytes) of sections when they are loaded into memory. It must be greater than or equal to FileAlignment. The default is the page size for the architecture.
     pub section_alignment: StructField<[u8; 4]>,
 
+    /// The alignment factor (in bytes) that is used to align the raw data of sections in the image file. The value should be a power of 2 between 512 and 64 K, inclusive. The default is 512. If the SectionAlignment is less than the architecture's page size, then FileAlignment must match SectionAlignment.
     pub file_alignment: StructField<[u8; 4]>,
 
+    /// The major version number of the required operating system.
     pub major_operating_system_version: StructField<[u8; 2]>,
 
     /// The minor version number of the required operating system.
@@ -285,7 +285,58 @@ pub struct OptionalHeader {
     /// Address/size pairs for special tables that are found in the image file and are used by the operating system (for example, the import table and the export table).
     /// Note that the number of directories is not fixed. Before looking for a specific directory,
     /// check the `number_of_rva_and_sizes` field.
-    pub data_directories: Vec<DataDirectory>,
+    pub data_directories: DataDirectories,
+}
+
+#[derive(Debug)]
+pub struct DataDirectories {
+    /// The export table address and size.
+    pub export: Option<StructField<DataDirectory>>,
+
+    /// The import table address and size.
+    pub import: Option<StructField<DataDirectory>>,
+
+    /// The resource table address and size.
+    pub resource: Option<StructField<DataDirectory>>,
+
+    /// The exception table address and size.
+    pub exception: Option<StructField<DataDirectory>>,
+
+    // The attribute certificate table address and size.
+    /// This entry points to a table of attribute certificates.
+    /// These certificates are not loaded into memory as part of the image.
+    /// As such, the first field of this entry, which is normally an [`RVA`](RelativeVirtualAddress), is a file pointer instead.
+    pub certificate: Option<StructField<DataDirectory>>,
+
+    /// The base relocation table address and size.
+    pub base_relocation: Option<StructField<DataDirectory>>,
+
+    /// The debug data starting address and size.
+    pub debug: Option<StructField<DataDirectory>>,
+
+    /// Reserved, must be 0
+    pub architecture: Option<StructField<DataDirectory>>,
+
+    /// The [`RVA`](RelativeVirtualAddress) of the value to be stored in the global pointer register. The size member of this structure must be set to zero.
+    pub global_ptr: Option<StructField<DataDirectory>>,
+
+    /// The thread local storage (TLS) table address and size.
+    pub tls_table: Option<StructField<DataDirectory>>,
+
+    /// The load configuration table address and size.
+    pub load_config_table: Option<StructField<DataDirectory>>,
+
+    /// The bound import table address and size.
+    pub bound_import: Option<StructField<DataDirectory>>,
+
+    /// The import address table address and size.
+    pub import_address_table: Option<StructField<DataDirectory>>,
+
+    /// The delay import descriptor address and size.
+    pub delay_import_descriptor: Option<StructField<DataDirectory>>,
+
+    /// The CLR runtime header address and size.
+    pub clr_runtime_header: Option<StructField<DataDirectory>>,
 }
 
 #[derive(Debug, Clone)]
@@ -319,96 +370,40 @@ pub struct DataDirectoryReader<R: Read + Seek> {
 }
 
 impl<R: Read + Seek> DataDirectoryReader<R> {
-    /// The export table address and size.
-    pub fn export(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
+    fn read_array_field<const N: usize>(&mut self, relative_offset: u64) -> StructField<[u8; N]> {
+        let pos = SeekFrom::Start(self.offset + relative_offset);
+        let _ = self.reader.seek(pos);
+        let mut data = [0u8; N];
+        let _ = self.reader.read_exact(&mut data);
+        StructField {
+            abs_offset: self.offset + relative_offset,
+            data,
+        }
     }
 
-    /// The import table address and size.
-    pub fn import(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The resource table address and size.
-    pub fn resource(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The exception table address and size.
-    pub fn exception(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    // The attribute certificate table address and size.
-    /// This entry points to a table of attribute certificates.
-    /// These certificates are not loaded into memory as part of the image.
-    /// As such, the first field of this entry, which is normally an [`RVA`](RelativeVirtualAddress), is a file pointer instead.
-    pub fn certificate(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The base relocation table address and size.
-    pub fn base_relocation(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The debug data starting address and size.
-    pub fn debug(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// Reserved, must be 0
-    pub fn architecture(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The [`RVA`](RelativeVirtualAddress) of the value to be stored in the global pointer register. The size member of this structure must be set to zero.
-    pub fn global_ptr(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The thread local storage (TLS) table address and size.
-    pub fn tls_table(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The load configuration table address and size.
-    pub fn load_config_table(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The bound import table address and size.
-    pub fn bound_import(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The import address table address and size.
-    pub fn import_address_table(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The delay import descriptor address and size.
-    pub fn delay_import_descriptor(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
-    }
-
-    /// The CLR runtime header address and size.
-    pub fn clr_runtime_header(&self) -> Option<StructField<DataDirectory>> {
-        todo!()
+    fn read_data_directory(
+        &mut self,
+        offset: u64,
+        data_directory_type: DataDirectoryType,
+    ) -> StructField<DataDirectory> {
+        let virtual_address = self.read_array_field(offset);
+        let size = self.read_array_field(offset + 4);
+        StructField {
+            abs_offset: self.offset + offset,
+            data: DataDirectory {
+                virtual_address,
+                size,
+                data_directory_type,
+            },
+        }
     }
 }
 
 #[derive(Debug)]
 pub struct DataDirectory {
     /// The [`RVA`](crate::header::RelativeVirtualAddress) of the table
-    pub virtual_address: RelativeVirtualAddress,
+    pub virtual_address: StructField<[u8; 4]>,
     /// Size in bytes
-    pub size: u32,
+    pub size: StructField<[u8; 4]>,
     pub data_directory_type: DataDirectoryType,
-}
-
-#[derive(Debug)]
-pub struct DataDirectoriesReader {
-    offset: u64,
-    buffer: Vec<u8>,
 }

@@ -58,26 +58,3 @@ impl Display for ImageType {
         }
     }
 }
-
-/// Relative virtual address (RVA)
-///
-/// In an image file, this is the address of an item after it is loaded into memory, with the base address of the image file subtracted from it.
-/// The RVA of an item almost always differs from its position within the file on disk (file pointer).
-/// In an object file, an RVA is less meaningful because memory locations are not assigned.
-/// In this case, an RVA would be an address within a section (described later in this table), to which a relocation is later applied during linking.
-/// For simplicity, a compiler should just set the first RVA in each section to zero.
-#[derive(Debug)]
-pub struct RelativeVirtualAddress {
-    addr: u64,
-}
-
-/// Virtual address (VA)
-///
-/// Same as [RVA](RelativeVirtualAddress), except that the base address of the image file is not subtracted.
-/// The address is called a VA because Windows creates a distinct VA space for each process, independent of physical memory.
-/// For almost all purposes, a VA should be considered just an address.
-/// A VA is not as predictable as an [RVA](RelativeVirtualAddress) because the loader might not load the image at its preferred location.
-#[derive(Debug)]
-pub struct VirtualAddress {
-    addr: u64,
-}
