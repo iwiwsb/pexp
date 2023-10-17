@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::header::characteristics::Characteristics;
+use crate::header::{characteristics::Characteristics, ImageType};
 use chrono::NaiveDateTime;
 
 use crate::header::machine_types::Machine;
@@ -29,6 +29,15 @@ impl StructField<[u8; 2]> {
     pub fn as_characteristics(&self) -> Characteristics {
         todo!()
     }
+
+    pub fn as_image_type(&self) -> ImageType {
+        match self.as_u16_le() {
+            0x010B => ImageType::Image32,
+            0x020B => ImageType::Image64,
+            0x0107 => ImageType::ImageRom,
+            _ => ImageType::ImageUnknown,
+        }
+    }
 }
 
 impl StructField<[u8; 4]> {
@@ -45,12 +54,4 @@ impl StructField<[u8; 8]> {
     pub fn as_u64_le(&self) -> u64 {
         u64::from_le_bytes(self.data)
     }
-}
-
-pub trait ReadU16LE {
-    fn read_u16_le(&mut self, offset: u64) -> u16;
-}
-
-pub trait ReadU32LE {
-    fn read_u32_le(&mut self, offset: u64) -> u32;
 }

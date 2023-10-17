@@ -26,6 +26,7 @@ pub enum ImageType {
     Image64,
     /// Represents ROM PE Image
     ImageRom,
+    /// Represents that image type is unknown
     ImageUnknown,
 }
 
