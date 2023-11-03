@@ -2,7 +2,6 @@ pub mod characteristics;
 pub mod dll_characteristics;
 pub mod machine_types;
 pub mod section_flags;
-pub mod section_header;
 pub mod win_subsystem;
 
 use chrono::NaiveDateTime;
@@ -29,6 +28,7 @@ pub enum ImageType {
     Image64,
     /// Represents ROM PE Image
     ImageRom,
+    /// Represents that image type is unknown
     ImageUnknown,
 }
 
