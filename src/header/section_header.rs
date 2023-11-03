@@ -1,5 +1,4 @@
 use crate::header::RelativeVirtualAddress;
-use crate::struct_parse::StructField;
 
 /// Section header structure
 ///
@@ -56,15 +55,4 @@ pub struct SectionHeader {
     pub number_of_linenumbers: u64,
     /// The [flags](crate::header::section_flags) that describe the characteristics of the section.
     pub characteristics: [u8; 4],
-}
-
-impl SectionHeaderReader {
-    pub fn read_section(&self) -> SectionHeader {
-        let _name = self.read_name();
-        todo!()
-    }
-
-    fn read_name(&self) -> StructField<String> {
-        todo!()
-    }
 }
