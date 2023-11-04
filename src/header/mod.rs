@@ -137,22 +137,12 @@ impl FileHeader {
     }
 }
 
-/// Optional Header structure
+/// Standard fields that are defined for every implementation of COFF.
 ///
-/// Every image file has an optional header that provides information to the loader.
-/// This header is optional in the sense that some files (specifically, object files) do not have it.
-/// For image files, this header is required.
-/// An object file can have an optional header, but generally this header has no function in an object file except to increase its size.
-/// Note that the size of the optional header is not fixed.
-/// The [`size_of_optional_header`](crate::header::file_header::FileHeader#structfield.size_of_optional_header) field in the COFF header must be used
-/// to validate that a probe into the file for a particular data directory does not go beyond [`size_of_optional_header`](crate::header::file_header::FileHeader#structfield.size_of_optional_header).
-///
-/// The first 8 fields of the optional header are standard fields that are defined for every implementation of COFF.
-/// PE32 contains additional field `base_of_data`, which is absent in PE32+, following `base_of_code`.
-/// These fields contain general information that is useful for loading and running an executable file. They are unchanged for the PE32+ format.
-/// The next 21 fields are an extension to the COFF optional header format. They contain additional information that is required by the linker and loader in Windows.
+/// These fields contain general information that is useful for loading and running an executable file.
+/// They are unchanged for the PE32+ format.
 #[derive(Debug)]
-pub struct OptionalHeader32 {
+pub struct OptionalHeaderStdFields {
     /// Identifies the state of the image file.
     /// The most common number is `0x10B`, which identifies it as a 32-bit (PE32) executable file.
     /// `0x107` identifies it as a ROM image, and `0x20B` identifies it as a 64-bit (PE32+) executable file.
@@ -181,6 +171,28 @@ pub struct OptionalHeader32 {
 
     /// The address that is relative to the image base of the beginning-of-code section when it is loaded into memory.
     pub base_of_code: u32,
+}
+
+/// Optional Header 32-bit structure
+///
+/// Every image file has an optional header that provides information to the loader.
+/// This header is optional in the sense that some files (specifically, object files) do not have it.
+/// For image files, this header is required.
+/// An object file can have an optional header, but generally this header has no function in an object file except to increase its size.
+/// Note that the size of the optional header is not fixed.
+/// The [`size_of_optional_header`](crate::header::file_header::FileHeader#structfield.size_of_optional_header) field in the COFF header must be used
+/// to validate that a probe into the file for a particular data directory does not go beyond [`size_of_optional_header`](crate::header::file_header::FileHeader#structfield.size_of_optional_header).
+///
+/// The first 8 fields of the optional header are standard fields that are defined for every implementation of COFF.
+/// PE32 contains additional field `base_of_data`, which is absent in PE32+, following `base_of_code`.
+/// These fields contain general information that is useful for loading and running an executable file. They are unchanged for the PE32+ format.
+/// The next 21 fields are an extension to the COFF optional header format. They contain additional information that is required by the linker and loader in Windows.
+#[derive(Debug)]
+pub struct OptionalHeader32 {
+    /// The first eight fields of the optional header are standard fields that are defined for every implementation of COFF.
+    /// These fields contain general information that is useful for loading and running an executable file.
+    /// They are unchanged for the PE32+ format.
+    pub std_fields: OptionalHeaderStdFields,
 
     /// The address that is relative to the image base of the beginning-of-data section when it is loaded into memory.
     /// PE32 contains this additional field, which is absent in PE32+
@@ -258,7 +270,7 @@ pub struct OptionalHeader32 {
     pub data_directories: Vec<DataDirectory>,
 }
 
-/// Optional Header structure
+/// Optional Header 64-bit structure
 ///
 /// Every image file has an optional header that provides information to the loader.
 /// This header is optional in the sense that some files (specifically, object files) do not have it.
@@ -274,34 +286,10 @@ pub struct OptionalHeader32 {
 /// The next 21 fields are an extension to the COFF optional header format. They contain additional information that is required by the linker and loader in Windows.
 #[derive(Debug)]
 pub struct OptionalHeader64 {
-    /// Identifies the state of the image file.
-    /// The most common number is `0x10B`, which identifies it as a 32-bit (PE32) executable file.
-    /// `0x107` identifies it as a ROM image, and `0x20B` identifies it as a 64-bit (PE32+) executable file.
-    pub magic: u16,
-
-    /// The linker major version number.
-    pub major_linker_version: u8,
-
-    /// The linker minor version number.
-    pub minor_linker_version: u8,
-
-    /// The size of the code (`.text`) section, or the sum of all code sections if there are multiple sections.
-    pub size_of_code: u32,
-
-    /// The size of the initialized data section, or the sum of all such sections if there are multiple data sections.
-    pub size_of_initialized_data: u32,
-
-    /// The size of the uninitialized data section (`BSS`), or the sum of all such sections if there are multiple `BSS` sections.
-    pub size_of_uninitialized_data: u32,
-
-    /// The address of the entry point relative to the image base when the executable file is loaded into memory.
-    /// For program images, this is the starting address.
-    /// For device drivers, this is the address of the initialization function.
-    /// An entry point is optional for DLLs.
-    pub address_of_entry_point: u32,
-
-    /// The address that is relative to the image base of the beginning-of-code section when it is loaded into memory.
-    pub base_of_code: u32,
+    /// The first eight fields of the optional header are standard fields that are defined for every implementation of COFF.
+    /// These fields contain general information that is useful for loading and running an executable file.
+    /// They are unchanged for the PE32+ format.
+    pub std_fields: OptionalHeaderStdFields,
 
     /// The preferred address of the first byte of image when loaded into memory; must be a multiple of 64 K.
     /// The default for DLLs is `0x10000000`.
@@ -375,6 +363,8 @@ pub struct OptionalHeader64 {
     pub data_directories: Vec<DataDirectory>,
 }
 
+/// Optional Header ROM structure
+///
 #[derive(Debug)]
 pub struct OptionalHeaderRom {
     pub magic: u16,
