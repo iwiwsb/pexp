@@ -7,7 +7,7 @@ pub mod win_subsystem;
 use chrono::NaiveDateTime;
 
 use std::fmt::{self, Debug, Display};
-use std::io::{Read, Seek};
+use std::io::Read;
 
 use self::machine_types::Machine;
 
@@ -69,9 +69,7 @@ impl Display for ImageType {
 /// In this case, an RVA would be an address within a section (described later in this table), to which a relocation is later applied during linking.
 /// For simplicity, a compiler should just set the first RVA in each section to zero.
 #[derive(Debug)]
-pub struct RelativeVirtualAddress {
-    addr: u64,
-}
+pub struct RelativeVirtualAddress {}
 
 /// Virtual address (VA)
 ///
@@ -80,9 +78,7 @@ pub struct RelativeVirtualAddress {
 /// For almost all purposes, a VA should be considered just an address.
 /// A VA is not as predictable as an [RVA](RelativeVirtualAddress) because the loader might not load the image at its preferred location.
 #[derive(Debug)]
-pub struct VirtualAddress {
-    addr: u64,
-}
+pub struct VirtualAddress {}
 
 /// COFF File Header structure
 #[derive(Debug, PartialEq)]
@@ -127,15 +123,9 @@ impl FileHeader {
             characteristics,
         }
     }
-
-    fn read_array<R: Read, const N: usize>(reader: &mut R) -> [u8; N] {
-        let mut buf = [0u8; N];
-        reader
-            .read_exact(&mut buf)
-            .expect("Data stream should be readable");
-        buf
-    }
 }
+
+impl ReadArray for FileHeader {}
 
 /// Standard fields that are defined for every implementation of COFF.
 ///
@@ -173,6 +163,31 @@ pub struct OptionalHeaderStdFields {
     pub base_of_code: u32,
 }
 
+impl ReadArray for OptionalHeaderStdFields {}
+
+impl OptionalHeaderStdFields {
+    pub fn read_from<R: Read>(reader: &mut R) -> Self {
+        let magic = u16::from_le_bytes(Self::read_array(reader));
+        let major_linker_version = u8::from_le_bytes(Self::read_array(reader));
+        let minor_linker_version = u8::from_le_bytes(Self::read_array(reader));
+        let size_of_code = u32::from_le_bytes(Self::read_array(reader));
+        let size_of_initialized_data = u32::from_le_bytes(Self::read_array(reader));
+        let size_of_uninitialized_data = u32::from_le_bytes(Self::read_array(reader));
+        let address_of_entry_point = u32::from_le_bytes(Self::read_array(reader));
+        let base_of_code = u32::from_le_bytes(Self::read_array(reader));
+        Self {
+            magic,
+            major_linker_version,
+            minor_linker_version,
+            size_of_code,
+            size_of_initialized_data,
+            size_of_uninitialized_data,
+            address_of_entry_point,
+            base_of_code,
+        }
+    }
+}
+
 /// Optional Header 32-bit structure
 ///
 /// Every image file has an optional header that provides information to the loader.
@@ -191,7 +206,6 @@ pub struct OptionalHeaderStdFields {
 pub struct OptionalHeader32 {
     /// The first eight fields of the optional header are standard fields that are defined for every implementation of COFF.
     /// These fields contain general information that is useful for loading and running an executable file.
-    /// They are unchanged for the PE32+ format.
     pub std_fields: OptionalHeaderStdFields,
 
     /// The address that is relative to the image base of the beginning-of-data section when it is loaded into memory.
@@ -204,10 +218,20 @@ pub struct OptionalHeader32 {
     /// The default for Windows NT, Windows 2000, Windows XP, Windows 95, Windows 98, and Windows Me is `0x00400000`.
     pub image_base: u32,
 
+    /// The alignment (in bytes) of sections when they are loaded into memory.
+    ///
+    /// It must be greater than or equal to FileAlignment.
+    /// The default is the page size for the architecture.
     pub section_alignment: u32,
 
+    /// The alignment factor (in bytes) that is used to align the raw data of sections in the image file.
+    ///
+    /// The value should be a power of 2 between 512 and 64 K, inclusive.
+    /// The default is 512.
+    /// If the SectionAlignment is less than the architecture's page size, then FileAlignment must match SectionAlignment.
     pub file_alignment: u32,
 
+    /// The major version number of the required operating system
     pub major_operating_system_version: u16,
 
     /// The minor version number of the required operating system.
@@ -270,6 +294,69 @@ pub struct OptionalHeader32 {
     pub data_directories: Vec<DataDirectory>,
 }
 
+impl OptionalHeader32 {
+    fn read_from<R: Read>(reader: &mut R) -> Self {
+        let std_fields = OptionalHeaderStdFields::read_from(reader);
+        let base_of_data = u32::from_le_bytes(Self::read_array(reader));
+        let image_base = u32::from_le_bytes(Self::read_array(reader));
+        let section_alignment = u32::from_le_bytes(Self::read_array(reader));
+        let file_alignment = u32::from_le_bytes(Self::read_array(reader));
+        let major_operating_system_version = u16::from_le_bytes(Self::read_array(reader));
+        let minor_operating_system_version = u16::from_le_bytes(Self::read_array(reader));
+        let major_image_version = u16::from_le_bytes(Self::read_array(reader));
+        let minor_image_version = u16::from_le_bytes(Self::read_array(reader));
+        let major_subsystem_version = u16::from_le_bytes(Self::read_array(reader));
+        let minor_subsystem_version = u16::from_le_bytes(Self::read_array(reader));
+        let win32_version_value = u32::from_le_bytes(Self::read_array(reader));
+        let size_of_image = u32::from_le_bytes(Self::read_array(reader));
+        let size_of_headers = u32::from_le_bytes(Self::read_array(reader));
+        let check_sum = u32::from_le_bytes(Self::read_array(reader));
+        let subsystem = u16::from_le_bytes(Self::read_array(reader));
+        let dll_characteristics = u16::from_le_bytes(Self::read_array(reader));
+        let size_of_stack_reserve = u32::from_le_bytes(Self::read_array(reader));
+        let size_of_stack_commit = u32::from_le_bytes(Self::read_array(reader));
+        let size_of_heap_reserve = u32::from_le_bytes(Self::read_array(reader));
+        let size_of_heap_commit = u32::from_le_bytes(Self::read_array(reader));
+        let loader_flags = u32::from_le_bytes(Self::read_array(reader));
+        let number_of_rva_and_sizes = u32::from_le_bytes(Self::read_array(reader));
+
+        let mut data_directories: Vec<DataDirectory> = Vec::new();
+        for _ in 0..number_of_rva_and_sizes {
+            let value = DataDirectory::read_from(reader);
+            data_directories.push(value);
+        }
+
+        Self {
+            std_fields,
+            base_of_data,
+            image_base,
+            section_alignment,
+            file_alignment,
+            major_operating_system_version,
+            minor_operating_system_version,
+            major_image_version,
+            minor_image_version,
+            major_subsystem_version,
+            minor_subsystem_version,
+            win32_version_value,
+            size_of_image,
+            size_of_headers,
+            check_sum,
+            subsystem,
+            dll_characteristics,
+            size_of_stack_reserve,
+            size_of_stack_commit,
+            size_of_heap_reserve,
+            size_of_heap_commit,
+            loader_flags,
+            number_of_rva_and_sizes,
+            data_directories,
+        }
+    }
+}
+
+impl ReadArray for OptionalHeader32 {}
+
 /// Optional Header 64-bit structure
 ///
 /// Every image file has an optional header that provides information to the loader.
@@ -297,10 +384,20 @@ pub struct OptionalHeader64 {
     /// The default for Windows NT, Windows 2000, Windows XP, Windows 95, Windows 98, and Windows Me is `0x00400000`.
     pub image_base: u64,
 
+    /// The alignment (in bytes) of sections when they are loaded into memory.
+    ///
+    /// It must be greater than or equal to FileAlignment.
+    /// The default is the page size for the architecture.
     pub section_alignment: u32,
 
+    /// The alignment factor (in bytes) that is used to align the raw data of sections in the image file.
+    ///
+    /// The value should be a power of 2 between 512 and 64 K, inclusive.
+    /// The default is 512.
+    /// If the SectionAlignment is less than the architecture's page size, then FileAlignment must match SectionAlignment.
     pub file_alignment: u32,
 
+    /// The major version number of the required operating system
     pub major_operating_system_version: u16,
 
     /// The minor version number of the required operating system.
@@ -363,6 +460,77 @@ pub struct OptionalHeader64 {
     pub data_directories: Vec<DataDirectory>,
 }
 
+impl OptionalHeader64 {
+    fn read_from<R: Read>(reader: &mut R) -> Self {
+        let std_fields = OptionalHeaderStdFields::read_from(reader);
+        let image_base = u64::from_le_bytes(Self::read_array(reader));
+        let section_alignment = u32::from_le_bytes(Self::read_array(reader));
+        let file_alignment = u32::from_le_bytes(Self::read_array(reader));
+        let major_operating_system_version = u16::from_le_bytes(Self::read_array(reader));
+        let minor_operating_system_version = u16::from_le_bytes(Self::read_array(reader));
+        let major_image_version = u16::from_le_bytes(Self::read_array(reader));
+        let minor_image_version = u16::from_le_bytes(Self::read_array(reader));
+        let major_subsystem_version = u16::from_le_bytes(Self::read_array(reader));
+        let minor_subsystem_version = u16::from_le_bytes(Self::read_array(reader));
+        let win32_version_value = u32::from_le_bytes(Self::read_array(reader));
+        let size_of_image = u32::from_le_bytes(Self::read_array(reader));
+        let size_of_headers = u32::from_le_bytes(Self::read_array(reader));
+        let check_sum = u32::from_le_bytes(Self::read_array(reader));
+        let subsystem = u16::from_le_bytes(Self::read_array(reader));
+        let dll_characteristics = u16::from_le_bytes(Self::read_array(reader));
+        let size_of_stack_reserve = u64::from_le_bytes(Self::read_array(reader));
+        let size_of_stack_commit = u64::from_le_bytes(Self::read_array(reader));
+        let size_of_heap_reserve = u64::from_le_bytes(Self::read_array(reader));
+        let size_of_heap_commit = u64::from_le_bytes(Self::read_array(reader));
+        let loader_flags = u32::from_le_bytes(Self::read_array(reader));
+        let number_of_rva_and_sizes = u32::from_le_bytes(Self::read_array(reader));
+        let mut data_directories: Vec<DataDirectory> = Vec::new();
+
+        for _ in 0..number_of_rva_and_sizes {
+            let value = DataDirectory::read_from(reader);
+            data_directories.push(value);
+        }
+
+        Self {
+            std_fields,
+            image_base,
+            section_alignment,
+            file_alignment,
+            major_operating_system_version,
+            minor_operating_system_version,
+            major_image_version,
+            minor_image_version,
+            major_subsystem_version,
+            minor_subsystem_version,
+            win32_version_value,
+            size_of_image,
+            size_of_headers,
+            check_sum,
+            subsystem,
+            dll_characteristics,
+            size_of_stack_reserve,
+            size_of_stack_commit,
+            size_of_heap_reserve,
+            size_of_heap_commit,
+            loader_flags,
+            number_of_rva_and_sizes,
+            data_directories,
+        }
+    }
+}
+
+impl ReadArray for OptionalHeader64 {}
+
+trait ReadArray {
+    fn read_array<R: Read, const N: usize>(reader: &mut R) -> [u8; N] {
+        let mut buf = [0u8; N];
+        reader
+            .read_exact(&mut buf)
+            .expect("Data stream should be readable");
+        buf
+    }
+}
+
 /// Optional Header ROM structure
 ///
 #[derive(Debug)]
@@ -409,8 +577,21 @@ pub enum DataDirectoryType {
 #[derive(Debug)]
 pub struct DataDirectory {
     /// The [`RVA`](crate::header::RelativeVirtualAddress) of the table
-    pub virtual_address: RelativeVirtualAddress,
+    pub virtual_address: u32,
     /// Size in bytes
     pub size: u32,
-    pub data_directory_type: DataDirectoryType,
 }
+
+impl DataDirectory {
+    fn read_from<R: Read>(reader: &mut R) -> Self {
+        let virtual_address = u32::from_le_bytes(Self::read_array(reader));
+        let size = u32::from_le_bytes(Self::read_array(reader));
+
+        Self {
+            virtual_address,
+            size,
+        }
+    }
+}
+
+impl ReadArray for DataDirectory {}
