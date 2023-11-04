@@ -108,7 +108,7 @@ pub struct FileHeader {
 }
 
 impl FileHeader {
-    pub fn read_from<R: Read + Seek>(reader: &mut R) -> Self {
+    pub fn read_from<R: Read>(reader: &mut R) -> Self {
         let machine = Machine::from(u16::from_le_bytes(Self::read_array(reader)));
         let number_of_sections = u16::from_le_bytes(Self::read_array(reader));
         let time_date_stamp =
@@ -128,7 +128,7 @@ impl FileHeader {
         }
     }
 
-    fn read_array<R: Read + Seek, const N: usize>(reader: &mut R) -> [u8; N] {
+    fn read_array<R: Read, const N: usize>(reader: &mut R) -> [u8; N] {
         let mut buf = [0u8; N];
         reader
             .read_exact(&mut buf)
@@ -152,11 +152,11 @@ impl FileHeader {
 /// These fields contain general information that is useful for loading and running an executable file. They are unchanged for the PE32+ format.
 /// The next 21 fields are an extension to the COFF optional header format. They contain additional information that is required by the linker and loader in Windows.
 #[derive(Debug)]
-pub struct OptionalHeader {
+pub struct OptionalHeader32 {
     /// Identifies the state of the image file.
     /// The most common number is `0x10B`, which identifies it as a 32-bit (PE32) executable file.
     /// `0x107` identifies it as a ROM image, and `0x20B` identifies it as a 64-bit (PE32+) executable file.
-    pub image_type: ImageType,
+    pub magic: u16,
 
     /// The linker major version number.
     pub major_linker_version: u8,
@@ -184,7 +184,124 @@ pub struct OptionalHeader {
 
     /// The address that is relative to the image base of the beginning-of-data section when it is loaded into memory.
     /// PE32 contains this additional field, which is absent in PE32+
-    pub base_of_data: Option<u32>,
+    pub base_of_data: u32,
+
+    /// The preferred address of the first byte of image when loaded into memory; must be a multiple of 64 K.
+    /// The default for DLLs is `0x10000000`.
+    /// The default for Windows CE EXEs is `0x00010000`.
+    /// The default for Windows NT, Windows 2000, Windows XP, Windows 95, Windows 98, and Windows Me is `0x00400000`.
+    pub image_base: u32,
+
+    pub section_alignment: u32,
+
+    pub file_alignment: u32,
+
+    pub major_operating_system_version: u16,
+
+    /// The minor version number of the required operating system.
+    pub minor_operating_system_version: u16,
+
+    /// The major version number of the image.
+    pub major_image_version: u16,
+
+    /// The minor version number of the image.
+    pub minor_image_version: u16,
+
+    /// The major version number of the subsystem.
+    pub major_subsystem_version: u16,
+
+    /// The minor version number of the subsystem.
+    pub minor_subsystem_version: u16,
+
+    /// Reserved, must be zero.
+    pub win32_version_value: u32,
+
+    /// The size (in bytes) of the image, including all headers, as the image is loaded in memory.
+    /// It must be a multiple of `section_alignment`.
+    pub size_of_image: u32,
+
+    /// The combined size of an MS-DOS stub, PE header, and section headers rounded up to a multiple of `file_alignment`.
+    pub size_of_headers: u32,
+
+    /// The image file checksum.
+    /// The algorithm for computing the checksum is incorporated into IMAGHELP.DLL.
+    /// The following are checked for validation at load time: all drivers, any DLL loaded at boot time, and any DLL that is loaded into a critical Windows process.
+    pub check_sum: u32,
+
+    /// The subsystem that is required to run this image. For more information, see [`win_subsystem`](crate::header::win_subsystem) module.
+    pub subsystem: u16,
+
+    /// See [`dll_characteristics`](crate::header::dll_characteristics) module.
+    pub dll_characteristics: u16,
+
+    /// The size of the stack to reserve. Only `size_of_stack_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
+    pub size_of_stack_reserve: u32,
+
+    /// The size of the stack to commit.
+    pub size_of_stack_commit: u32,
+
+    /// The size of the local heap space to reserve. Only `size_of_heap_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
+    pub size_of_heap_reserve: u32,
+
+    /// The size of the local heap space to commit.
+    pub size_of_heap_commit: u32,
+
+    /// Reserved, must be zero.
+    pub loader_flags: u32,
+
+    /// The number of data-directory entries in the remainder of the optional header. Each describes a location and size.
+    pub number_of_rva_and_sizes: u32,
+
+    /// Address/size pairs for special tables that are found in the image file and are used by the operating system (for example, the import table and the export table).
+    /// Note that the number of directories is not fixed. Before looking for a specific directory,
+    /// check the `number_of_rva_and_sizes` field.
+    pub data_directories: Vec<DataDirectory>,
+}
+
+/// Optional Header structure
+///
+/// Every image file has an optional header that provides information to the loader.
+/// This header is optional in the sense that some files (specifically, object files) do not have it.
+/// For image files, this header is required.
+/// An object file can have an optional header, but generally this header has no function in an object file except to increase its size.
+/// Note that the size of the optional header is not fixed.
+/// The [`size_of_optional_header`](crate::header::file_header::FileHeader#structfield.size_of_optional_header) field in the COFF header must be used
+/// to validate that a probe into the file for a particular data directory does not go beyond [`size_of_optional_header`](crate::header::file_header::FileHeader#structfield.size_of_optional_header).
+///
+/// The first 8 fields of the optional header are standard fields that are defined for every implementation of COFF.
+/// PE32 contains additional field `base_of_data`, which is absent in PE32+, following `base_of_code`.
+/// These fields contain general information that is useful for loading and running an executable file. They are unchanged for the PE32+ format.
+/// The next 21 fields are an extension to the COFF optional header format. They contain additional information that is required by the linker and loader in Windows.
+#[derive(Debug)]
+pub struct OptionalHeader64 {
+    /// Identifies the state of the image file.
+    /// The most common number is `0x10B`, which identifies it as a 32-bit (PE32) executable file.
+    /// `0x107` identifies it as a ROM image, and `0x20B` identifies it as a 64-bit (PE32+) executable file.
+    pub magic: u16,
+
+    /// The linker major version number.
+    pub major_linker_version: u8,
+
+    /// The linker minor version number.
+    pub minor_linker_version: u8,
+
+    /// The size of the code (`.text`) section, or the sum of all code sections if there are multiple sections.
+    pub size_of_code: u32,
+
+    /// The size of the initialized data section, or the sum of all such sections if there are multiple data sections.
+    pub size_of_initialized_data: u32,
+
+    /// The size of the uninitialized data section (`BSS`), or the sum of all such sections if there are multiple `BSS` sections.
+    pub size_of_uninitialized_data: u32,
+
+    /// The address of the entry point relative to the image base when the executable file is loaded into memory.
+    /// For program images, this is the starting address.
+    /// For device drivers, this is the address of the initialization function.
+    /// An entry point is optional for DLLs.
+    pub address_of_entry_point: u32,
+
+    /// The address that is relative to the image base of the beginning-of-code section when it is loaded into memory.
+    pub base_of_code: u32,
 
     /// The preferred address of the first byte of image when loaded into memory; must be a multiple of 64 K.
     /// The default for DLLs is `0x10000000`.
@@ -256,6 +373,23 @@ pub struct OptionalHeader {
     /// Note that the number of directories is not fixed. Before looking for a specific directory,
     /// check the `number_of_rva_and_sizes` field.
     pub data_directories: Vec<DataDirectory>,
+}
+
+#[derive(Debug)]
+pub struct OptionalHeaderRom {
+    pub magic: u16,
+    pub major_linker_version: u8,
+    pub minor_linker_version: u8,
+    pub size_of_code: u32,
+    pub size_of_initialized_data: u32,
+    pub size_of_uninitialized_data: u32,
+    pub address_of_entry_point: u32,
+    pub base_of_code: u32,
+    pub base_of_data: u32,
+    pub base_of_bss: u32,
+    pub gpr_mask: u32,
+    pub cpr_mask: [u32; 4],
+    pub gp_value: u32,
 }
 
 #[derive(Debug, Clone)]
