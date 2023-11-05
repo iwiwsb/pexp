@@ -12,11 +12,11 @@ use std::io::Read;
 use self::machine_types::Machine;
 
 /// The file is an executable image of 32-bit application
-pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: [u8; 2] = [0x0B, 0x01];
+pub const IMAGE_NT_OPTIONAL_HDR32_MAGIC: u16 = 0x010B;
 /// The file is an executable image of 64-bit application
-pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: [u8; 2] = [0x0B, 0x02];
+pub const IMAGE_NT_OPTIONAL_HDR64_MAGIC: u16 = 0x020B;
 /// The file is a ROM image.
-pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: [u8; 2] = [0x07, 0x01];
+pub const IMAGE_ROM_OPTIONAL_HDR_MAGIC: u16 = 0x0107;
 /// Size of COFF File Header
 pub const FILE_HEADER_SIZE: u64 = 28;
 
@@ -35,9 +35,9 @@ pub enum ImageType {
 impl From<u16> for ImageType {
     fn from(value: u16) -> Self {
         match value {
-            0x010B => ImageType::Image32,
-            0x020B => ImageType::Image64,
-            0x0107 => ImageType::ImageRom,
+            IMAGE_NT_OPTIONAL_HDR32_MAGIC => ImageType::Image32,
+            IMAGE_NT_OPTIONAL_HDR64_MAGIC => ImageType::Image64,
+            IMAGE_ROM_OPTIONAL_HDR_MAGIC => ImageType::ImageRom,
             _ => ImageType::ImageUnknown,
         }
     }
