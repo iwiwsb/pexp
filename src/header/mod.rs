@@ -183,6 +183,23 @@ pub struct OptionalHeaderStdFields {
     pub base_of_code: u32,
 }
 
+impl Display for OptionalHeaderStdFields {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(
+            f,
+            "Magic: {}\nMajor linker version: {}\nMinor linker version: {}\nSize of code: {}\nSize of initialized data: {}\nSize of uninitialized data: {}\nAddress of entry point: {:#X}\nBase of code: {:#X}",
+            self.magic,
+            self.major_linker_version,
+            self.minor_linker_version,
+            self.size_of_code,
+            self.size_of_initialized_data,
+            self.size_of_uninitialized_data,
+            self.address_of_entry_point,
+            self.base_of_code
+        )
+    }
+}
+
 impl ReadArray for OptionalHeaderStdFields {}
 
 impl OptionalHeaderStdFields {
