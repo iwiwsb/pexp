@@ -1,3 +1,5 @@
+use std::fmt::{self, Binary, Formatter};
+
 #[derive(Debug, PartialEq)]
 pub struct Characteristics {
     pub relocs_stripped: bool,
@@ -60,7 +62,22 @@ impl Characteristics {
     pub const IMAGE_FILE_BYTES_REVERSED_HI: u16 = 0x8000;
 
     pub fn to_bits(&self) -> u16 {
-        todo!()
+        (self.relocs_stripped as u16) << 15
+            | (self.executable as u16) << 14
+            | (self.line_nums_stripped as u16) << 13
+            | (self.local_syms_stripped as u16) << 12
+            | (self.aggressive_ws_trim as u16) << 11
+            | (self.large_address_aware as u16) << 10
+            | (self.reserved0 as u16) << 9
+            | (self.bytes_reserved_lo as u16) << 8
+            | (self.machine_32_bit as u16) << 7
+            | (self.debug_stripped as u16) << 6
+            | (self.removable_run_from_swap as u16) << 5
+            | (self.net_run_from_swap as u16) << 4
+            | (self.system as u16) << 3
+            | (self.dynamic_link_library as u16) << 2
+            | (self.up_system_only as u16) << 1
+            | (self.bytes_reserved_hi as u16)
     }
 }
 
@@ -114,5 +131,11 @@ impl From<u16> for Characteristics {
             up_system_only,
             bytes_reserved_hi,
         }
+    }
+}
+
+impl Binary for Characteristics {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!("{:016b}", self.to_bits()))
     }
 }

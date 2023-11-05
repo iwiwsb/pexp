@@ -127,6 +127,26 @@ impl FileHeader {
 
 impl ReadArray for FileHeader {}
 
+impl Display for FileHeader {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let _ = writeln!(f, "Machine: {}", self.machine);
+        let _ = writeln!(f, "Number of sections: {}", self.number_of_sections);
+        let _ = writeln!(f, "Datetime stamp: {}", self.time_date_stamp);
+        let _ = writeln!(
+            f,
+            "Pointer to symbol table: {:#X}",
+            self.pointer_to_symbol_table
+        );
+        let _ = writeln!(f, "Number of symbols: {}", self.number_of_symbols);
+        let _ = writeln!(
+            f,
+            "Size of optional header: {}",
+            self.size_of_optional_header
+        );
+        writeln!(f, "Characteristics: {:b}", self.characteristics)
+    }
+}
+
 /// Standard fields that are defined for every implementation of COFF.
 ///
 /// These fields contain general information that is useful for loading and running an executable file.
