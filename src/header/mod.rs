@@ -315,7 +315,7 @@ pub struct OptionalHeader32 {
 }
 
 impl OptionalHeader32 {
-    fn read_from<R: Read>(reader: &mut R) -> Self {
+    pub fn read_from<R: Read>(reader: &mut R) -> Self {
         let std_fields = OptionalHeaderStdFields::read_from(reader);
         let base_of_data = u32::from_le_bytes(Self::read_array(reader));
         let image_base = u32::from_le_bytes(Self::read_array(reader));
@@ -481,7 +481,7 @@ pub struct OptionalHeader64 {
 }
 
 impl OptionalHeader64 {
-    fn read_from<R: Read>(reader: &mut R) -> Self {
+    pub fn read_from<R: Read>(reader: &mut R) -> Self {
         let std_fields = OptionalHeaderStdFields::read_from(reader);
         let image_base = u64::from_le_bytes(Self::read_array(reader));
         let section_alignment = u32::from_le_bytes(Self::read_array(reader));
