@@ -9,6 +9,8 @@ use chrono::NaiveDateTime;
 use std::fmt::{self, Debug, Display};
 use std::io::Read;
 
+use self::characteristics::Characteristics;
+use self::dll_characteristics::DllCharacteristics;
 use self::machine_types::Machine;
 
 /// The file is an executable image of 32-bit application
@@ -100,7 +102,7 @@ pub struct FileHeader {
     /// This value should be zero for an object file.
     pub size_of_optional_header: u16,
     /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](crate::header::characteristics)
-    pub characteristics: u16,
+    pub characteristics: Characteristics,
 }
 
 impl FileHeader {
@@ -112,7 +114,7 @@ impl FileHeader {
         let pointer_to_symbol_table = u32::from_le_bytes(Self::read_array(reader));
         let number_of_symbols = u32::from_le_bytes(Self::read_array(reader));
         let size_of_optional_header = u16::from_le_bytes(Self::read_array(reader));
-        let characteristics = u16::from_le_bytes(Self::read_array(reader));
+        let characteristics = Characteristics::from(u16::from_le_bytes(Self::read_array(reader)));
         Self {
             machine,
             number_of_sections,
@@ -305,7 +307,7 @@ pub struct OptionalHeader32 {
     pub subsystem: u16,
 
     /// See [`dll_characteristics`](crate::header::dll_characteristics) module.
-    pub dll_characteristics: u16,
+    pub dll_characteristics: DllCharacteristics,
 
     /// The size of the stack to reserve. Only `size_of_stack_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
     pub size_of_stack_reserve: u32,
@@ -349,7 +351,8 @@ impl OptionalHeader32 {
         let size_of_headers = u32::from_le_bytes(Self::read_array(reader));
         let check_sum = u32::from_le_bytes(Self::read_array(reader));
         let subsystem = u16::from_le_bytes(Self::read_array(reader));
-        let dll_characteristics = u16::from_le_bytes(Self::read_array(reader));
+        let dll_characteristics =
+            DllCharacteristics::from(u16::from_le_bytes(Self::read_array(reader)));
         let size_of_stack_reserve = u32::from_le_bytes(Self::read_array(reader));
         let size_of_stack_commit = u32::from_le_bytes(Self::read_array(reader));
         let size_of_heap_reserve = u32::from_le_bytes(Self::read_array(reader));
@@ -471,7 +474,7 @@ pub struct OptionalHeader64 {
     pub subsystem: u16,
 
     /// See [`dll_characteristics`](crate::header::dll_characteristics) module.
-    pub dll_characteristics: u16,
+    pub dll_characteristics: DllCharacteristics,
 
     /// The size of the stack to reserve. Only `size_of_stack_commit` is committed; the rest is made available one page at a time until the reserve size is reached.
     pub size_of_stack_reserve: u64,
@@ -514,7 +517,8 @@ impl OptionalHeader64 {
         let size_of_headers = u32::from_le_bytes(Self::read_array(reader));
         let check_sum = u32::from_le_bytes(Self::read_array(reader));
         let subsystem = u16::from_le_bytes(Self::read_array(reader));
-        let dll_characteristics = u16::from_le_bytes(Self::read_array(reader));
+        let dll_characteristics =
+            DllCharacteristics::from(u16::from_le_bytes(Self::read_array(reader)));
         let size_of_stack_reserve = u64::from_le_bytes(Self::read_array(reader));
         let size_of_stack_commit = u64::from_le_bytes(Self::read_array(reader));
         let size_of_heap_reserve = u64::from_le_bytes(Self::read_array(reader));

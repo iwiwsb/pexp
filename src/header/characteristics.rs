@@ -2,22 +2,7 @@ use std::fmt::{self, Binary, Formatter};
 
 #[derive(Debug, PartialEq)]
 pub struct Characteristics {
-    pub relocs_stripped: bool,
-    pub executable: bool,
-    pub line_nums_stripped: bool,
-    pub local_syms_stripped: bool,
-    pub aggressive_ws_trim: bool,
-    pub large_address_aware: bool,
-    pub reserved0: bool,
-    pub bytes_reserved_lo: bool,
-    pub machine_32_bit: bool,
-    pub debug_stripped: bool,
-    pub removable_run_from_swap: bool,
-    pub net_run_from_swap: bool,
-    pub system: bool,
-    pub dynamic_link_library: bool,
-    pub up_system_only: bool,
-    pub bytes_reserved_hi: bool,
+    flags: Vec<bool>,
 }
 
 impl Characteristics {
@@ -62,75 +47,55 @@ impl Characteristics {
     pub const IMAGE_FILE_BYTES_REVERSED_HI: u16 = 0x8000;
 
     pub fn to_bits(&self) -> u16 {
-        (self.relocs_stripped as u16) << 15
-            | (self.executable as u16) << 14
-            | (self.line_nums_stripped as u16) << 13
-            | (self.local_syms_stripped as u16) << 12
-            | (self.aggressive_ws_trim as u16) << 11
-            | (self.large_address_aware as u16) << 10
-            | (self.reserved0 as u16) << 9
-            | (self.bytes_reserved_lo as u16) << 8
-            | (self.machine_32_bit as u16) << 7
-            | (self.debug_stripped as u16) << 6
-            | (self.removable_run_from_swap as u16) << 5
-            | (self.net_run_from_swap as u16) << 4
-            | (self.system as u16) << 3
-            | (self.dynamic_link_library as u16) << 2
-            | (self.up_system_only as u16) << 1
-            | (self.bytes_reserved_hi as u16)
+        (self.flags[0] as u16) << 15
+            | (self.flags[1] as u16) << 14
+            | (self.flags[2] as u16) << 13
+            | (self.flags[3] as u16) << 12
+            | (self.flags[4] as u16) << 11
+            | (self.flags[5] as u16) << 10
+            | (self.flags[6] as u16) << 9
+            | (self.flags[7] as u16) << 8
+            | (self.flags[8] as u16) << 7
+            | (self.flags[9] as u16) << 6
+            | (self.flags[10] as u16) << 5
+            | (self.flags[11] as u16) << 4
+            | (self.flags[12] as u16) << 3
+            | (self.flags[13] as u16) << 2
+            | (self.flags[14] as u16) << 1
+            | (self.flags[15] as u16)
     }
 }
 
 impl From<u16> for Characteristics {
     fn from(value: u16) -> Self {
-        let relocs_stripped =
-            (value & Self::IMAGE_FILE_RELOCS_STRIPPED) == Self::IMAGE_FILE_RELOCS_STRIPPED;
-        let executable =
-            (value & Self::IMAGE_FILE_EXECUTABLE_IMAGE) == Self::IMAGE_FILE_EXECUTABLE_IMAGE;
-        let line_nums_stripped =
+        let mut flags: Vec<bool> = Vec::new();
+
+        flags[0] = (value & Self::IMAGE_FILE_RELOCS_STRIPPED) == Self::IMAGE_FILE_RELOCS_STRIPPED;
+        flags[1] = (value & Self::IMAGE_FILE_EXECUTABLE_IMAGE) == Self::IMAGE_FILE_EXECUTABLE_IMAGE;
+        flags[2] =
             (value & Self::IMAGE_FILE_LINE_NUMS_STRIPPED) == Self::IMAGE_FILE_LINE_NUMS_STRIPPED;
-        let local_syms_stripped =
+        flags[3] =
             (value & Self::IMAGE_FILE_LOCAL_SYMS_STRIPPED) == Self::IMAGE_FILE_LOCAL_SYMS_STRIPPED;
-        let aggressive_ws_trim =
+        flags[4] =
             (value & Self::IMAGE_FILE_AGGRESSIVE_WS_TRIM) == Self::IMAGE_FILE_AGGRESSIVE_WS_TRIM;
-        let large_address_aware =
+        flags[5] =
             (value & Self::IMAGE_FILE_LARGE_ADDRESS_AWARE) == Self::IMAGE_FILE_LARGE_ADDRESS_AWARE;
-        let reserved0 = (value & Self::IMAGE_FILE_RESERVED0) == Self::IMAGE_FILE_RESERVED0;
+        flags[6] = (value & Self::IMAGE_FILE_RESERVED0) == Self::IMAGE_FILE_RESERVED0;
         let bytes_reserved_lo =
             (value & Self::IMAGE_FILE_BYTES_REVERSED_LO) == Self::IMAGE_FILE_BYTES_REVERSED_LO;
-        let machine_32_bit =
-            (value & Self::IMAGE_FILE_32BIT_MACHINE) == Self::IMAGE_FILE_32BIT_MACHINE;
-        let debug_stripped =
-            (value & Self::IMAGE_FILE_DEBUG_STRIPPED) == Self::IMAGE_FILE_DEBUG_STRIPPED;
-        let removable_run_from_swap = (value & Self::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP)
+        flags[7] = (value & Self::IMAGE_FILE_32BIT_MACHINE) == Self::IMAGE_FILE_32BIT_MACHINE;
+        flags[8] = (value & Self::IMAGE_FILE_DEBUG_STRIPPED) == Self::IMAGE_FILE_DEBUG_STRIPPED;
+        flags[9] = (value & Self::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP)
             == Self::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP;
-        let net_run_from_swap =
+        flags[10] =
             (value & Self::IMAGE_FILE_NET_RUN_FROM_SWAP) == Self::IMAGE_FILE_NET_RUN_FROM_SWAP;
-        let system = (value & Self::IMAGE_FILE_SYSTEM) == Self::IMAGE_FILE_SYSTEM;
-        let dynamic_link_library = (value & Self::IMAGE_FILE_DLL) == Self::IMAGE_FILE_DLL;
-        let up_system_only =
-            (value & Self::IMAGE_FILE_UP_SYSTEM_ONLY) == Self::IMAGE_FILE_UP_SYSTEM_ONLY;
-        let bytes_reserved_hi =
+        flags[11] = (value & Self::IMAGE_FILE_SYSTEM) == Self::IMAGE_FILE_SYSTEM;
+        flags[12] = (value & Self::IMAGE_FILE_DLL) == Self::IMAGE_FILE_DLL;
+        flags[13] = (value & Self::IMAGE_FILE_UP_SYSTEM_ONLY) == Self::IMAGE_FILE_UP_SYSTEM_ONLY;
+        flags[14] =
             (value & Self::IMAGE_FILE_BYTES_REVERSED_HI) == Self::IMAGE_FILE_BYTES_REVERSED_HI;
 
-        Self {
-            relocs_stripped,
-            executable,
-            line_nums_stripped,
-            local_syms_stripped,
-            aggressive_ws_trim,
-            large_address_aware,
-            reserved0,
-            bytes_reserved_lo,
-            machine_32_bit,
-            debug_stripped,
-            removable_run_from_swap,
-            net_run_from_swap,
-            system,
-            dynamic_link_library,
-            up_system_only,
-            bytes_reserved_hi,
-        }
+        Self { flags }
     }
 }
 
