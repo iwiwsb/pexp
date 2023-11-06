@@ -81,18 +81,18 @@ impl From<u16> for Characteristics {
         flags[5] =
             (value & Self::IMAGE_FILE_LARGE_ADDRESS_AWARE) == Self::IMAGE_FILE_LARGE_ADDRESS_AWARE;
         flags[6] = (value & Self::IMAGE_FILE_RESERVED0) == Self::IMAGE_FILE_RESERVED0;
-        let bytes_reserved_lo =
+        flags[7] =
             (value & Self::IMAGE_FILE_BYTES_REVERSED_LO) == Self::IMAGE_FILE_BYTES_REVERSED_LO;
-        flags[7] = (value & Self::IMAGE_FILE_32BIT_MACHINE) == Self::IMAGE_FILE_32BIT_MACHINE;
-        flags[8] = (value & Self::IMAGE_FILE_DEBUG_STRIPPED) == Self::IMAGE_FILE_DEBUG_STRIPPED;
-        flags[9] = (value & Self::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP)
+        flags[8] = (value & Self::IMAGE_FILE_32BIT_MACHINE) == Self::IMAGE_FILE_32BIT_MACHINE;
+        flags[9] = (value & Self::IMAGE_FILE_DEBUG_STRIPPED) == Self::IMAGE_FILE_DEBUG_STRIPPED;
+        flags[10] = (value & Self::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP)
             == Self::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP;
-        flags[10] =
+        flags[11] =
             (value & Self::IMAGE_FILE_NET_RUN_FROM_SWAP) == Self::IMAGE_FILE_NET_RUN_FROM_SWAP;
-        flags[11] = (value & Self::IMAGE_FILE_SYSTEM) == Self::IMAGE_FILE_SYSTEM;
-        flags[12] = (value & Self::IMAGE_FILE_DLL) == Self::IMAGE_FILE_DLL;
-        flags[13] = (value & Self::IMAGE_FILE_UP_SYSTEM_ONLY) == Self::IMAGE_FILE_UP_SYSTEM_ONLY;
-        flags[14] =
+        flags[12] = (value & Self::IMAGE_FILE_SYSTEM) == Self::IMAGE_FILE_SYSTEM;
+        flags[13] = (value & Self::IMAGE_FILE_DLL) == Self::IMAGE_FILE_DLL;
+        flags[14] = (value & Self::IMAGE_FILE_UP_SYSTEM_ONLY) == Self::IMAGE_FILE_UP_SYSTEM_ONLY;
+        flags[15] =
             (value & Self::IMAGE_FILE_BYTES_REVERSED_HI) == Self::IMAGE_FILE_BYTES_REVERSED_HI;
 
         Self { flags }
