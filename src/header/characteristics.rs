@@ -2,7 +2,7 @@ use std::fmt::{self, Binary, Formatter};
 
 #[derive(Debug, PartialEq)]
 pub struct Characteristics {
-    flags: Vec<bool>,
+    flags: [bool; 16],
 }
 
 impl Characteristics {
@@ -68,42 +68,32 @@ impl Characteristics {
 
 impl From<u16> for Characteristics {
     fn from(value: u16) -> Self {
-        let mut flags: Vec<bool> = Vec::new();
+        let mut flags = [false; 16];
 
-        flags.push((value & Self::IMAGE_FILE_RELOCS_STRIPPED) == Self::IMAGE_FILE_RELOCS_STRIPPED);
-        flags
-            .push((value & Self::IMAGE_FILE_EXECUTABLE_IMAGE) == Self::IMAGE_FILE_EXECUTABLE_IMAGE);
-        flags.push(
-            (value & Self::IMAGE_FILE_LINE_NUMS_STRIPPED) == Self::IMAGE_FILE_LINE_NUMS_STRIPPED,
-        );
-        flags.push(
-            (value & Self::IMAGE_FILE_LOCAL_SYMS_STRIPPED) == Self::IMAGE_FILE_LOCAL_SYMS_STRIPPED,
-        );
-        flags.push(
-            (value & Self::IMAGE_FILE_AGGRESSIVE_WS_TRIM) == Self::IMAGE_FILE_AGGRESSIVE_WS_TRIM,
-        );
-        flags.push(
-            (value & Self::IMAGE_FILE_LARGE_ADDRESS_AWARE) == Self::IMAGE_FILE_LARGE_ADDRESS_AWARE,
-        );
-        flags.push((value & Self::IMAGE_FILE_RESERVED0) == Self::IMAGE_FILE_RESERVED0);
-        flags.push(
-            (value & Self::IMAGE_FILE_BYTES_REVERSED_LO) == Self::IMAGE_FILE_BYTES_REVERSED_LO,
-        );
-        flags.push((value & Self::IMAGE_FILE_32BIT_MACHINE) == Self::IMAGE_FILE_32BIT_MACHINE);
-        flags.push((value & Self::IMAGE_FILE_DEBUG_STRIPPED) == Self::IMAGE_FILE_DEBUG_STRIPPED);
-        flags.push(
-            (value & Self::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP)
-                == Self::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP,
-        );
-        flags.push(
-            (value & Self::IMAGE_FILE_NET_RUN_FROM_SWAP) == Self::IMAGE_FILE_NET_RUN_FROM_SWAP,
-        );
-        flags.push((value & Self::IMAGE_FILE_SYSTEM) == Self::IMAGE_FILE_SYSTEM);
-        flags.push((value & Self::IMAGE_FILE_DLL) == Self::IMAGE_FILE_DLL);
-        flags.push((value & Self::IMAGE_FILE_UP_SYSTEM_ONLY) == Self::IMAGE_FILE_UP_SYSTEM_ONLY);
-        flags.push(
-            (value & Self::IMAGE_FILE_BYTES_REVERSED_HI) == Self::IMAGE_FILE_BYTES_REVERSED_HI,
-        );
+        flags[0] = (value & Self::IMAGE_FILE_RELOCS_STRIPPED) == Self::IMAGE_FILE_RELOCS_STRIPPED;
+        flags[1] = (value & Self::IMAGE_FILE_EXECUTABLE_IMAGE) == Self::IMAGE_FILE_EXECUTABLE_IMAGE;
+        flags[2] =
+            (value & Self::IMAGE_FILE_LINE_NUMS_STRIPPED) == Self::IMAGE_FILE_LINE_NUMS_STRIPPED;
+        flags[3] =
+            (value & Self::IMAGE_FILE_LOCAL_SYMS_STRIPPED) == Self::IMAGE_FILE_LOCAL_SYMS_STRIPPED;
+        flags[4] =
+            (value & Self::IMAGE_FILE_AGGRESSIVE_WS_TRIM) == Self::IMAGE_FILE_AGGRESSIVE_WS_TRIM;
+        flags[5] =
+            value & Self::IMAGE_FILE_LARGE_ADDRESS_AWARE == Self::IMAGE_FILE_LARGE_ADDRESS_AWARE;
+        flags[6] = (value & Self::IMAGE_FILE_RESERVED0) == Self::IMAGE_FILE_RESERVED0;
+        flags[7] =
+            (value & Self::IMAGE_FILE_BYTES_REVERSED_LO) == Self::IMAGE_FILE_BYTES_REVERSED_LO;
+        flags[8] = (value & Self::IMAGE_FILE_32BIT_MACHINE) == Self::IMAGE_FILE_32BIT_MACHINE;
+        flags[9] = (value & Self::IMAGE_FILE_DEBUG_STRIPPED) == Self::IMAGE_FILE_DEBUG_STRIPPED;
+        flags[10] = (value & Self::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP)
+            == Self::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP;
+        flags[11] =
+            (value & Self::IMAGE_FILE_NET_RUN_FROM_SWAP) == Self::IMAGE_FILE_NET_RUN_FROM_SWAP;
+        flags[12] = (value & Self::IMAGE_FILE_SYSTEM) == Self::IMAGE_FILE_SYSTEM;
+        flags[13] = (value & Self::IMAGE_FILE_DLL) == Self::IMAGE_FILE_DLL;
+        flags[14] = (value & Self::IMAGE_FILE_UP_SYSTEM_ONLY) == Self::IMAGE_FILE_UP_SYSTEM_ONLY;
+        flags[15] =
+            (value & Self::IMAGE_FILE_BYTES_REVERSED_HI) == Self::IMAGE_FILE_BYTES_REVERSED_HI;
 
         Self { flags }
     }
