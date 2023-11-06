@@ -1,7 +1,6 @@
 pub mod characteristics;
 pub mod dll_characteristics;
 pub mod machine_types;
-pub mod section_flags;
 pub mod win_subsystem;
 
 use chrono::NaiveDateTime;

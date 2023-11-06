@@ -55,32 +55,32 @@ impl DllCharacteristics {
 impl From<u16> for DllCharacteristics {
     fn from(value: u16) -> Self {
         let mut flags: Vec<bool> = Vec::new();
-        flags[0] = (value & 0x0001) == 0x0001;
-        flags[1] = (value & 0x0002) == 0x0002;
-        flags[3] = (value & 0x0004) == 0x0004;
-        flags[4] = (value & 0x0008) == 0x0008;
-        flags[5] = (value & Self::IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA)
-            == Self::IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA;
-        flags[6] = (value & Self::IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
-            == Self::IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE;
-        flags[7] = (value & Self::IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY)
-            == Self::IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY;
-        flags[8] = (value & Self::IMAGE_DLLCHARACTERISTICS_NX_COMPAT)
-            == Self::IMAGE_DLLCHARACTERISTICS_NX_COMPAT;
-        flags[9] = (value & Self::IMAGE_DLLCHARACTERISTICS_NO_ISOLATION)
-            == Self::IMAGE_DLLCHARACTERISTICS_NO_ISOLATION;
-        flags[10] = (value & Self::IMAGE_DLLCHARACTERISTICS_NO_SEH)
-            == Self::IMAGE_DLLCHARACTERISTICS_NO_SEH;
-        flags[11] = (value & Self::IMAGE_DLLCHARACTERISTICS_NO_BIND)
-            == Self::IMAGE_DLLCHARACTERISTICS_NO_BIND;
-        flags[12] = (value & Self::IMAGE_DLLCHARACTERISTICS_APPCONTAINER)
-            == Self::IMAGE_DLLCHARACTERISTICS_APPCONTAINER;
-        flags[13] = (value & Self::IMAGE_DLLCHARACTERISTICS_WDM_DRIVER)
-            == Self::IMAGE_DLLCHARACTERISTICS_WDM_DRIVER;
-        flags[14] = (value & Self::IMAGE_DLLCHARACTERISTICS_GUARD_CF)
-            == Self::IMAGE_DLLCHARACTERISTICS_GUARD_CF;
-        flags[15] = (value & Self::IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE)
-            == Self::IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE;
+        flags.push((value & 0x0001) == 0x0001);
+        flags.push((value & 0x0002) == 0x0002);
+        flags.push((value & 0x0004) == 0x0004);
+        flags.push((value & 0x0008) == 0x0008);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA)
+            == Self::IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
+            == Self::IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY)
+            == Self::IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_NX_COMPAT)
+            == Self::IMAGE_DLLCHARACTERISTICS_NX_COMPAT);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_NO_ISOLATION)
+            == Self::IMAGE_DLLCHARACTERISTICS_NO_ISOLATION);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_NO_SEH)
+            == Self::IMAGE_DLLCHARACTERISTICS_NO_SEH);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_NO_BIND)
+            == Self::IMAGE_DLLCHARACTERISTICS_NO_BIND);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_APPCONTAINER)
+            == Self::IMAGE_DLLCHARACTERISTICS_APPCONTAINER);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_WDM_DRIVER)
+            == Self::IMAGE_DLLCHARACTERISTICS_WDM_DRIVER);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_GUARD_CF)
+            == Self::IMAGE_DLLCHARACTERISTICS_GUARD_CF);
+        flags.push((value & Self::IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE)
+            == Self::IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE);
         Self { flags }
     }
 }
