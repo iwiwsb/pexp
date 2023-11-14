@@ -1,7 +1,7 @@
 //! The following values are defined for the [`dll_characteristics`](crate::header::optional_header::OptionalHeader#structfield.dll_characteristics) field of
 //! the [`OptionalHeader`](crate::header::optional_header::OptionalHeader).
 
-use std::fmt::Binary;
+use std::fmt::{Binary, LowerHex, UpperHex};
 
 #[derive(Debug)]
 pub struct DllCharacteristics {
@@ -89,5 +89,17 @@ impl From<u16> for DllCharacteristics {
 impl Binary for DllCharacteristics {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{:016b}", self.to_bits())
+    }
+}
+
+impl UpperHex for DllCharacteristics {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:02X}", self.to_bits())
+    }
+}
+
+impl LowerHex for DllCharacteristics {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:02x}", self.to_bits())
     }
 }
