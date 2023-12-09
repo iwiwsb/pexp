@@ -1,4 +1,5 @@
-pub mod header;
+pub mod file_header;
+pub mod optional_header;
 pub mod section;
 
 use std::{
@@ -6,7 +7,7 @@ use std::{
     io::{Read, Seek},
 };
 
-use header::FileHeader;
+use file_header::FileHeader;
 
 fn main() {
     let mut pe_file = File::open("target\\release\\pexp.exe").expect("File should be openable");
