@@ -7,37 +7,36 @@ use std::io::Read;
 
 /// COFF File Header structure
 #[derive(Debug, PartialEq)]
-pub struct FileHeader {
+struct FileHeader {
     /// Identifies the type of target machine. For more information, see [`machine_types`](crate::header::machine_types).
-    pub machine: Machine,
+    machine: [u8; 2],
     /// Indicates the size of the section table, which immediately follows the headers.
-    pub number_of_sections: u16,
+    number_of_sections: [u8; 2],
     /// The low 32 bits of the number of seconds since 00:00 January 1, 1970 (a C run-time time_t value), which indicates when the file was created.
-    pub time_date_stamp: NaiveDateTime,
+    time_date_stamp: [u8; 4],
     /// The file offset of the COFF symbol table, or zero if no COFF symbol table is present.
     /// This value should be zero for an image because COFF debugging information is deprecated.
-    pub pointer_to_symbol_table: u32,
+    pointer_to_symbol_table: [u8; 4],
     /// The number of entries in the symbol table.
     /// This data can be used to locate the string table, which immediately follows the symbol table.
     /// This value should be zero for an image because COFF debugging information is deprecated.
-    pub number_of_symbols: u32,
+    number_of_symbols: [u8; 4],
     /// The size of the [`OptionalHeader`](crate::header::optional_header::OptionalHeader), which is required for executable files but not for object files.
     /// This value should be zero for an object file.
-    pub size_of_optional_header: u16,
+    size_of_optional_header: [u8; 2],
     /// The flags that indicate the attributes of the file. For specific flag values, see [`characteristics`](crate::header::characteristics)
-    pub characteristics: Characteristics,
+    characteristics: [u8; 2],
 }
 
 impl FileHeader {
-    pub fn read_from<R: Read>(reader: &mut R) -> Self {
-        let machine = Machine::from(u16::from_le_bytes(Self::read_array(reader)));
-        let number_of_sections = u16::from_le_bytes(Self::read_array(reader));
-        let time_date_stamp =
-            NaiveDateTime::from_timestamp(u32::from_le_bytes(Self::read_array(reader)) as i64, 0);
-        let pointer_to_symbol_table = u32::from_le_bytes(Self::read_array(reader));
-        let number_of_symbols = u32::from_le_bytes(Self::read_array(reader));
-        let size_of_optional_header = u16::from_le_bytes(Self::read_array(reader));
-        let characteristics = Characteristics::from(u16::from_le_bytes(Self::read_array(reader)));
+    fn read_from<R: Read>(reader: &mut R) -> Self {
+        let machine = Self::read_array(reader);
+        let number_of_sections = Self::read_array(reader);
+        let time_date_stamp = Self::read_array(reader);
+        let pointer_to_symbol_table = Self::read_array(reader);
+        let number_of_symbols = Self::read_array(reader);
+        let size_of_optional_header = Self::read_array(reader);
+        let characteristics = Self::read_array(reader);
         Self {
             machine,
             number_of_sections,
@@ -52,23 +51,63 @@ impl FileHeader {
 
 impl ReadArray for FileHeader {}
 
-impl Display for FileHeader {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let _ = writeln!(f, "Machine: {}", self.machine);
-        let _ = writeln!(f, "Number of sections: {}", self.number_of_sections);
-        let _ = writeln!(f, "Datetime stamp: {}", self.time_date_stamp);
-        let _ = writeln!(
-            f,
-            "Pointer to symbol table: {:#X}",
-            self.pointer_to_symbol_table
-        );
-        let _ = writeln!(f, "Number of symbols: {}", self.number_of_symbols);
-        let _ = writeln!(
-            f,
-            "Size of optional header: {}",
-            self.size_of_optional_header
-        );
-        writeln!(f, "Characteristics: {:b}", self.characteristics)
+struct FileHeaderParser {
+    inner_header: FileHeader,
+}
+
+impl FileHeaderParser {
+    pub fn new(inner_header: FileHeader) -> Self {
+        Self { inner_header }
+    }
+
+    pub fn machine(&self) -> u16 {
+        u16::from_le_bytes(self.inner_header.machine)
+    }
+
+    pub fn number_of_sections(&self) -> u16 {
+        u16::from_le_bytes(self.inner_header.number_of_sections)
+    }
+
+    pub fn time_date_stamp(&self) -> u32 {
+        u32::from_le_bytes(self.inner_header.time_date_stamp)
+    }
+
+    pub fn pointer_to_symbol_table(&self) -> u32 {
+        u32::from_le_bytes(self.inner_header.pointer_to_symbol_table)
+    }
+
+    pub fn number_of_symbols(&self) -> u32 {
+        u32::from_le_bytes(self.inner_header.number_of_symbols)
+    }
+
+    pub fn size_of_optional_header(&self) -> u16 {
+        u16::from_le_bytes(self.inner_header.size_of_optional_header)
+    }
+
+    pub fn characteristics(&self) -> u16 {
+        u16::from_le_bytes(self.inner_header.characteristics)
+    }
+}
+
+struct FileHeaderAnalyzer {
+    inner_parser: FileHeaderParser,
+}
+
+impl FileHeaderAnalyzer {
+    pub fn new(inner_parser: FileHeaderParser) -> Self {
+        Self { inner_parser }
+    }
+
+    pub fn machine(&self) -> Machine {
+        Machine::from(self.inner_parser.machine())
+    }
+
+    pub fn time_date_stamp(&self) -> NaiveDateTime {
+        NaiveDateTime::from_timestamp(self.inner_parser.time_date_stamp() as i64, 0)
+    }
+
+    pub fn characteristics(&self) -> Characteristics {
+        Characteristics::from(self.inner_parser.characteristics())
     }
 }
 
