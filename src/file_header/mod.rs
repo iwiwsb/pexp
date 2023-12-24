@@ -1,8 +1,12 @@
 use crate::StructField;
 use chrono::NaiveDateTime;
-use std::io::{Read, Seek};
+use std::io::Read;
+use std::io::Seek;
+use std::io::SeekFrom;
 
-fn read_file_header<R: Read + Seek>(reader: &mut R) -> FileHeader {
+pub fn read_file_header<R: Read + Seek>(reader: &mut R, offset: u64) -> FileHeaderWrapper {
+    let _ = reader.seek(SeekFrom::Start(offset));
+
     let mut machine = [0u8; 2];
     let mut number_of_sections = [0u8; 2];
     let mut time_date_stamp = [0u8; 4];
@@ -29,14 +33,12 @@ fn read_file_header<R: Read + Seek>(reader: &mut R) -> FileHeader {
         characteristics,
     };
 
-    let offset = reader
-        .stream_position()
-        .expect("Stream position should working");
-
-    FileHeader {
+    let file_header = FileHeader {
         offset,
         file_header_raw,
-    }
+    };
+
+    FileHeaderWrapper { file_header }
 }
 
 #[derive(Debug)]
@@ -57,35 +59,31 @@ struct FileHeader {
 }
 
 impl FileHeader {
-    pub fn get_offset(&self) -> u64 {
-        self.offset
-    }
-
-    pub fn machine(&self) -> u16 {
+    fn machine(&self) -> u16 {
         u16::from_le_bytes(self.file_header_raw.machine)
     }
 
-    pub fn number_of_sections(&self) -> u16 {
+    fn number_of_sections(&self) -> u16 {
         u16::from_le_bytes(self.file_header_raw.number_of_sections)
     }
 
-    pub fn time_date_stamp(&self) -> u32 {
+    fn time_date_stamp(&self) -> u32 {
         u32::from_le_bytes(self.file_header_raw.time_date_stamp)
     }
 
-    pub fn pointer_to_symbol_table(&self) -> u32 {
+    fn pointer_to_symbol_table(&self) -> u32 {
         u32::from_le_bytes(self.file_header_raw.pointer_to_symbol_table)
     }
 
-    pub fn number_of_symbols(&self) -> u32 {
+    fn number_of_symbols(&self) -> u32 {
         u32::from_le_bytes(self.file_header_raw.number_of_symbols)
     }
 
-    pub fn size_of_optional_header(&self) -> u16 {
+    fn size_of_optional_header(&self) -> u16 {
         u16::from_le_bytes(self.file_header_raw.size_of_optional_header)
     }
 
-    pub fn characteristics(&self) -> u16 {
+    fn characteristics(&self) -> u16 {
         u16::from_le_bytes(self.file_header_raw.characteristics)
     }
 }
@@ -96,14 +94,20 @@ pub struct FileHeaderWrapper {
 }
 
 impl FileHeaderWrapper {
-    fn machine(&self) -> StructField<Machine, 2> {
+    pub fn machine(&self) -> StructField<Machine, 2> {
         let offset = self.file_header.offset;
         let name = String::from("Machine");
         let raw_bytes = self.file_header.file_header_raw.machine;
-        todo!()
+        let value = Machine::from(self.file_header.machine());
+        StructField {
+            offset,
+            name,
+            raw_bytes,
+            value,
+        }
     }
 
-    fn number_of_sections(&self) -> StructField<u16, 2> {
+    pub fn number_of_sections(&self) -> StructField<u16, 2> {
         let offset = self.file_header.offset + 2;
         let name = String::from("Num. of sections");
         let raw_bytes = self.file_header.file_header_raw.number_of_sections;
@@ -116,7 +120,7 @@ impl FileHeaderWrapper {
         }
     }
 
-    fn time_date_stamp(&self) -> StructField<NaiveDateTime, 4> {
+    pub fn time_date_stamp(&self) -> StructField<NaiveDateTime, 4> {
         let offset = self.file_header.offset + 4;
         let name = String::from("Time date stamp");
         let raw_bytes = self.file_header.file_header_raw.time_date_stamp;
@@ -129,7 +133,7 @@ impl FileHeaderWrapper {
         }
     }
 
-    fn pointer_to_symbol_table(&self) -> StructField<u32, 4> {
+    pub fn pointer_to_symbol_table(&self) -> StructField<u32, 4> {
         let offset = self.file_header.offset + 8;
         let name = String::from("Pointer to symbol table");
         let raw_bytes = self.file_header.file_header_raw.pointer_to_symbol_table;
@@ -142,7 +146,7 @@ impl FileHeaderWrapper {
         }
     }
 
-    fn number_of_symbols(&self) -> StructField<u32, 4> {
+    pub fn number_of_symbols(&self) -> StructField<u32, 4> {
         let offset = self.file_header.offset + 12;
         let name = String::from("Number of symbols");
         let raw_bytes = self.file_header.file_header_raw.number_of_symbols;
@@ -155,7 +159,7 @@ impl FileHeaderWrapper {
         }
     }
 
-    fn size_of_optional_header(&self) -> StructField<u16, 2> {
+    pub fn size_of_optional_header(&self) -> StructField<u16, 2> {
         let offset = self.file_header.offset + 16;
         let name = String::from("Size of optional header");
         let raw_bytes = self.file_header.file_header_raw.size_of_optional_header;
@@ -168,19 +172,85 @@ impl FileHeaderWrapper {
         }
     }
 
-    fn characteristics(&self) -> StructField<Characteristics, 2> {
+    pub fn characteristics(&self) -> StructField<Characteristics, 2> {
         let offset = self.file_header.offset + 18;
         let name = String::from("Characteristics");
         let raw_bytes = self.file_header.file_header_raw.characteristics;
-        todo!()
+        let value = Characteristics::from(self.file_header.characteristics());
+        StructField {
+            offset,
+            name,
+            raw_bytes,
+            value,
+        }
     }
 }
 
-enum Machine {}
+pub enum Machine {
+    Unknown,
+    AlphaAXP,
+    Alpha64,
+    MatsushitaAM33,
+    X64,
+    ARMLittleEndian,
+    ARM64LittleEndian,
+    ARMThumb2,
+    EFIByteCode,
+    Intel386,
+    Itanium,
+    LoongArch32,
+    LoongArch64,
+    MitsubishiM32R,
+    MIPS16,
+    MIPSFPU,
+    MIPSFPU16,
+    PowerPCLE,
+    PowerPCFPU,
+    MIPSLE,
+    RISCV32,
+    RISCV64,
+    RISCV128,
+    HitachiSH3,
+    HitachiSH3DSP,
+    HitachiSH4,
+    HitachiSH5,
+    Thumb,
+    WCEMIPSV2,
+}
 
 impl From<u16> for Machine {
     fn from(value: u16) -> Self {
-        todo!()
+        match value {
+            IMAGE_FILE_MACHINE_ALPHA => Self::AlphaAXP,
+            IMAGE_FILE_MACHINE_ALPHA64 => Self::Alpha64,
+            IMAGE_FILE_MACHINE_AM33 => Self::MatsushitaAM33,
+            IMAGE_FILE_MACHINE_AMD64 => Self::X64,
+            IMAGE_FILE_MACHINE_ARM => Self::ARMLittleEndian,
+            IMAGE_FILE_MACHINE_ARM64 => Self::ARM64LittleEndian,
+            IMAGE_FILE_MACHINE_ARMNT => Self::ARMThumb2,
+            IMAGE_FILE_MACHINE_EBC => Self::EFIByteCode,
+            IMAGE_FILE_MACHINE_I386 => Self::Intel386,
+            IMAGE_FILE_MACHINE_IA64 => Self::Itanium,
+            IMAGE_FILE_MACHINE_LOONGARCH32 => Self::LoongArch32,
+            IMAGE_FILE_MACHINE_LOONGARCH64 => Self::LoongArch64,
+            IMAGE_FILE_MACHINE_M32R => Self::MitsubishiM32R,
+            IMAGE_FILE_MACHINE_MIPS16 => Self::MIPS16,
+            IMAGE_FILE_MACHINE_MIPSFPU => Self::MIPSFPU,
+            IMAGE_FILE_MACHINE_MIPSFPU16 => Self::MIPSFPU16,
+            IMAGE_FILE_MACHINE_POWERPC => Self::PowerPCLE,
+            IMAGE_FILE_MACHINE_POWERPCFP => Self::PowerPCFPU,
+            IMAGE_FILE_MACHINE_R4000 => Self::MIPSLE,
+            IMAGE_FILE_MACHINE_RISCV32 => Self::RISCV32,
+            IMAGE_FILE_MACHINE_RISCV64 => Self::RISCV64,
+            IMAGE_FILE_MACHINE_RISCV128 => Self::RISCV128,
+            IMAGE_FILE_MACHINE_SH3 => Self::HitachiSH3,
+            IMAGE_FILE_MACHINE_SH3DSP => Self::HitachiSH3DSP,
+            IMAGE_FILE_MACHINE_SH4 => Self::HitachiSH4,
+            IMAGE_FILE_MACHINE_SH5 => Self::HitachiSH5,
+            IMAGE_FILE_MACHINE_THUMB => Self::Thumb,
+            IMAGE_FILE_MACHINE_WCEMIPSV2 => Self::WCEMIPSV2,
+            _ => Self::Unknown,
+        }
     }
 }
 
@@ -243,7 +313,7 @@ const IMAGE_FILE_MACHINE_THUMB: u16 = 0x01C2;
 /// MIPS little-endian WCE v2
 const IMAGE_FILE_MACHINE_WCEMIPSV2: u16 = 0x0169;
 
-const MACHINE: [u16; 29] = [
+pub const MACHINE_LIST: [u16; 29] = [
     IMAGE_FILE_MACHINE_ALPHA,
     IMAGE_FILE_MACHINE_ALPHA64,
     IMAGE_FILE_MACHINE_AM33,
@@ -275,4 +345,44 @@ const MACHINE: [u16; 29] = [
     IMAGE_FILE_MACHINE_WCEMIPSV2,
 ];
 
-struct Characteristics;
+pub struct Characteristics {
+    relocs_stripped: bool,
+    executable_image: bool,
+    line_nums_stripped: bool,
+    local_syms_stripped: bool,
+    agressive_ws_trim: bool,
+    large_address_aware: bool,
+    reserved: bool,
+    bytes_reserved_lo: bool,
+    x32_machine: bool,
+    debug_stripped: bool,
+    removable_run_from_swap: bool,
+    net_run_from_swap: bool,
+    system: bool,
+    dynamic_link_library: bool,
+    uniprocessor_system_only: bool,
+    bytes_reserved_hi: bool,
+}
+
+impl From<u16> for Characteristics {
+    fn from(value: u16) -> Self {
+        todo!()
+    }
+}
+
+const IMAGE_FILE_RELOCS_STRIPPED: u16 = 0x0001;
+const IMAGE_FILE_EXECUTABLE_IMAGE: u16 = 0x0002;
+const IMAGE_FILE_LINE_NUMS_STRIPPED: u16 = 0x0004;
+const IMAGE_FILE_LOCAL_SYMS_STRIPPED: u16 = 0x0008;
+const IMAGE_FILE_AGGRESSIVE_WS_TRIM: u16 = 0x0010;
+const IMAGE_FILE_LARGE_ADDRESS_AWARE: u16 = 0x0020;
+const IMAGE_FILE_RESERVED: u16 = 0x0040;
+const IMAGE_FILE_BYTES_REVERSED_LO: u16 = 0x0080;
+const IMAGE_FILE_32BIT_MACHINE: u16 = 0x0100;
+const IMAGE_FILE_DEBUG_STRIPPED: u16 = 0x0200;
+const IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP: u16 = 0x0400;
+const IMAGE_FILE_NET_RUN_FROM_SWAP: u16 = 0x0800;
+const IMAGE_FILE_SYSTEM: u16 = 0x1000;
+const IMAGE_FILE_DLL: u16 = 0x2000;
+const IMAGE_FILE_UP_SYSTEM_ONLY: u16 = 0x4000;
+const IMAGE_FILE_BYTES_REVERSED_HI: u16 = 0x8000;
