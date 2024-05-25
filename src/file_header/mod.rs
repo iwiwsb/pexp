@@ -366,23 +366,57 @@ pub struct Characteristics {
 
 impl From<u16> for Characteristics {
     fn from(value: u16) -> Self {
-        todo!()
+        let relocs_stripped = (value % 2) != 0;
+        let executable_image = ((value >> 1) % 2) != 0;
+        let line_nums_stripped = ((value >> 2) % 2) != 0;
+        let local_syms_stripped = ((value >> 3) % 2) != 0;
+        let agressive_ws_trim = ((value >> 4) % 2) != 0;
+        let large_address_aware = ((value >> 5) % 2) != 0;
+        let reserved = ((value >> 6) % 2) != 0;
+        let bytes_reserved_lo = ((value >> 7) % 2) != 0;
+        let x32_machine = ((value >> 7) % 2) != 0;
+        let debug_stripped = ((value >> 8) % 2) != 0;
+        let removable_run_from_swap = ((value >> 9) % 2) != 0;
+        let net_run_from_swap = ((value >> 10) % 2) != 0;
+        let system = ((value >> 11) % 2) != 0;
+        let dynamic_link_library = ((value >> 12) % 2) != 0;
+        let uniprocessor_system_only = ((value >> 13) % 2) != 0;
+        let bytes_reserved_hi = ((value >> 14) % 2) != 0;
+        
+        Self {
+            relocs_stripped,
+            executable_image,
+            line_nums_stripped,
+            local_syms_stripped,
+            agressive_ws_trim,
+            large_address_aware,
+            reserved,
+            bytes_reserved_lo,
+            x32_machine,
+            debug_stripped,
+            removable_run_from_swap,
+            net_run_from_swap,
+            system,
+            dynamic_link_library,
+            uniprocessor_system_only,
+            bytes_reserved_hi,
+        }
     }
 }
 
-const IMAGE_FILE_RELOCS_STRIPPED: u16 = 0x0001;
-const IMAGE_FILE_EXECUTABLE_IMAGE: u16 = 0x0002;
-const IMAGE_FILE_LINE_NUMS_STRIPPED: u16 = 0x0004;
-const IMAGE_FILE_LOCAL_SYMS_STRIPPED: u16 = 0x0008;
-const IMAGE_FILE_AGGRESSIVE_WS_TRIM: u16 = 0x0010;
-const IMAGE_FILE_LARGE_ADDRESS_AWARE: u16 = 0x0020;
-const IMAGE_FILE_RESERVED: u16 = 0x0040;
-const IMAGE_FILE_BYTES_REVERSED_LO: u16 = 0x0080;
-const IMAGE_FILE_32BIT_MACHINE: u16 = 0x0100;
-const IMAGE_FILE_DEBUG_STRIPPED: u16 = 0x0200;
-const IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP: u16 = 0x0400;
-const IMAGE_FILE_NET_RUN_FROM_SWAP: u16 = 0x0800;
-const IMAGE_FILE_SYSTEM: u16 = 0x1000;
-const IMAGE_FILE_DLL: u16 = 0x2000;
-const IMAGE_FILE_UP_SYSTEM_ONLY: u16 = 0x4000;
-const IMAGE_FILE_BYTES_REVERSED_HI: u16 = 0x8000;
+pub const IMAGE_FILE_RELOCS_STRIPPED: u16 = 0x0001;
+pub const IMAGE_FILE_EXECUTABLE_IMAGE: u16 = 0x0002;
+pub const IMAGE_FILE_LINE_NUMS_STRIPPED: u16 = 0x0004;
+pub const IMAGE_FILE_LOCAL_SYMS_STRIPPED: u16 = 0x0008;
+pub const IMAGE_FILE_AGGRESSIVE_WS_TRIM: u16 = 0x0010;
+pub const IMAGE_FILE_LARGE_ADDRESS_AWARE: u16 = 0x0020;
+pub const IMAGE_FILE_RESERVED: u16 = 0x0040;
+pub const IMAGE_FILE_BYTES_REVERSED_LO: u16 = 0x0080;
+pub const IMAGE_FILE_32BIT_MACHINE: u16 = 0x0100;
+pub const IMAGE_FILE_DEBUG_STRIPPED: u16 = 0x0200;
+pub const IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP: u16 = 0x0400;
+pub const IMAGE_FILE_NET_RUN_FROM_SWAP: u16 = 0x0800;
+pub const IMAGE_FILE_SYSTEM: u16 = 0x1000;
+pub const IMAGE_FILE_DLL: u16 = 0x2000;
+pub const IMAGE_FILE_UP_SYSTEM_ONLY: u16 = 0x4000;
+pub const IMAGE_FILE_BYTES_REVERSED_HI: u16 = 0x8000;
