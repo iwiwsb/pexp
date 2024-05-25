@@ -1,3 +1,5 @@
+use crate::StructField;
+
 pub enum WindowsSubsystem {
     Unknown,
     Native,
@@ -29,7 +31,7 @@ const IMAGE_SUBSYSTEM_EFI_ROM: u16 = 13;
 const IMAGE_SUBSYSTEM_XBOX: u16 = 14;
 const IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION: u16 = 16;
 
-struct StandardFieldsRaw {
+struct OptionalHeader32Raw {
     magic: [u8; 2],
     major_linker_version: [u8; 1],
     minor_linker_version: [u8; 1],
@@ -38,9 +40,7 @@ struct StandardFieldsRaw {
     size_of_uninitialized_data: [u8; 4],
     address_of_entry_point: [u8; 4],
     base_of_code: [u8; 4],
-}
-
-struct WinSpecificFields32Raw {
+    base_of_data: [u8; 4],
     image_base: [u8; 4],
     section_alignment: [u8; 4],
     file_alignment: [u8; 4],
@@ -62,16 +62,152 @@ struct WinSpecificFields32Raw {
     size_of_heap_commit: [u8; 4],
     loader_flags: [u8; 4],
     number_of_rva_and_sizes: [u8; 4],
-}
-
-struct OptionalHeaderRaw32 {
-    std_fields: StandardFieldsRaw,
-    base_of_data: [u8; 4],
-    win_specific_fields: WinSpecificFields32Raw,
     data_directories: Vec<DataDirectoryRaw>,
 }
 
-struct WinSpecificFields64Raw {
+struct OptionalHeader32 {
+    offset: u64,
+    optional_header_32_raw: OptionalHeader32Raw,
+}
+
+impl OptionalHeader32 {
+    fn magic(&self) -> u16 {
+        u16::from_le_bytes(self.optional_header_32_raw.magic)
+    }
+
+    fn major_linker_version(&self) -> u8 {
+        todo!()
+    }
+
+    fn minor_linker_version(&self) -> u8 {
+        todo!()
+    }
+
+    fn size_of_code(&self) -> u32 {
+        todo!()
+    }
+    fn size_of_initialized_data(&self) -> u32 {
+        todo!()
+    }
+
+    fn size_of_uninitialized_data(&self) -> u32 {
+        todo!()
+    }
+
+    fn address_of_entry_point(&self) -> u32 {
+        todo!()
+    }
+
+    fn base_of_code(&self) -> u32 {
+        todo!()
+    }
+
+    fn base_of_data(&self) -> u32 {
+        todo!()
+    }
+
+    fn image_base(&self) -> u32 {
+        todo!()
+    }
+
+    fn section_alignment(&self) -> u32 {
+        todo!()
+    }
+
+    fn file_alignment(&self) -> u32 {
+        todo!()
+    }
+
+    fn major_os_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn minor_os_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn major_image_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn minor_image_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn major_subsystem_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn minor_subsystem_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn win32_version_value(&self) -> u32 {
+        todo!()
+    }
+
+    fn size_of_image(&self) -> u32 {
+        todo!()
+    }
+
+    fn size_of_headers(&self) -> u32 {
+        todo!()
+    }
+
+    fn checksum(&self) -> u32 {
+        todo!()
+    }
+
+    fn subsystem(&self) -> u16 {
+        todo!()
+    }
+
+    fn dll_characteristics(&self) -> u16 {
+        todo!()
+    }
+
+    fn size_of_stack_reserve(&self) -> u32 {
+        todo!()
+    }
+
+    fn size_of_stack_commit(&self) -> u32 {
+        todo!()
+    }
+
+    fn size_of_heap_reserve(&self) -> u32 {
+        todo!()
+    }
+
+    fn size_of_heap_commit(&self) -> u32 {
+        todo!()
+    }
+
+    fn loader_flags(&self) -> u32 {
+        todo!()
+    }
+
+    fn number_of_rva_and_sizes(&self) -> u32 {
+        todo!()
+    }
+
+    fn data_directories(&self) -> Vec<DataDirectory> {
+        todo!()
+    }
+}
+
+struct OptionalHeader32Wrapper {
+    optional_header_32: OptionalHeader32,
+}
+
+struct OptionalHeader64Raw {
+    magic: [u8; 2],
+    major_linker_version: [u8; 1],
+    minor_linker_version: [u8; 1],
+    size_of_code: [u8; 4],
+    size_of_initialized_data: [u8; 4],
+    size_of_uninitialized_data: [u8; 4],
+    address_of_entry_point: [u8; 4],
+    base_of_code: [u8; 4],
     image_base: [u8; 8],
     section_alignment: [u8; 4],
     file_alignment: [u8; 4],
@@ -93,25 +229,15 @@ struct WinSpecificFields64Raw {
     size_of_heap_commit: [u8; 8],
     loader_flags: [u8; 4],
     number_of_rva_and_sizes: [u8; 4],
-}
-
-struct OptionalHeaderRaw64 {
-    std_fields: StandardFieldsRaw,
-    win_specific_fields: WinSpecificFields64Raw,
     data_directories: Vec<DataDirectoryRaw>,
 }
 
-struct DataDirectoryRaw {
-    virtual_address: [u8; 4],
-    size: [u8; 4],
-}
-
-struct StandardFields {
+struct OptionalHeader64 {
     offset: u64,
-    std_fields_raw: StandardFieldsRaw,
+    optional_header_64_raw: OptionalHeader64Raw,
 }
 
-impl StandardFields {
+impl OptionalHeader64 {
     fn magic(&self) -> u16 {
         todo!()
     }
@@ -127,4 +253,137 @@ impl StandardFields {
     fn size_of_code(&self) -> u32 {
         todo!()
     }
+    fn size_of_initialized_data(&self) -> u32 {
+        todo!()
+    }
+
+    fn size_of_uninitialized_data(&self) -> u32 {
+        todo!()
+    }
+
+    fn address_of_entry_point(&self) -> u32 {
+        todo!()
+    }
+
+    fn base_of_code(&self) -> u32 {
+        todo!()
+    }
+
+    fn image_base(&self) -> u64 {
+        todo!()
+    }
+
+    fn section_alignment(&self) -> u32 {
+        todo!()
+    }
+
+    fn file_alignment(&self) -> u32 {
+        todo!()
+    }
+
+    fn major_os_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn minor_os_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn major_image_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn minor_image_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn major_subsystem_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn minor_subsystem_version(&self) -> u16 {
+        todo!()
+    }
+
+    fn win32_version_value(&self) -> u32 {
+        todo!()
+    }
+
+    fn size_of_image(&self) -> u32 {
+        todo!()
+    }
+
+    fn size_of_headers(&self) -> u32 {
+        todo!()
+    }
+
+    fn checksum(&self) -> u32 {
+        todo!()
+    }
+
+    fn subsystem(&self) -> u16 {
+        todo!()
+    }
+
+    fn dll_characteristics(&self) -> u16 {
+        todo!()
+    }
+
+    fn size_of_stack_reserve(&self) -> u64 {
+        todo!()
+    }
+
+    fn size_of_stack_commit(&self) -> u64 {
+        todo!()
+    }
+
+    fn size_of_heap_reserve(&self) -> u64 {
+        todo!()
+    }
+
+    fn size_of_heap_commit(&self) -> u64 {
+        todo!()
+    }
+
+    fn loader_flags(&self) -> u32 {
+        todo!()
+    }
+
+    fn number_of_rva_and_sizes(&self) -> u32 {
+        todo!()
+    }
+
+    fn data_directories(&self) -> Vec<DataDirectory> {
+        todo!()
+    }
 }
+
+struct OptionalHeader64Wrapper {
+    optional_header_64: OptionalHeader64,
+}
+
+struct DataDirectoryRaw {
+    virtual_address: [u8; 4],
+    size: [u8; 4],
+}
+
+struct DataDirectory {
+    offset: u64,
+    data_directory_raw: DataDirectoryRaw,
+}
+
+struct DataDirectoryWrapper {
+    data_directory: DataDirectory,
+}
+
+impl DataDirectoryWrapper {
+    pub fn virtual_address(&self) -> StructField<u32, 4> {
+        todo!()
+    }
+
+    pub fn size(&self) -> StructField<u32, 4> {
+        todo!()
+    }
+}
+
+struct DllCharacteristics {}

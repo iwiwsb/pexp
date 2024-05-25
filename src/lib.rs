@@ -17,7 +17,7 @@ impl fmt::Display for StructField<u16, 2> {
     }
 }
 
-enum PEType {
+pub enum PEType {
     Object,
     Image,
     Unknown,
@@ -27,7 +27,7 @@ impl PEType {
     /// Returns `true` if the PE type is [`Object`].
     ///
     /// [`Object`]: PEType::Object
-    fn is_object(&self) -> bool {
+    pub fn is_object(&self) -> bool {
         match self {
             Self::Object => true,
             _ => false,
@@ -37,7 +37,7 @@ impl PEType {
     /// Returns `true` if the PE type is [`Image`].
     ///
     /// [`Image`]: PEType::Image
-    fn is_image(&self) -> bool {
+    pub fn is_image(&self) -> bool {
         match self {
             Self::Image => true,
             _ => false,
@@ -45,7 +45,7 @@ impl PEType {
     }
 }
 
-enum ImageType {
+pub enum ImageType {
     X32,
     X64,
     ROM,
@@ -55,7 +55,7 @@ impl ImageType {
     /// Returns `true` if the image type is [`X32`].
     ///
     /// [`X32`]: ImageType::X32
-    fn is_x32(&self) -> bool {
+    pub fn is_x32(&self) -> bool {
         match self {
             Self::X32 => true,
             _ => false,
@@ -65,7 +65,7 @@ impl ImageType {
     /// Returns `true` if the image type is [`X64`].
     ///
     /// [`X64`]: ImageType::X64
-    fn is_x64(&self) -> bool {
+    pub fn is_x64(&self) -> bool {
         match self {
             Self::X64 => true,
             _ => false,
@@ -75,7 +75,7 @@ impl ImageType {
     /// Returns `true` if the image type is [`ROM`].
     ///
     /// [`ROM`]: ImageType::ROM
-    fn is_rom(&self) -> bool {
+    pub fn is_rom(&self) -> bool {
         match self {
             Self::ROM => true,
             _ => false,
