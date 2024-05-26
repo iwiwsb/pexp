@@ -28,20 +28,14 @@ impl PEType {
     ///
     /// [`Object`]: PEType::Object
     pub fn is_object(&self) -> bool {
-        match self {
-            Self::Object => true,
-            _ => false,
-        }
+        matches!(self, Self::Object)
     }
 
     /// Returns `true` if the PE type is [`Image`].
     ///
     /// [`Image`]: PEType::Image
     pub fn is_image(&self) -> bool {
-        match self {
-            Self::Image => true,
-            _ => false,
-        }
+        matches!(self, Self::Image)
     }
 }
 
@@ -56,29 +50,20 @@ impl ImageType {
     ///
     /// [`X32`]: ImageType::X32
     pub fn is_x32(&self) -> bool {
-        match self {
-            Self::X32 => true,
-            _ => false,
-        }
+        matches!(self, Self::X32)
     }
 
     /// Returns `true` if the image type is [`X64`].
     ///
     /// [`X64`]: ImageType::X64
     pub fn is_x64(&self) -> bool {
-        match self {
-            Self::X64 => true,
-            _ => false,
-        }
+        matches!(self, Self::X64)
     }
 
     /// Returns `true` if the image type is [`ROM`].
     ///
     /// [`ROM`]: ImageType::ROM
     pub fn is_rom(&self) -> bool {
-        match self {
-            Self::ROM => true,
-            _ => false,
-        }
+        matches!(self, Self::ROM)
     }
 }
