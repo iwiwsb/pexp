@@ -76,118 +76,118 @@ impl OptionalHeader32 {
     }
 
     fn major_linker_version(&self) -> u8 {
-        todo!()
+        u8::from_le_bytes(self.optional_header_32_raw.major_linker_version)
     }
 
     fn minor_linker_version(&self) -> u8 {
-        todo!()
+        u8::from_le_bytes(self.optional_header_32_raw.minor_linker_version)
     }
 
     fn size_of_code(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.size_of_code)
     }
     fn size_of_initialized_data(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.size_of_initialized_data)
     }
 
     fn size_of_uninitialized_data(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.size_of_uninitialized_data)
     }
 
     fn address_of_entry_point(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.address_of_entry_point)
     }
 
     fn base_of_code(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.base_of_code)
     }
 
     fn base_of_data(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.base_of_data)
     }
 
     fn image_base(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.image_base)
     }
 
     fn section_alignment(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.section_alignment)
     }
 
     fn file_alignment(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.file_alignment)
     }
 
     fn major_os_version(&self) -> u16 {
-        todo!()
+        u16::from_le_bytes(self.optional_header_32_raw.major_os_version)
     }
 
     fn minor_os_version(&self) -> u16 {
-        todo!()
+        u16::from_le_bytes(self.optional_header_32_raw.minor_os_version)
     }
 
     fn major_image_version(&self) -> u16 {
-        todo!()
+        u16::from_le_bytes(self.optional_header_32_raw.major_image_version)
     }
 
     fn minor_image_version(&self) -> u16 {
-        todo!()
+        u16::from_le_bytes(self.optional_header_32_raw.minor_image_version)
     }
 
     fn major_subsystem_version(&self) -> u16 {
-        todo!()
+        u16::from_le_bytes(self.optional_header_32_raw.major_subsystem_version)
     }
 
     fn minor_subsystem_version(&self) -> u16 {
-        todo!()
+        u16::from_le_bytes(self.optional_header_32_raw.minor_subsystem_version)
     }
 
     fn win32_version_value(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.win32_version_value)
     }
 
     fn size_of_image(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.size_of_image)
     }
 
     fn size_of_headers(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.size_of_headers)
     }
 
     fn checksum(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.checksum)
     }
 
     fn subsystem(&self) -> u16 {
-        todo!()
+        u16::from_le_bytes(self.optional_header_32_raw.subsystem)
     }
 
     fn dll_characteristics(&self) -> u16 {
-        todo!()
+        u16::from_le_bytes(self.optional_header_32_raw.dll_characteristics)
     }
 
     fn size_of_stack_reserve(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.size_of_stack_reserve)
     }
 
     fn size_of_stack_commit(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.size_of_stack_commit)
     }
 
     fn size_of_heap_reserve(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.size_of_heap_reserve)
     }
 
     fn size_of_heap_commit(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.size_of_heap_commit)
     }
 
     fn loader_flags(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.loader_flags)
     }
 
     fn number_of_rva_and_sizes(&self) -> u32 {
-        todo!()
+        u32::from_le_bytes(self.optional_header_32_raw.number_of_rva_and_sizes)
     }
 
     fn data_directories(&self) -> Vec<DataDirectory> {
