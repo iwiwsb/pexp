@@ -1,5 +1,5 @@
 use crate::StructField;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use std::io::Read;
 use std::io::Seek;
 use std::io::SeekFrom;
@@ -120,11 +120,12 @@ impl FileHeaderWrapper {
         }
     }
 
-    pub fn time_date_stamp(&self) -> StructField<NaiveDateTime, 4> {
+    pub fn time_date_stamp(&self) -> StructField<DateTime<Utc>, 4> {
         let offset = self.file_header.offset + 4;
         let name = String::from("Time date stamp");
         let raw_bytes = self.file_header.file_header_raw.time_date_stamp;
-        let value = NaiveDateTime::from_timestamp(self.file_header.time_date_stamp() as i64, 0);
+        let value = DateTime::from_timestamp(self.file_header.time_date_stamp() as i64, 0)
+            .expect("invalid timestamp");
         StructField {
             offset,
             name,
@@ -382,7 +383,7 @@ impl From<u16> for Characteristics {
         let dynamic_link_library = ((value >> 12) % 2) != 0;
         let uniprocessor_system_only = ((value >> 13) % 2) != 0;
         let bytes_reserved_hi = ((value >> 14) % 2) != 0;
-        
+
         Self {
             relocs_stripped,
             executable_image,
