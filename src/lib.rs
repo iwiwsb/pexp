@@ -13,7 +13,7 @@ pub struct StructField<T, const N: usize> {
 
 impl fmt::Display for StructField<u16, 2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+        writeln!(f, "{}\t{}\t{:?}\t{}", self.offset, self.name, self.raw_bytes, self.value)
     }
 }
 
